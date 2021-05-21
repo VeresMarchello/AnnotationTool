@@ -98,6 +98,8 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Commands\RelayCommand.cs" />
+    <Compile Include="Converters\Vector3Converter.cs" />
+    <Compile Include="Model\Line.cs" />
     <Compile Include="ViewModel\MyViewModel.cs" />
     <Compile Include="ViewModel\ViewModel2D.cs" />
     <Compile Include="View\ProgressBar.xaml.cs">
@@ -161,10 +163,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Converters\" />
-    <Folder Include="Model\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Resource Include="Images\G0074002.JPG" />
     <Resource Include="Images\G0074019.JPG" />

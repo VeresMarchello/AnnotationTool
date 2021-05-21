@@ -5,10 +5,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:AnnotationTool.ViewModel"
              xmlns:view="clr-namespace:AnnotationTool.View"
+             xmlns:converters="clr-namespace:AnnotationTool.Converters"
              xmlns:hx="http://helix-toolkit.org/wpf/SharpDX"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:ie="http://schemas.microsoft.com/expression/2010/interactions"
-             
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
@@ -18,17 +19,23 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:Vector3Converter x:Key="Vector3Converter"/>
+        <sys:Int32 x:Key="Zero">0</sys:Int32>
+        <sys:Int32 x:Key="One">1</sys:Int32>
+        <sys:Int32 x:Key="Two">2</sys:Int32>
+        <sys:Int32 x:Key="Three">3</sys:Int32>
     </UserControl.Resources>
     <Grid Background="White">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="3*"/>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
+        
 
         <Grid Grid.Column="0">
             <view:ProgressBar Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>
-            <hx:Viewport3DX 
-                x:Name="view1"
+            <hx:Viewport3DX
+                x:Name="view"
                 Camera="{Binding Camera}"
                 ShowViewCube="False"
                 ShowCameraInfo="False"
@@ -68,9 +75,12 @@
                     Transform="{Binding GridTransform}"
                     Color="{Binding GridColor}" />-->
                 <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="Purple"/>
-                
+                <!--<hx:TransformManipulator3D
+                x:Name="manipulator"
+                CenterOffset="{Binding CenterOffset}"
+                SizeScale="1"
+                Target="{Binding Target}" />-->
             </hx:Viewport3DX>
-
         </Grid>
 
         <Grid Grid.Column="1">
@@ -80,12 +90,12 @@
             </Grid.RowDefinitions>
 
 
-            <DataGrid Grid.Row="0" Margin="10">
+            <DataGrid x:Name="dataGrid" Grid.Row="0" ItemsSource="{Binding Lines.Lines}" Margin="10" IsReadOnly="True">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="X1" Width="1*"/>
-                    <DataGridTextColumn Header="Y1" Width="1*"/>
-                    <DataGridTextColumn Header="X2" Width="1*"/>
-                    <DataGridTextColumn Header="Y2" Width="1*"/>
+                    <DataGridTextColumn Header="X1" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Zero}}" Width="1*"/>
+                    <DataGridTextColumn Header="Y1" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource One}}" Width="1*"/>
+                    <DataGridTextColumn Header="X2" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Two}}" Width="1*"/>
+                    <DataGridTextColumn Header="Y2" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Three}}" Width="1*"/>
                 </DataGrid.Columns>
             </DataGrid>
 

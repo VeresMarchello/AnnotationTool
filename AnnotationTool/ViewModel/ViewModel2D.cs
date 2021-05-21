@@ -8,6 +8,7 @@ using AnnotationTool.Commands;
 using System.Windows.Media.Imaging;
 using HelixToolkit.Wpf.SharpDX;
 using System;
+using System.Windows.Controls;
 
 namespace AnnotationTool.ViewModel
 {
@@ -45,6 +46,19 @@ namespace AnnotationTool.ViewModel
 
         public Color LineColor { get; set; } = new Color(new Vector3(255, 0, 255));
 
+        private Point _mouse;
+
+        public Point Mouse
+        {
+            get { return _mouse; }
+            set
+            {
+                _mouse = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public Vector3 FirstPoint { get; set; }
 
 
         public ViewModel2D()
@@ -65,6 +79,12 @@ namespace AnnotationTool.ViewModel
             _planeMaterial = PhongMaterials.Blue;
             _planeTransform = new Media3D.TranslateTransform3D(0, 0, 0);
 
+            _lines = new LineGeometry3D()
+            {
+                Positions = new Vector3Collection(),
+                Indices = new IntCollection(),
+                Colors = new Color4Collection()
+            };
             //var lineBuilder = new LineBuilder();
             //lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3(1, 0, 0));
             //Lines = lineBuilder.ToLineGeometry3D();
@@ -199,7 +219,6 @@ namespace AnnotationTool.ViewModel
             }
         }
 
-
         public string[] Images
         {
             get { return _images; }
@@ -220,8 +239,30 @@ namespace AnnotationTool.ViewModel
             }
         }
 
+        public bool IsFirstPoint { get; set; } = true;
         public ICommand SelectImageCommand { get; private set; }
 
+        //private Element3D _target;
+        //public Element3D Target
+        //{
+        //    get { return _target; }
+        //    set
+        //    {
+        //        _target = value;
+        //        NotifyPropertyChanged();
+        //    }
+        //}
+
+        //private Vector3 _centerOffset;
+        //public Vector3 CenterOffset
+        //{
+        //    get { return _centerOffset; }
+        //    set
+        //    {
+        //        _centerOffset = value;
+        //        NotifyPropertyChanged();
+        //    }
+        //}
 
         private void ChangeSelectedImage(object newPath)
         {
@@ -253,12 +294,40 @@ namespace AnnotationTool.ViewModel
 
         public void OnMouseDown3DHandler(object sender, MouseDown3DEventArgs e)
         {
-            var point = e.Position;
+            var pressedMouseButton = (e.OriginalInputEventArgs as MouseButtonEventArgs).ChangedButton;
 
-            var lineBuilder = new LineBuilder();
-            lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3((float)point.X + 1, (float)point.Y + 1, 0));
-            Lines = lineBuilder.ToLineGeometry3D();
-            //if (e.HitTestResult != null && e.HitTestResult.ModelHit is MeshGeometryModel3D m && (m.Geometry == Model || m.Geometry == Model2))
+            if (e.HitTestResult == null || pressedMouseButton != MouseButton.Left)
+            {
+                return;
+            }
+            var vector = e.HitTestResult.PointHit;
+
+            if (IsFirstPoint)
+            {
+                FirstPoint = vector;
+            }
+            else
+            {
+                if (!(vector.X == FirstPoint.X && vector.Y == FirstPoint.Y))
+                {
+                    var lineBuilder = new LineBuilder();
+                    foreach (var item in Lines.Lines)
+                    {
+                        lineBuilder.AddLine(item.P0, item.P1);
+                    }
+
+                    lineBuilder.AddLine(FirstPoint, vector);
+                    //Lines.Positions.Add(FirstPoint);
+                    //Lines.Positions.Add(vector);
+                    //Lines.Indices.Add(Lines.Indices.Count);
+                    //Lines.Indices.Add(Lines.Indices.Count);
+                    //NotifyPropertyChanged("Lines");
+                    Lines = lineBuilder.ToLineGeometry3D();
+                }
+            }
+            IsFirstPoint = !IsFirstPoint;
+
+            //if (e.HitTestResult.ModelHit is MeshGeometryModel3D m)
             //{
             //    Target = null;
             //    CenterOffset = m.Geometry.Bound.Center; // Must update this before updating target
@@ -266,6 +335,7 @@ namespace AnnotationTool.ViewModel
 
             //}
         }
+
 
         private string[] GetFolderFiles()
         {

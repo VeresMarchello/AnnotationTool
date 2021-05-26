@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Lines>
+  <Line>
+    <Points>
+      <Point>
+        <X>3,674261</X>
+        <Y>2,710107</Y>
+      </Point>
+      <Point>
+        <X>-2,780878</X>
+        <Y>-1,590399</Y>
+      </Point>
+    </Points>
+  </Line>
+  <Line>
+    <Points>
+      <Point>
+        <X>-3,74433</X>
+        <Y>0,4941642</Y>
+      </Point>
+      <Point>
+        <X>0,2583807</X>
+        <Y>2,097001</Y>
+      </Point>
+    </Points>
+  </Line>
+</Lines>

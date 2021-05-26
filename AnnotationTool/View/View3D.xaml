@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="AnnotationTool.View.View2D"
+﻿<UserControl x:Class="AnnotationTool.View.View3D"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -9,29 +9,21 @@
              xmlns:hx="http://helix-toolkit.org/wpf/SharpDX"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:ie="http://schemas.microsoft.com/expression/2010/interactions"
-             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-
     <UserControl.DataContext>
-        <vm:ViewModel2D/>
+        <vm:ViewModel3D/>
     </UserControl.DataContext>
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-        <converters:Vector3Converter x:Key="Vector3Converter"/>
-        <sys:Int32 x:Key="Zero">0</sys:Int32>
-        <sys:Int32 x:Key="One">1</sys:Int32>
-        <sys:Int32 x:Key="Two">2</sys:Int32>
-        <sys:Int32 x:Key="Three">3</sys:Int32>
-
     </UserControl.Resources>
+
     <Grid Background="White">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="3*"/>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
-
 
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
@@ -39,21 +31,27 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <view:ProgressBar Grid.RowSpan="2" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>
-            <hx:Viewport3DX
-                Grid.Row="0"
-                x:Name="view"
-                Camera="{Binding Camera}"
-                TextBrush="Purple"
-                ShowViewCube="False"
-                ShowCameraInfo="False"
-                UseDefaultGestures="False"
-                EffectsManager="{Binding EffectsManager}">
 
+            <hx:Viewport3DX            
+            x:Name="view"
+            Grid.Row="0"
+            ShowCoordinateSystem="True"
+            Camera="{Binding Camera}"
+            UseDefaultGestures="False"
+            EffectsManager="{Binding EffectsManager}">
                 <hx:Viewport3DX.InputBindings>
+                    <KeyBinding Key="B" Command="hx:ViewportCommands.BackView" />
+                    <KeyBinding Key="F" Command="hx:ViewportCommands.FrontView" />
+                    <KeyBinding Key="U" Command="hx:ViewportCommands.TopView" />
+                    <KeyBinding Key="D" Command="hx:ViewportCommands.BottomView" />
+                    <KeyBinding Key="L" Command="hx:ViewportCommands.LeftView" />
+                    <KeyBinding Key="R" Command="hx:ViewportCommands.RightView" />
+
                     <KeyBinding Command="hx:ViewportCommands.ZoomExtents" Gesture="Control+E" />
+                    <MouseBinding Command="hx:ViewportCommands.Rotate" Gesture="RightClick" />
                     <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="MiddleClick"/>
                 </hx:Viewport3DX.InputBindings>
-                
+
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="MouseDown3D">
                         <ie:CallMethodAction MethodName="MouseDown3DHandler" TargetObject="{Binding}" />
@@ -62,22 +60,18 @@
 
                 <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
                 <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />
-                <hx:MeshGeometryModel3D 
-                    x:Name="plane"
-                    Geometry="{Binding Plane}"
-                    Transform="{Binding PlaneTransform}" >
+                <hx:Element3DPresenter Content="{Binding GroupModel}" />
+                <!--<hx:PostEffectMeshBorderHighlight EffectName="highlight" />-->
+                <hx:LineGeometryModel3D Geometry="{Binding AxisModel}" Color="White" />
+                <hx:BillboardTextModel3D Geometry="{Binding AxisLabel}" IsTransparent="True" />
+                <hx:BillboardTextModel3D Geometry="{Binding PointsLabel}" IsTransparent="True" />
+                <hx:MeshGeometryModel3D Geometry="{Binding PointsLayer}" IsTransparent="True" >
                     <hx:MeshGeometryModel3D.Material>
-                        <hx:PhongMaterial DiffuseColor="White" AmbientColor="black" ReflectiveColor="Black" EmissiveColor="Black" SpecularColor="Black" DiffuseMap="{Binding Picture}"/>
+                        <hx:PhongMaterial DiffuseColor="Red" AmbientColor="black" ReflectiveColor="Black" EmissiveColor="Black" SpecularColor="Black"/>
                     </hx:MeshGeometryModel3D.Material>
                 </hx:MeshGeometryModel3D>
-                <!--Material="{Binding PlaneMaterial}"-->
-                <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="Purple"/>
-                <!--<hx:TransformManipulator3D
-                x:Name="manipulator"
-                CenterOffset="{Binding CenterOffset}"
-                SizeScale="1"
-                Target="{Binding Target}" />-->
             </hx:Viewport3DX>
+
             <StatusBar Grid.Row="1" VerticalAlignment="Bottom">
                 <StatusBar.Background>
                     <SolidColorBrush Opacity="0.5" Color="WhiteSmoke" />
@@ -96,46 +90,18 @@
                 <StatusBarItem>
                     <TextBlock Text="{Binding Camera.LookDirection, StringFormat=LookDirection: \{0:0.0\}}" />
                 </StatusBarItem>
-                <Separator />
-                <StatusBarItem>
-                    <TextBlock Text="{Binding SelectedImage, StringFormat=Image: {0}}" />
-                </StatusBarItem>
             </StatusBar>
         </Grid>
-
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="200" />
-                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <DataGrid x:Name="dataGrid" Grid.Row="0" ItemsSource="{Binding Lines.Lines}" Margin="10">
+            <DataGrid x:Name="dataGrid" ItemsSource="{Binding Vectors}" AutoGenerateColumns="True" Grid.Row="0" Margin="10">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="X1" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Zero}}" Width="1*"/>
-                    <DataGridTextColumn Header="Y1" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource One}}" Width="1*"/>
-                    <DataGridTextColumn Header="X2" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Two}}" Width="1*"/>
-                    <DataGridTextColumn Header="Y2" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Three}}" Width="1*"/>
+                    <DataGridTextColumn Header="X1" Binding="{Binding IsNormalized}" Width="1*"/>
                 </DataGrid.Columns>
             </DataGrid>
-
-            <Grid Grid.Row="1" Margin="10, 10, 5, 10">
-                <ScrollViewer x:Name="scrollViewer">
-                    <ItemsControl ItemsSource="{Binding Images}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button Margin="0,2,2,0" Command="{Binding Path=DataContext.SelectImageCommand, ElementName=scrollViewer}" CommandParameter="{Binding}">
-                                    <Image x:Name="Image" Source="{Binding}"/>
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid Columns="2" Rows="6"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                    </ItemsControl>
-                </ScrollViewer>
-            </Grid>
         </Grid>
     </Grid>
 </UserControl>

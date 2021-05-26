@@ -100,16 +100,17 @@
     <Compile Include="Commands\RelayCommand.cs" />
     <Compile Include="Converters\Vector3Converter.cs" />
     <Compile Include="Model\Line.cs" />
-    <Compile Include="ViewModel\MyViewModel.cs" />
     <Compile Include="ViewModel\ViewModel2D.cs" />
+    <Compile Include="ViewModel\ViewModel3D.cs" />
+    <Compile Include="ViewModel\ViewModelBase.cs" />
     <Compile Include="View\ProgressBar.xaml.cs">
       <DependentUpon>ProgressBar.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\View2D.xaml.cs">
       <DependentUpon>View2D.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\ViewPort3DX.xaml.cs">
-      <DependentUpon>ViewPort3DX.xaml</DependentUpon>
+    <Compile Include="View\View3D.xaml.cs">
+      <DependentUpon>View3D.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -131,9 +132,9 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="View\ViewPort3DX.xaml">
-      <Generator>MSBuild:Compile</Generator>
+    <Page Include="View\View3D.xaml">
       <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>

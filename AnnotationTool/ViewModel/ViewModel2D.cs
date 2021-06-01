@@ -208,25 +208,27 @@ namespace AnnotationTool.ViewModel
                 }
                 IsFirstPoint = !IsFirstPoint;
             }
-            //else if (pressedMouseButton == MouseButton.Right)
-            //{
+            else if (pressedMouseButton == MouseButton.Right)
+            {
+                Dictionary<Geometry3D.Line, float> keyValues = new Dictionary<Geometry3D.Line, float>();
+                foreach (var line in Lines.Lines)
+                {
+                    var dxc = vector.X - line.P0.X;
+                    var dyc = vector.Y - line.P0.Y;
+                    var dxl = line.P1.X - line.P0.X;
+                    var dyl = line.P1.Y - line.P0.Y;
+                    var cross = dxc * dyl - dyc * dxl;
 
-            //    var hitTests = e.Viewport.FindHits(originalEvent.GetPosition(e.Viewport));
-            //    Vector3 hitPt;
-            //    if (hitTests != null && hitTests.Count > 0)
-            //    {
-            //        foreach (var hit in hitTests)
-            //        {
-            //            var line = hit.ModelHit as LineGeometryModel3D;
+                    keyValues.Add(line, Math.Abs(cross));
+                }
 
-            //            if (line != null)
-            //            {
-            //                hitPt = hit.PointHit;
-            //                break;
-            //            }
-            //        }
-            //    }
-            //}
+                if (keyValues.Count < 1)
+                {
+                    return;
+                }
+
+                SelectedLine = keyValues.OrderBy(x => x.Value).First().Key;
+            }
             else if (pressedMouseButton == MouseButton.Middle)
             {
                 Dictionary<Geometry3D.Line, float> keyValues = new Dictionary<Geometry3D.Line, float>();

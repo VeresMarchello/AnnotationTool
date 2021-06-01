@@ -3,66 +3,6 @@
   <Line>
     <Points>
       <Point>
-        <X>1,006143</X>
-        <Y>3,841707</Y>
-      </Point>
-      <Point>
-        <X>1,117482</X>
-        <Y>3,850796</Y>
-      </Point>
-    </Points>
-  </Line>
-  <Line>
-    <Points>
-      <Point>
-        <X>1,171147</X>
-        <Y>3,437473</Y>
-      </Point>
-      <Point>
-        <X>1,259333</X>
-        <Y>3,468967</Y>
-      </Point>
-    </Points>
-  </Line>
-  <Line>
-    <Points>
-      <Point>
-        <X>1,99164</X>
-        <Y>3,626859</Y>
-      </Point>
-      <Point>
-        <X>2,072644</X>
-        <Y>3,560583</Y>
-      </Point>
-    </Points>
-  </Line>
-  <Line>
-    <Points>
-      <Point>
-        <X>0,3421137</X>
-        <Y>3,135928</Y>
-      </Point>
-      <Point>
-        <X>0,783951</X>
-        <Y>3,170294</Y>
-      </Point>
-    </Points>
-  </Line>
-  <Line>
-    <Points>
-      <Point>
-        <X>1,363417</X>
-        <Y>3,567253</Y>
-      </Point>
-      <Point>
-        <X>1,55354</X>
-        <Y>3,605096</Y>
-      </Point>
-    </Points>
-  </Line>
-  <Line>
-    <Points>
-      <Point>
         <X>-1,896451</X>
         <Y>-0,8565719</Y>
       </Point>

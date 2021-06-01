@@ -20,6 +20,8 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:Vector3Converter x:Key="Vector3Converter"/>
+        <converters:OpacityConverter x:Key="OpacityConverter"/>
+
         <sys:Int32 x:Key="Zero">0</sys:Int32>
         <sys:Int32 x:Key="One">1</sys:Int32>
         <sys:Int32 x:Key="Two">2</sys:Int32>
@@ -50,10 +52,10 @@
                 EffectsManager="{Binding EffectsManager}">
 
                 <hx:Viewport3DX.InputBindings>
-                    <KeyBinding Command="hx:ViewportCommands.ZoomExtents" Gesture="Control+E" />
-                    <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="MiddleClick"/>
+                    <KeyBinding Command="hx:ViewportCommands.ZoomExtents" Key="E" Modifiers="Ctrl" />
+                    <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="RightClick"/>
                 </hx:Viewport3DX.InputBindings>
-                
+
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="MouseDown3D">
                         <ie:CallMethodAction MethodName="MouseDown3DHandler" TargetObject="{Binding}" />
@@ -109,13 +111,66 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <DataGrid x:Name="dataGrid" Grid.Row="0" ItemsSource="{Binding Lines.Lines}" Margin="10">
+            <!--<ListView Grid.Row="0" SelectedItem="{Binding SelectedLine, Mode=TwoWay}" ItemsSource="{Binding Lines.Lines}" Margin="10">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="SelectionChanged">
+                        <ie:CallMethodAction MethodName="SelectionChangedHandler" TargetObject="{Binding}" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="X1" Width="1" DisplayMemberBinding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Zero}}"/>
+                        <GridViewColumn Header="Y1" DisplayMemberBinding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource One}}"/>
+                        <GridViewColumn Header="X2" DisplayMemberBinding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Two}}"/>
+                        <GridViewColumn Header="Y2" DisplayMemberBinding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Three}}"/>
+                    </GridView>
+                </ListView.View>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="LightGray"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>-->
+
+            <DataGrid x:Name="dataGrid" Grid.Row="0" SelectedItem="{Binding SelectedLine, Mode=TwoWay}" ItemsSource="{Binding Lines.Lines}" Margin="10" IsReadOnly="True">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="SelectionChanged">
+                        <ie:CallMethodAction MethodName="SelectionChangedHandler" TargetObject="{Binding}" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="X1" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Zero}}" Width="1*"/>
                     <DataGridTextColumn Header="Y1" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource One}}" Width="1*"/>
                     <DataGridTextColumn Header="X2" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Two}}" Width="1*"/>
                     <DataGridTextColumn Header="Y2" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Three}}" Width="1*"/>
                 </DataGrid.Columns>
+
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="Purple"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.CellStyle>
+
+                <DataGrid.RowStyle >
+                    <Style TargetType="DataGridRow">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="LightGray"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
             </DataGrid>
 
             <Grid Grid.Row="1" Margin="10, 10, 5, 10">
@@ -124,7 +179,14 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Button Margin="0,2,2,0" Command="{Binding Path=DataContext.SelectImageCommand, ElementName=scrollViewer}" CommandParameter="{Binding}">
-                                    <Image x:Name="Image" Source="{Binding}"/>
+                                    <Image x:Name="Image" Source="{Binding}">
+                                        <!--<Image.Opacity>
+                                            <MultiBinding Converter="{StaticResource OpacityConverter}">
+                                                <Binding RelativeSource="{RelativeSource Self}" Path="Source"/>
+                                                <Binding Path="DataContext.SelectedImage"/>
+                                            </MultiBinding>
+                                        </Image.Opacity>-->
+                                    </Image>
                                 </Button>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

@@ -62,9 +62,10 @@
                 <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />
                 <hx:Element3DPresenter Content="{Binding GroupModel}" />
                 <!--<hx:PostEffectMeshBorderHighlight EffectName="highlight" />-->
+                <!--<hx:MeshGeometryModel3D Geometry="{Binding PLY}" Material="{Binding PLYMaterial}"/>-->
                 <hx:LineGeometryModel3D Geometry="{Binding AxisModel}" Color="White" />
-                <hx:BillboardTextModel3D Geometry="{Binding AxisLabel}" IsTransparent="True" />
-                <hx:BillboardTextModel3D Geometry="{Binding PointsLabel}" IsTransparent="True" />
+                <!--<hx:BillboardTextModel3D Geometry="{Binding AxisLabel}" IsTransparent="True" />-->
+                <!--<hx:BillboardTextModel3D Geometry="{Binding PointsLabel}" IsTransparent="True" />-->
                 <hx:MeshGeometryModel3D Geometry="{Binding PointsLayer}" IsTransparent="True" >
                     <hx:MeshGeometryModel3D.Material>
                         <hx:PhongMaterial DiffuseColor="Red" AmbientColor="black" ReflectiveColor="Black" EmissiveColor="Black" SpecularColor="Black"/>

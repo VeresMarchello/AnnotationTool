@@ -1,7 +1,13 @@
 ﻿using HelixToolkit.Wpf.SharpDX;
 using SharpDX;
+using HelixToolkit.Wpf.SharpDX.Assimp;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
+using HelixToolkit.Wpf.SharpDX.Model.Scene;
+using HelixToolkit.Wpf.SharpDX.Model;
 
 namespace AnnotationTool.ViewModel
 {
@@ -9,7 +15,8 @@ namespace AnnotationTool.ViewModel
     {
         private MeshGeometry3D _pointsLayer;
 
-        public SceneNodeGroupModel3D GroupModel { get; set; }
+        public SceneNodeGroupModel3D GroupModel { get; set; } = new SceneNodeGroupModel3D();
+        public Geometry3D PLY { get; set; }
         public MeshGeometry3D PointsLayer
         {
             get { return _pointsLayer; }
@@ -25,6 +32,8 @@ namespace AnnotationTool.ViewModel
 
         public Vector3Collection Vectors { get; private set; }
 
+        public PhongMaterial PLYMaterial { get; set; } = PhongMaterials.Gray;
+
         public ViewModel3D()
         {
             Camera = new OrthographicCamera()
@@ -36,12 +45,12 @@ namespace AnnotationTool.ViewModel
                 NearPlaneDistance = 0.01f
             };
 
-            GroupModel = new SceneNodeGroupModel3D();
+            //GroupModel = new SceneNodeGroupModel3D();
 
             var lineBuilder = new LineBuilder();
-            lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3(1000, 0, 0));
-            lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3(0, 1000, 0));
-            lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3(0, 0, 1000));
+            lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3(100, 0, 0));
+            lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3(0, 100, 0));
+            lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3(0, 0, 100));
 
             AxisModel = lineBuilder.ToLineGeometry3D();
             AxisModel.Colors = new Color4Collection(AxisModel.Positions.Count)
@@ -60,11 +69,53 @@ namespace AnnotationTool.ViewModel
             AxisLabel.TextInfo.Add(new TextInfo() { Origin = new Vector3(0, 0, 1100), Text = "Z", Foreground = Colors.Blue.ToColor4() });
 
             PointsLabel = new BillboardText3D();
-            _pointsLayer = new MeshGeometry3D() { Positions = new Vector3Collection()};
+            _pointsLayer = new MeshGeometry3D() { Positions = new Vector3Collection() };
 
             Vectors = new Vector3Collection();
+            IsLoading = true;
+            ImportSTL("Madi_Cloud_mesh_center");
         }
 
+
+        public void ImportSTL(string fileName)
+        {
+            Task.Run(() =>
+            {
+                var loader = new Importer();
+                return loader.Load($"../../PLYs/{ fileName }.ply");
+            }).ContinueWith((result) =>
+            {
+                IsLoading = false;
+                if (result.IsCompleted)
+                {
+                    var scene = result.Result;
+                    GroupModel.Clear();
+                    if (scene != null)
+                    {
+                        //if (scene.Root != null)
+                        //{
+                        //    foreach (var node in scene.Root.Traverse())
+                        //    {
+                        //        if (node is MaterialGeometryNode m)
+                        //        {
+                        //            if (m.Material is PBRMaterialCore pbr)
+                        //            {
+                        //                pbr.RenderEnvironmentMap = RenderEnvironmentMap;
+                        //            }
+                        //            else if (m.Material is PhongMaterialCore phong)
+                        //            {
+                        //                phong.RenderEnvironmentMap = RenderEnvironmentMap;
+                        //            }
+                        //        }
+                        //    }
+                        //}
+                        GroupModel.AddNode(scene.Root);
+                        NotifyPropertyChanged("GroupModel");
+                    }
+                }
+
+            }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
 
         public void MouseDown3DHandler(object sender, MouseDown3DEventArgs e)
         {

@@ -3,72 +3,120 @@
   <Line>
     <Points>
       <Point>
-        <X>-1,896451</X>
-        <Y>-0,8565719</Y>
+        <X>2,085728</X>
+        <Y>-0,3356566</Y>
       </Point>
       <Point>
-        <X>-1,581181</X>
-        <Y>-0,8979187</Y>
-      </Point>
-    </Points>
-  </Line>
-  <Line>
-    <Points>
-      <Point>
-        <X>1,132214</X>
-        <Y>0,7818018</Y>
-      </Point>
-      <Point>
-        <X>0,9151423</X>
-        <Y>0,5337198</Y>
+        <X>2,831177</X>
+        <Y>-0,4479849</Y>
       </Point>
     </Points>
   </Line>
   <Line>
     <Points>
       <Point>
-        <X>1,328612</X>
-        <Y>-0,4741125</Y>
+        <X>3,28049</X>
+        <Y>-0,01909588</Y>
       </Point>
       <Point>
-        <X>1,891964</X>
-        <Y>-0,4275971</Y>
-      </Point>
-    </Points>
-  </Line>
-  <Line>
-    <Points>
-      <Point>
-        <X>1,778261</X>
-        <Y>-0,3552398</Y>
-      </Point>
-      <Point>
-        <X>1,431979</X>
-        <Y>-0,5309646</Y>
+        <X>3,729803</X>
+        <Y>-0,4684078</Y>
       </Point>
     </Points>
   </Line>
   <Line>
     <Points>
       <Point>
-        <X>1,55136</X>
-        <Y>0,0231064</Y>
+        <X>4,536523</X>
+        <Y>0,8182589</Y>
       </Point>
       <Point>
-        <X>1,224356</X>
-        <Y>-0,08739845</Y>
+        <X>4,863295</X>
+        <Y>0,5527562</Y>
       </Point>
     </Points>
   </Line>
   <Line>
     <Points>
       <Point>
-        <X>2,539139</X>
-        <Y>-0,5203974</Y>
+        <X>2,004034</X>
+        <Y>-0,9279317</Y>
       </Point>
       <Point>
-        <X>2,083588</X>
-        <Y>-0,5880533</Y>
+        <X>1,72832</X>
+        <Y>-1,326186</Y>
+      </Point>
+    </Points>
+  </Line>
+  <Line>
+    <Points>
+      <Point>
+        <X>-1,845755</X>
+        <Y>-0,3152332</Y>
+      </Point>
+      <Point>
+        <X>-1,110516</X>
+        <Y>-0,5398896</Y>
+      </Point>
+    </Points>
+  </Line>
+  <Line>
+    <Points>
+      <Point>
+        <X>-1,641521</X>
+        <Y>2,615508</Y>
+      </Point>
+      <Point>
+        <X>-1,079881</X>
+        <Y>2,329582</Y>
+      </Point>
+    </Points>
+  </Line>
+  <Line>
+    <Points>
+      <Point>
+        <X>-3,3775</X>
+        <Y>-1,346609</Y>
+      </Point>
+      <Point>
+        <X>-3,837025</X>
+        <Y>-1,959308</Y>
+      </Point>
+    </Points>
+  </Line>
+  <Line>
+    <Points>
+      <Point>
+        <X>1,808178</X>
+        <Y>0,8084851</Y>
+      </Point>
+      <Point>
+        <X>3,378756</X>
+        <Y>-0,1419159</Y>
+      </Point>
+    </Points>
+  </Line>
+  <Line>
+    <Points>
+      <Point>
+        <X>0,9463736</X>
+        <Y>0,3252303</Y>
+      </Point>
+      <Point>
+        <X>1,026916</X>
+        <Y>-0,1096988</Y>
+      </Point>
+    </Points>
+  </Line>
+  <Line>
+    <Points>
+      <Point>
+        <X>-1,445737</X>
+        <Y>0,808485</Y>
+      </Point>
+      <Point>
+        <X>-1,41313</X>
+        <Y>-0,4559057</Y>
       </Point>
     </Points>
   </Line>

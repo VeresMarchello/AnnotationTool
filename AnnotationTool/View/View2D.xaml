@@ -54,11 +54,12 @@
                 <hx:Viewport3DX.InputBindings>
                     <KeyBinding Command="hx:ViewportCommands.ZoomExtents" Key="E" Modifiers="Ctrl" />
                     <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="RightClick"/>
+                    <MouseBinding Command="{Binding Command}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+LeftClick"/>
                 </hx:Viewport3DX.InputBindings>
 
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="MouseDown3D">
-                        <ie:CallMethodAction MethodName="MouseDown3DHandler" TargetObject="{Binding}" />
+                        <ie:CallMethodAction MethodName="MouseDown3DHandler" TargetObject="{Binding}"/>
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
 
@@ -111,31 +112,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!--<ListView Grid.Row="0" SelectedItem="{Binding SelectedLine, Mode=TwoWay}" ItemsSource="{Binding Lines.Lines}" Margin="10">
-                <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="SelectionChanged">
-                        <ie:CallMethodAction MethodName="SelectionChangedHandler" TargetObject="{Binding}" />
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="X1" Width="1" DisplayMemberBinding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Zero}}"/>
-                        <GridViewColumn Header="Y1" DisplayMemberBinding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource One}}"/>
-                        <GridViewColumn Header="X2" DisplayMemberBinding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Two}}"/>
-                        <GridViewColumn Header="Y2" DisplayMemberBinding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Three}}"/>
-                    </GridView>
-                </ListView.View>
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem">
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="LightGray"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </ListView.ItemContainerStyle>
-            </ListView>-->
-
+            
             <DataGrid x:Name="dataGrid" Grid.Row="0" SelectedItem="{Binding SelectedLine, Mode=TwoWay}" ItemsSource="{Binding Lines.Lines}" Margin="10" IsReadOnly="True">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="SelectionChanged">

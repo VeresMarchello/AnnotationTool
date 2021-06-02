@@ -55,8 +55,15 @@ namespace AnnotationTool.ViewModel
             ChangeSelectedImage(Images[0]);
 
             SelectImageCommand = new RelayCommand<object>(ChangeSelectedImage);
+            Command = new RelayCommand<object>(asd);
         }
 
+        private void asd(object obj)
+        {
+            var asd =Mouse.GetPosition((Viewport3DX)obj);
+            var bsd =((Viewport3DX)obj).CurrentPosition;
+            Console.WriteLine();
+        }
 
         public LineGeometry3D Lines
         {
@@ -104,6 +111,7 @@ namespace AnnotationTool.ViewModel
             }
         }
 
+        public ICommand Command { get; private set; }
 
         public ICommand SelectImageCommand { get; private set; }
 
@@ -143,14 +151,9 @@ namespace AnnotationTool.ViewModel
 
             LoadPoints(SelectedImage);
 
-            Camera = new PerspectiveCamera
-            {
-                Position = new Media3D.Point3D(0, 0, 10),
-                LookDirection = new Media3D.Vector3D(0, 0, -5),
-                UpDirection = new Media3D.Vector3D(0, 1, 0),
-                NearPlaneDistance = 0.5,
-                FarPlaneDistance = 150,
-            };
+            ResetCamera();
+
+            SelectedLine = new Geometry3D.Line();
         }
         private void SetImage(BitmapSource image)
         {
@@ -271,6 +274,18 @@ namespace AnnotationTool.ViewModel
             }
         }
 
+
+        private void ResetCamera()
+        {
+            Camera = new PerspectiveCamera
+            {
+                Position = new Media3D.Point3D(0, 0, 10),
+                LookDirection = new Media3D.Vector3D(0, 0, -5),
+                UpDirection = new Media3D.Vector3D(0, 1, 0),
+                NearPlaneDistance = 0.5,
+                FarPlaneDistance = 150,
+            };
+        }
         private void SetCameraTarget()
         {
             var target = new Vector3((SelectedLine.P1.X + SelectedLine.P0.X) / 2, (SelectedLine.P1.Y + SelectedLine.P0.Y) / 2, 0);

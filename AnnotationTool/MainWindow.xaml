@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:view="clr-namespace:AnnotationTool.View"
         mc:Ignorable="d"
+        WindowState="Maximized"
         Title="Grapler Annotáló" Height="450" Width="800">
     
     <Grid>

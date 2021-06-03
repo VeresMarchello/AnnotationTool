@@ -20,14 +20,13 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:Vector3Converter x:Key="Vector3Converter"/>
-        <converters:OpacityConverter x:Key="OpacityConverter"/>
 
         <sys:Int32 x:Key="Zero">0</sys:Int32>
         <sys:Int32 x:Key="One">1</sys:Int32>
         <sys:Int32 x:Key="Two">2</sys:Int32>
         <sys:Int32 x:Key="Three">3</sys:Int32>
-
     </UserControl.Resources>
+    
     <Grid Background="White">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="3*"/>
@@ -57,17 +56,10 @@
                     <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="RightClick"/>
                     <MouseBinding Command="{Binding CTRLLeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+LeftClick"/>
                     <MouseBinding Command="{Binding CTRLRigtClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+RightClick"/>
-                    <MouseBinding Command="{Binding CTRLLeftDoubleClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+LeftDoubleClick"/>
                     <MouseBinding Command="{Binding MiddleClickCommand}" Gesture="MiddleClick"/>
                 </hx:Viewport3DX.InputBindings>
 
                 <i:Interaction.Triggers>
-                    <!--<i:EventTrigger EventName="MouseDown3D">
-                        <ie:CallMethodAction MethodName="MouseDown3DHandler" TargetObject="{Binding}"/>
-                    </i:EventTrigger>-->
-                    <i:EventTrigger EventName="MouseUp3D">
-                        <ie:CallMethodAction MethodName="MouseUp3DHandler" TargetObject="{Binding}"/>
-                    </i:EventTrigger>
                     <i:EventTrigger EventName="MouseMove3D">
                         <ie:CallMethodAction MethodName="MouseMove3DHandler" TargetObject="{Binding}"/>
                     </i:EventTrigger>
@@ -78,19 +70,11 @@
                 <hx:MeshGeometryModel3D 
                     x:Name="plane"
                     Geometry="{Binding Plane}"
+                    Material="{Binding PlaneMaterial}"
                     Transform="{Binding PlaneTransform}" >
-                    <hx:MeshGeometryModel3D.Material>
-                        <hx:PhongMaterial DiffuseColor="White" AmbientColor="black" ReflectiveColor="Black" EmissiveColor="Black" SpecularColor="Black" DiffuseMap="{Binding Picture}"/>
-                    </hx:MeshGeometryModel3D.Material>
                 </hx:MeshGeometryModel3D>
-                <!--Material="{Binding PlaneMaterial}"-->
                 <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="Purple"/>
                 <hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="Red"/>
-                <!--<hx:TransformManipulator3D
-                x:Name="manipulator"
-                CenterOffset="{Binding CenterOffset}"
-                SizeScale="1"
-                Target="{Binding Target}" />-->
             </hx:Viewport3DX>
             <StatusBar Grid.Row="1" VerticalAlignment="Bottom">
                 <StatusBar.Background>
@@ -127,7 +111,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            
+
             <DataGrid x:Name="dataGrid" Grid.Row="0" SelectedItem="{Binding SelectedLine, Mode=TwoWay}" ItemsSource="{Binding Lines.Lines}" Margin="10" IsReadOnly="True">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="SelectionChanged">
@@ -171,14 +155,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Button Margin="0,2,2,0" Command="{Binding Path=DataContext.SelectImageCommand, ElementName=scrollViewer}" CommandParameter="{Binding}">
-                                    <Image x:Name="Image" Source="{Binding}">
-                                        <!--<Image.Opacity>
-                                            <MultiBinding Converter="{StaticResource OpacityConverter}">
-                                                <Binding RelativeSource="{RelativeSource Self}" Path="Source"/>
-                                                <Binding Path="DataContext.SelectedImage"/>
-                                            </MultiBinding>
-                                        </Image.Opacity>-->
-                                    </Image>
+                                    <Image x:Name="Image" Source="{Binding}" />
                                 </Button>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

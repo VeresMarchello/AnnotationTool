@@ -53,13 +53,22 @@
 
                 <hx:Viewport3DX.InputBindings>
                     <KeyBinding Command="hx:ViewportCommands.ZoomExtents" Key="E" Modifiers="Ctrl" />
+                    <MouseBinding Command="{Binding LeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="LeftClick"/>
                     <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="RightClick"/>
-                    <MouseBinding Command="{Binding Command}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+LeftClick"/>
+                    <MouseBinding Command="{Binding CTRLLeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+LeftClick"/>
+                    <MouseBinding Command="{Binding CTRLRigtClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+RightClick"/>
+                    <MouseBinding Command="{Binding MiddleClickCommand}" Gesture="MiddleClick"/>
                 </hx:Viewport3DX.InputBindings>
 
                 <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="MouseDown3D">
+                    <!--<i:EventTrigger EventName="MouseDown3D">
                         <ie:CallMethodAction MethodName="MouseDown3DHandler" TargetObject="{Binding}"/>
+                    </i:EventTrigger>-->
+                    <i:EventTrigger EventName="MouseUp3D">
+                        <ie:CallMethodAction MethodName="MouseUp3DHandler" TargetObject="{Binding}"/>
+                    </i:EventTrigger>
+                    <i:EventTrigger EventName="MouseMove3D">
+                        <ie:CallMethodAction MethodName="MouseMove3DHandler" TargetObject="{Binding}"/>
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
 

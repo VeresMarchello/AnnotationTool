@@ -12,15 +12,17 @@ using System.Xml;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
+using System.Windows;
 
 namespace AnnotationTool.ViewModel
 {
     class ViewModel2D : ViewModelBase
     {
         private LineGeometry3D _lines;
-
         private string _selectedImage;
         private string[] _images;
+        private Geometry3D.Line _selectedLine;
+
 
         //remove later
         private TextureModel _picture;
@@ -55,14 +57,80 @@ namespace AnnotationTool.ViewModel
             ChangeSelectedImage(Images[0]);
 
             SelectImageCommand = new RelayCommand<object>(ChangeSelectedImage);
-            Command = new RelayCommand<object>(asd);
+            LeftClickCommand = new RelayCommand<object>(AddLine);
+            CTRLLeftClickCommand = new RelayCommand<object>(SelectLine);
+            CTRLRigtClickCommand = new RelayCommand<object>(DeleteLine);
+            MiddleClickCommand = new RelayCommand<object>(CancelLine);
         }
 
-        private void asd(object obj)
+        private void SelectLine(object parameter)
         {
-            var asd =Mouse.GetPosition((Viewport3DX)obj);
-            var bsd =((Viewport3DX)obj).CurrentPosition;
-            Console.WriteLine();
+            SelectedLine = GetNearestLine(GetVector(parameter));
+        }
+
+        private void CancelLine(object parameter)
+        {
+            if (!IsFirstPoint)
+            {
+                IsFirstPoint = true;
+            }
+        }
+
+        private void AddLine(object parameter)
+        {
+            var vector = GetVector(parameter);
+            vector.Z = 0;
+
+            if (IsFirstPoint)
+            {
+                FirstPoint = vector;
+            }
+            else
+            {
+                var lineBuilder = new LineBuilder();
+                //foreach (var item in Lines.Lines)
+                //{
+                //    lineBuilder.AddLine(item.P0, item.P1);
+                //}
+
+                //var center = new Vector3((FirstPoint.X + vector.X) / 2, (FirstPoint.Y + vector.Y) / 2, 0);
+                //lineBuilder.AddCircle(center, new Vector3(0, 0, 1), 0.05f, 360);
+                lineBuilder.AddLine(FirstPoint, vector);
+                Lines = lineBuilder.ToLineGeometry3D();
+                SaveLine(Lines.Lines.Last());
+            }
+
+            IsFirstPoint = !IsFirstPoint;
+        }
+        private void DeleteLine(object parameter)
+        {
+            var selectedLine = GetNearestLine(GetVector(parameter));
+
+            var lineBuilder = new LineBuilder();
+            foreach (var line in Lines.Lines)
+            {
+                if (!line.Equals(selectedLine))
+                {
+                    lineBuilder.AddLine(line.P0, line.P1);
+                }
+            }
+
+            Lines = lineBuilder.ToLineGeometry3D();
+            DeleteLine(selectedLine);
+        }
+        private Vector3 GetVector(object parameter)
+        {
+            var viewPort = (Viewport3DX)parameter;
+            var point = viewPort.FindNearestPoint(Mouse.GetPosition(viewPort));
+            var vector = new Vector3();
+
+            if (point.HasValue)
+            {
+                vector = point.Value.ToVector3();
+                //vector.Z = 0;
+            }
+
+            return vector;
         }
 
         public LineGeometry3D Lines
@@ -97,8 +165,6 @@ namespace AnnotationTool.ViewModel
 
         public bool IsFirstPoint { get; set; }
 
-        private Geometry3D.Line _selectedLine;
-
         public Geometry3D.Line SelectedLine
         {
             get { return _selectedLine; }
@@ -110,32 +176,11 @@ namespace AnnotationTool.ViewModel
                 SetCameraTarget();
             }
         }
-
-        public ICommand Command { get; private set; }
-
+        public ICommand LeftClickCommand { get; private set; }
+        public ICommand CTRLLeftClickCommand { get; private set; }
+        public ICommand CTRLRigtClickCommand { get; private set; }
+        public ICommand MiddleClickCommand { get; private set; }
         public ICommand SelectImageCommand { get; private set; }
-
-        //private Element3D _target;
-        //public Element3D Target
-        //{
-        //    get { return _target; }
-        //    set
-        //    {
-        //        _target = value;
-        //        NotifyPropertyChanged();
-        //    }
-        //}
-
-        //private Vector3 _centerOffset;
-        //public Vector3 CenterOffset
-        //{
-        //    get { return _centerOffset; }
-        //    set
-        //    {
-        //        _centerOffset = value;
-        //        NotifyPropertyChanged();
-        //    }
-        //}
 
         private void ChangeSelectedImage(object newPath)
         {
@@ -149,7 +194,7 @@ namespace AnnotationTool.ViewModel
             var image = new BitmapImage(new Uri(SelectedImage, UriKind.RelativeOrAbsolute));
             SetImage(image);
 
-            LoadPoints(SelectedImage);
+            LoadLines(SelectedImage);
 
             ResetCamera();
 
@@ -178,94 +223,86 @@ namespace AnnotationTool.ViewModel
             //PlaneMaterial = white;
         }
 
-        public void MouseDown3DHandler(object sender, MouseDown3DEventArgs e)
+        //public void MouseDown3DHandler(object sender, MouseDown3DEventArgs e)
+        //{
+        //    if (e.HitTestResult == null)
+        //    {
+        //        return;
+        //    }
+        //    var originalEvent = e.OriginalInputEventArgs as MouseButtonEventArgs;
+        //    var pressedMouseButton = originalEvent.ChangedButton;
+
+        //    var vector = e.HitTestResult.PointHit;
+        //    vector.Z = 0;
+
+        //    if (pressedMouseButton == MouseButton.Left)
+        //    {
+        //        if (IsFirstPoint)
+        //        {
+        //            FirstPoint = vector;
+        //        }
+        //        else
+        //        {
+        //            var lineBuilder = new LineBuilder();
+        //            foreach (var item in Lines.Lines)
+        //            {
+        //                lineBuilder.AddLine(item.P0, item.P1);
+        //            }
+
+        //            lineBuilder.AddLine(FirstPoint, vector);
+
+        //            Lines = lineBuilder.ToLineGeometry3D();
+        //            SaveLine(Lines.Lines.Last());
+        //        }
+        //        IsFirstPoint = !IsFirstPoint;
+        //    }
+        //    else if (pressedMouseButton == MouseButton.Right)
+        //    {
+        //        SelectedLine = GetNearestLine(vector);
+        //    }
+        //    else if (pressedMouseButton == MouseButton.Middle)
+        //    {
+        //        var selectedLine = GetNearestLine(vector);
+
+        //        var lineBuilder = new LineBuilder();
+        //        foreach (var line in Lines.Lines)
+        //        {
+        //            if (!line.Equals(selectedLine))
+        //            {
+        //                lineBuilder.AddLine(line.P0, line.P1);
+        //            }
+        //        }
+
+        //        Lines = lineBuilder.ToLineGeometry3D();
+        //        DeleteLine(selectedLine);
+        //    }
+        //}
+        public void MouseMove3DHandler(object sender, MouseMove3DEventArgs e)
         {
-            if (e.HitTestResult == null)
+            if (IsFirstPoint)
             {
                 return;
             }
-            var originalEvent = e.OriginalInputEventArgs as MouseButtonEventArgs;
-            var pressedMouseButton = originalEvent.ChangedButton;
-
-            var vector = e.HitTestResult.PointHit;
-            vector.Z = 0;
-
-            if (pressedMouseButton == MouseButton.Left)
-            {
-                if (IsFirstPoint)
-                {
-                    FirstPoint = vector;
-                }
-                else
-                {
-                    var lineBuilder = new LineBuilder();
-                    foreach (var item in Lines.Lines)
-                    {
-                        lineBuilder.AddLine(item.P0, item.P1);
-                    }
-
-                    lineBuilder.AddLine(FirstPoint, vector);
-
-                    Lines = lineBuilder.ToLineGeometry3D();
-                    SavePoints(Lines.Lines.Last());
-                }
-                IsFirstPoint = !IsFirstPoint;
-            }
-            else if (pressedMouseButton == MouseButton.Right)
-            {
-                Dictionary<Geometry3D.Line, float> keyValues = new Dictionary<Geometry3D.Line, float>();
-                foreach (var line in Lines.Lines)
-                {
-                    var dxc = vector.X - line.P0.X;
-                    var dyc = vector.Y - line.P0.Y;
-                    var dxl = line.P1.X - line.P0.X;
-                    var dyl = line.P1.Y - line.P0.Y;
-                    var cross = dxc * dyl - dyc * dxl;
-
-                    keyValues.Add(line, Math.Abs(cross));
-                }
-
-                if (keyValues.Count < 1)
-                {
-                    return;
-                }
-
-                SelectedLine = keyValues.OrderBy(x => x.Value).First().Key;
-            }
-            else if (pressedMouseButton == MouseButton.Middle)
-            {
-                Dictionary<Geometry3D.Line, float> keyValues = new Dictionary<Geometry3D.Line, float>();
-                foreach (var line in Lines.Lines)
-                {
-                    var dxc = vector.X - line.P0.X;
-                    var dyc = vector.Y - line.P0.Y;
-                    var dxl = line.P1.X - line.P0.X;
-                    var dyl = line.P1.Y - line.P0.Y;
-                    var cross = dxc * dyl - dyc * dxl;
-
-                    keyValues.Add(line, Math.Abs(cross));
-                }
-
-                if (keyValues.Count < 1)
-                {
-                    return;
-                }
-
-                var selectedLine = keyValues.OrderBy(x => x.Value).First().Key;
-
-                var lineBuilder = new LineBuilder();
-                foreach (var line in Lines.Lines)
-                {
-                    if (!line.Equals(selectedLine))
-                    {
-                        lineBuilder.AddLine(line.P0, line.P1);
-                    }
-                }
-                Lines = lineBuilder.ToLineGeometry3D();
-                DeletePoint(selectedLine);
-            }
+            var vector = GetVector(sender);
+            var lineBuilder = new LineBuilder();
+            lineBuilder.AddLine(FirstPoint, vector);
+            Lines = lineBuilder.ToLineGeometry3D();
         }
 
+        public void MouseUp3DHandler(object sender, MouseUp3DEventArgs e)
+        {
+            //var originalEvent = e.OriginalInputEventArgs as MouseButtonEventArgs;
+            //var pressedMouseButton = originalEvent.ChangedButton;
+            //if (pressedMouseButton != MouseButton.Left)
+            //{
+            //    return;
+            //}
+            //var vector = GetVector(sender);
+            //var lineBuilder = new LineBuilder();
+            //lineBuilder.AddLine(FirstPoint, vector);
+            //Lines = lineBuilder.ToLineGeometry3D();
+            //IsFirstPoint = true;
+        }
         public void SelectionChangedHandler(object sender, SelectionChangedEventArgs e)
         {
             if (e != null && e.AddedItems != null && e.AddedItems.Count >= 1 && e.AddedItems[0] is Geometry3D.Line)
@@ -273,7 +310,6 @@ namespace AnnotationTool.ViewModel
                 SelectedLine = (Geometry3D.Line)e.AddedItems[0];
             }
         }
-
 
         private void ResetCamera()
         {
@@ -293,8 +329,7 @@ namespace AnnotationTool.ViewModel
             Camera.LookDirection = new Media3D.Vector3D(0, 0, -5);
             NotifyPropertyChanged("Camera");
         }
-
-        private void DeletePoint(Geometry3D.Line line)
+        private void DeleteLine(Geometry3D.Line line)
         {
             XmlDocument document = new XmlDocument();
             try
@@ -328,8 +363,7 @@ namespace AnnotationTool.ViewModel
                 return;
             }
         }
-
-        private void SavePoints(Geometry3D.Line newLine)
+        private void SaveLine(Geometry3D.Line newLine)
         {
             XmlDocument document = new XmlDocument();
             XmlElement linesElement;
@@ -381,8 +415,7 @@ namespace AnnotationTool.ViewModel
 
             document.Save(SelectedImage.Replace("JPG", "xml"));
         }
-
-        public void LoadPoints(string fullFileName)
+        private void LoadLines(string fullFileName)
         {
             XmlDocument document = new XmlDocument();
 
@@ -431,7 +464,27 @@ namespace AnnotationTool.ViewModel
                 };
             }
         }
+        private Geometry3D.Line GetNearestLine(Vector3 vector)
+        {
+            Dictionary<Geometry3D.Line, float> lineDistancePairs = new Dictionary<Geometry3D.Line, float>();
+            foreach (var line in Lines.Lines)
+            {
+                var dxc = vector.X - line.P0.X;
+                var dyc = vector.Y - line.P0.Y;
+                var dxl = line.P1.X - line.P0.X;
+                var dyl = line.P1.Y - line.P0.Y;
+                var cross = dxc * dyl - dyc * dxl;
 
+                lineDistancePairs.Add(line, Math.Abs(cross));
+            }
+
+            if (lineDistancePairs.Count < 1)
+            {
+                return new Geometry3D.Line();
+            }
+
+            return lineDistancePairs.OrderBy(x => x.Value).First().Key;
+        }
         private string[] GetFolderFiles()
         {
             string[] files = null;

@@ -57,6 +57,7 @@
                     <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="RightClick"/>
                     <MouseBinding Command="{Binding CTRLLeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+LeftClick"/>
                     <MouseBinding Command="{Binding CTRLRigtClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+RightClick"/>
+                    <MouseBinding Command="{Binding CTRLLeftDoubleClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+LeftDoubleClick"/>
                     <MouseBinding Command="{Binding MiddleClickCommand}" Gesture="MiddleClick"/>
                 </hx:Viewport3DX.InputBindings>
 
@@ -84,6 +85,7 @@
                 </hx:MeshGeometryModel3D>
                 <!--Material="{Binding PlaneMaterial}"-->
                 <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="Purple"/>
+                <hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="Red"/>
                 <!--<hx:TransformManipulator3D
                 x:Name="manipulator"
                 CenterOffset="{Binding CenterOffset}"
@@ -111,6 +113,10 @@
                 <Separator />
                 <StatusBarItem>
                     <TextBlock Text="{Binding SelectedImage, StringFormat=Image: {0}}" />
+                </StatusBarItem>
+                <Separator />
+                <StatusBarItem>
+                    <TextBlock Text="{Binding Lines.Lines.Count, StringFormat=Number of Lines: {0}}" />
                 </StatusBarItem>
             </StatusBar>
         </Grid>

@@ -19,6 +19,7 @@ namespace AnnotationTool.ViewModel
     class ViewModel2D : ViewModelBase
     {
         private LineGeometry3D _lines;
+        private LineGeometry3D _newLine;
         private string _selectedImage;
         private string[] _images;
         private Geometry3D.Line _selectedLine;
@@ -41,12 +42,8 @@ namespace AnnotationTool.ViewModel
 
         public ViewModel2D()
         {
-            _lines = new LineGeometry3D()
-            {
-                Positions = new Vector3Collection(),
-                Indices = new IntCollection(),
-                Colors = new Color4Collection()
-            };
+            ResetLines();
+            ResetNewLine();
 
             IsFirstPoint = true;
 
@@ -61,8 +58,14 @@ namespace AnnotationTool.ViewModel
             CTRLLeftClickCommand = new RelayCommand<object>(SelectLine);
             CTRLRigtClickCommand = new RelayCommand<object>(DeleteLine);
             MiddleClickCommand = new RelayCommand<object>(CancelLine);
+            CTRLLeftDoubleClickCommand = new RelayCommand<object>(MoveLine);
         }
 
+        private void MoveLine(object parameter)
+        {
+            var selectedLine = GetNearestLine(GetVector(parameter));
+            IsLineMoving = true;
+        }
         private void SelectLine(object parameter)
         {
             SelectedLine = GetNearestLine(GetVector(parameter));
@@ -73,6 +76,7 @@ namespace AnnotationTool.ViewModel
             if (!IsFirstPoint)
             {
                 IsFirstPoint = true;
+                ResetNewLine();
             }
         }
 
@@ -84,19 +88,22 @@ namespace AnnotationTool.ViewModel
             if (IsFirstPoint)
             {
                 FirstPoint = vector;
+                SetCameraTarget(vector);
             }
             else
             {
                 var lineBuilder = new LineBuilder();
-                //foreach (var item in Lines.Lines)
-                //{
-                //    lineBuilder.AddLine(item.P0, item.P1);
-                //}
+                foreach (var item in Lines.Lines)
+                {
+                    lineBuilder.AddLine(item.P0, item.P1);
+                }
 
-                //var center = new Vector3((FirstPoint.X + vector.X) / 2, (FirstPoint.Y + vector.Y) / 2, 0);
-                //lineBuilder.AddCircle(center, new Vector3(0, 0, 1), 0.05f, 360);
-                lineBuilder.AddLine(FirstPoint, vector);
+                var newVector = new Vector3(FirstPoint.X - (vector.X - FirstPoint.X), FirstPoint.Y - (vector.Y - FirstPoint.Y), 0);
+
+                lineBuilder.AddLine(newVector, vector);
+
                 Lines = lineBuilder.ToLineGeometry3D();
+                ResetNewLine();
                 SaveLine(Lines.Lines.Last());
             }
 
@@ -142,6 +149,15 @@ namespace AnnotationTool.ViewModel
                 NotifyPropertyChanged();
             }
         }
+        public LineGeometry3D NewLine
+        {
+            get { return _newLine; }
+            set
+            {
+                _newLine = value;
+                NotifyPropertyChanged();
+            }
+        }
         public Vector3 FirstPoint { get; set; }
 
         public string SelectedImage
@@ -164,6 +180,7 @@ namespace AnnotationTool.ViewModel
         }
 
         public bool IsFirstPoint { get; set; }
+        public bool IsLineMoving { get; set; }
 
         public Geometry3D.Line SelectedLine
         {
@@ -172,13 +189,15 @@ namespace AnnotationTool.ViewModel
             {
                 _selectedLine = value;
                 NotifyPropertyChanged();
-
-                SetCameraTarget();
+                
+                var target = new Vector3((SelectedLine.P1.X + SelectedLine.P0.X) / 2, (SelectedLine.P1.Y + SelectedLine.P0.Y) / 2, 0);
+                SetCameraTarget(target);
             }
         }
         public ICommand LeftClickCommand { get; private set; }
         public ICommand CTRLLeftClickCommand { get; private set; }
         public ICommand CTRLRigtClickCommand { get; private set; }
+        public ICommand CTRLLeftDoubleClickCommand { get; private set; }
         public ICommand MiddleClickCommand { get; private set; }
         public ICommand SelectImageCommand { get; private set; }
 
@@ -279,14 +298,29 @@ namespace AnnotationTool.ViewModel
         //}
         public void MouseMove3DHandler(object sender, MouseMove3DEventArgs e)
         {
-            if (IsFirstPoint)
+            if (!IsFirstPoint)
+            {
+                var vector = GetVector(sender);
+                vector.Z = 0;
+                var lineBuilder = new LineBuilder();
+
+                var newVector = new Vector3(FirstPoint.X - (vector.X - FirstPoint.X), FirstPoint.Y - (vector.Y - FirstPoint.Y), 0);
+                lineBuilder.AddLine(newVector, vector);
+                lineBuilder.AddCircle(FirstPoint, new Vector3(0, 0, 1), 0.04f, 360);
+                NewLine = lineBuilder.ToLineGeometry3D();
+            }
+            //else if (IsFirstPoint && IsLineMoving)
+            //{
+            //    var vector = GetVector(sender);
+            //    vector.Z = 0;
+            //    var lineBuilder = new LineBuilder();
+
+            //}
+            else
             {
                 return;
             }
-            var vector = GetVector(sender);
-            var lineBuilder = new LineBuilder();
-            lineBuilder.AddLine(FirstPoint, vector);
-            Lines = lineBuilder.ToLineGeometry3D();
+
         }
 
         public void MouseUp3DHandler(object sender, MouseUp3DEventArgs e)
@@ -322,11 +356,28 @@ namespace AnnotationTool.ViewModel
                 FarPlaneDistance = 150,
             };
         }
-        private void SetCameraTarget()
+        private void ResetLines()
         {
-            var target = new Vector3((SelectedLine.P1.X + SelectedLine.P0.X) / 2, (SelectedLine.P1.Y + SelectedLine.P0.Y) / 2, 0);
-            Camera.Position = new Media3D.Point3D(target.X, target.Y, 5);
-            Camera.LookDirection = new Media3D.Vector3D(0, 0, -5);
+            Lines = new LineGeometry3D()
+            {
+                Positions = new Vector3Collection(),
+                Indices = new IntCollection(),
+                Colors = new Color4Collection()
+            };
+        }
+        private void ResetNewLine()
+        {
+            NewLine = new LineGeometry3D()
+            {
+                Positions = new Vector3Collection(),
+                Indices = new IntCollection(),
+                Colors = new Color4Collection()
+            };
+        }
+        private void SetCameraTarget(Vector3 target)
+        {
+            Camera.Position = new Media3D.Point3D(target.X, target.Y, Camera.Position.Z);
+            Camera.LookDirection = new Media3D.Vector3D(0, 0, -Camera.Position.Z);
             NotifyPropertyChanged("Camera");
         }
         private void DeleteLine(Geometry3D.Line line)

@@ -1,16 +1,10 @@
 ﻿using Media3D = System.Windows.Media.Media3D;
+using Media = System.Windows.Media;
 using SharpDX;
 using System.Runtime.CompilerServices;
 using System.ComponentModel;
-using System.Windows.Input;
-using System.IO;
-using AnnotationTool.Commands;
-using System.Windows.Media.Imaging;
 using HelixToolkit.Wpf.SharpDX;
-using System;
-using System.Xml;
-using System.Collections.Generic;
-using System.Linq;
+using System.Windows.Input;
 
 namespace AnnotationTool.ViewModel
 {
@@ -20,12 +14,8 @@ namespace AnnotationTool.ViewModel
         private Camera _camera;
 
         private Media3D.Vector3D _directionalLightDirection;
-        private Color4 _directionalLightColor;
-        private Color4 _ambientLightColor;
-
-        private MeshGeometry3D _plane;
-        private PhongMaterial _planeMaterial;
-        private Media3D.Transform3D _planeTransform;
+        private Media.Color _directionalLightColor;
+        private Media.Color _ambientLightColor;
 
         private bool _isLoading;
 
@@ -42,15 +32,15 @@ namespace AnnotationTool.ViewModel
                 FarPlaneDistance = 150,
             };
 
-            var box = new MeshBuilder();
-            box.AddBox(new Vector3(0, 0, 0), 10, 10, 0, BoxFaces.PositiveZ);
-            _plane = box.ToMeshGeometry3D();
-            _planeMaterial = PhongMaterials.Blue;
-            _planeTransform = new Media3D.TranslateTransform3D(0, 0, 0);
-
             _directionalLightDirection = new Media3D.Vector3D(-0, -0, -10);
-            _directionalLightColor = Color.White;
-            _ambientLightColor = new Color4(0f, 0f, 0f, 0f);
+            _directionalLightColor = Media.Colors.White;
+            _ambientLightColor = Media.Colors.Black;
+
+            PurpleColor = Media.Color.FromArgb(255, 255, 0, 255);
+            PurpleBrush = new Media.SolidColorBrush(PurpleColor);
+            var material = PhongMaterials.Red;
+            material.DiffuseColor = PurpleColor.ToColor4();
+            PurpleMaterial = material;
         }
 
 
@@ -73,34 +63,6 @@ namespace AnnotationTool.ViewModel
             }
         }
 
-        public MeshGeometry3D Plane
-        {
-            get { return _plane; }
-            set
-            {
-                _plane = value;
-                NotifyPropertyChanged();
-            }
-        }
-        public PhongMaterial PlaneMaterial
-        {
-            get { return _planeMaterial; }
-            set
-            {
-                _planeMaterial = value;
-                NotifyPropertyChanged();
-            }
-        }
-        public Media3D.Transform3D PlaneTransform
-        {
-            get { return _planeTransform; }
-            set
-            {
-                _planeTransform = value;
-                NotifyPropertyChanged();
-            }
-        }
-
         public Media3D.Vector3D DirectionalLightDirection
         {
             get { return _directionalLightDirection; }
@@ -110,7 +72,7 @@ namespace AnnotationTool.ViewModel
                 NotifyPropertyChanged();
             }
         }
-        public Color4 DirectionalLightColor
+        public Media.Color DirectionalLightColor
         {
             get { return _directionalLightColor; }
             set
@@ -119,7 +81,7 @@ namespace AnnotationTool.ViewModel
                 NotifyPropertyChanged();
             }
         }
-        public Color4 AmbientLightColor
+        public Media.Color AmbientLightColor
         {
             get { return _ambientLightColor; }
             set
@@ -129,6 +91,9 @@ namespace AnnotationTool.ViewModel
             }
         }
 
+        public PhongMaterial PurpleMaterial { get; private set; }
+        public Media.Color PurpleColor { get; private set; }
+        public Media.Brush PurpleBrush { get; private set; }
         public bool IsLoading
         {
             get { return _isLoading; }
@@ -137,6 +102,23 @@ namespace AnnotationTool.ViewModel
                 _isLoading = value;
                 NotifyPropertyChanged();
             }
+        }
+
+        public ICommand LeftClickCommand { get; protected set; }
+
+
+        public Vector3 GetVector(object parameter)
+        {
+            var viewPort = (Viewport3DX)parameter;
+            var point = viewPort.FindNearestPoint(Mouse.GetPosition(viewPort));
+            var vector = new Vector3();
+
+            if (point.HasValue)
+            {
+                vector = point.Value.ToVector3();
+            }
+
+            return vector;
         }
 
 

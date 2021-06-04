@@ -18,17 +18,25 @@ namespace AnnotationTool.ViewModel
 {
     class ViewModel2D : ViewModelBase
     {
+        private MeshGeometry3D _plane;
+        private PhongMaterial _planeMaterial;
+        private Media3D.Transform3D _planeTransform;
         private LineGeometry3D _lines;
         private LineGeometry3D _newLine;
         private string _selectedImage;
         private string[] _images;
         private Geometry3D.Line _selectedLine;
 
-
         public ViewModel2D()
         {
             ResetLines();
             ResetNewLine();
+
+            var box = new MeshBuilder();
+            box.AddBox(new Vector3(0, 0, 0), 10, 10, 0, BoxFaces.PositiveZ);
+            _plane = box.ToMeshGeometry3D();
+            _planeMaterial = PhongMaterials.Blue;
+            _planeTransform = new Media3D.TranslateTransform3D(0, 0, 0);
 
             IsFirstPoint = true;
 
@@ -45,6 +53,34 @@ namespace AnnotationTool.ViewModel
             MiddleClickCommand = new RelayCommand<object>(CancelLine);
         }
 
+
+        public MeshGeometry3D Plane
+        {
+            get { return _plane; }
+            set
+            {
+                _plane = value;
+                NotifyPropertyChanged();
+            }
+        }
+        public PhongMaterial PlaneMaterial
+        {
+            get { return _planeMaterial; }
+            set
+            {
+                _planeMaterial = value;
+                NotifyPropertyChanged();
+            }
+        }
+        public Media3D.Transform3D PlaneTransform
+        {
+            get { return _planeTransform; }
+            set
+            {
+                _planeTransform = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         public LineGeometry3D Lines
         {
@@ -99,7 +135,6 @@ namespace AnnotationTool.ViewModel
         public Vector3 FirstPoint { get; set; }
         public bool IsFirstPoint { get; set; }
 
-        public ICommand LeftClickCommand { get; private set; }
         public ICommand CTRLLeftClickCommand { get; private set; }
         public ICommand CTRLRigtClickCommand { get; private set; }
         public ICommand CTRLLeftDoubleClickCommand { get; private set; }
@@ -122,7 +157,7 @@ namespace AnnotationTool.ViewModel
         private void AddLine(object parameter)
         {
             var vector = GetVector(parameter);
-
+            vector.Z = 0;
             if (IsFirstPoint)
             {
                 FirstPoint = vector;
@@ -162,21 +197,6 @@ namespace AnnotationTool.ViewModel
 
             Lines = lineBuilder.ToLineGeometry3D();
             DeleteLineFromXML(selectedLine);
-        }
-
-        private Vector3 GetVector(object parameter)
-        {
-            var viewPort = (Viewport3DX)parameter;
-            var point = viewPort.FindNearestPoint(Mouse.GetPosition(viewPort));
-            var vector = new Vector3();
-
-            if (point.HasValue)
-            {
-                vector = point.Value.ToVector3();
-                vector.Z = 0;
-            }
-
-            return vector;
         }
         private Geometry3D.Line GetNearestLine(Vector3 vector)
         {
@@ -225,7 +245,6 @@ namespace AnnotationTool.ViewModel
             transform = transform.AppendTransform(new Media3D.ScaleTransform3D(ratio, 1.0, 1.0));
 
             PlaneTransform = transform;
-
             var material = new PhongMaterial()
             {
                 DiffuseColor = Color.White,
@@ -254,7 +273,7 @@ namespace AnnotationTool.ViewModel
 
             return files;
         }
-        
+
         public void MouseMove3DHandler(object sender, MouseMove3DEventArgs e)
         {
             if (IsFirstPoint)
@@ -263,6 +282,7 @@ namespace AnnotationTool.ViewModel
             }
 
             var vector = GetVector(sender);
+            vector.Z = 0;
             var lineBuilder = new LineBuilder();
 
             var newVector = new Vector3(FirstPoint.X - (vector.X - FirstPoint.X), FirstPoint.Y - (vector.Y - FirstPoint.Y), 0);

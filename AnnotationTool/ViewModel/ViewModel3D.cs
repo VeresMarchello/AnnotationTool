@@ -1,59 +1,71 @@
-﻿using HelixToolkit.Wpf.SharpDX;
+﻿using Media3D = System.Windows.Media.Media3D;
+using HelixToolkit.Wpf.SharpDX;
 using SharpDX;
 using HelixToolkit.Wpf.SharpDX.Assimp;
-using System;
-using System.IO;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using System.Windows.Media;
 using HelixToolkit.Wpf.SharpDX.Model.Scene;
 using HelixToolkit.Wpf.SharpDX.Model;
+using AnnotationTool.Commands;
+using System.Collections.Generic;
 
 namespace AnnotationTool.ViewModel
 {
     class ViewModel3D : ViewModelBase
     {
-        private MeshGeometry3D _pointsLayer;
+        private MeshGeometry3D _planes;
 
-        public SceneNodeGroupModel3D GroupModel { get; set; } = new SceneNodeGroupModel3D();
+        public SceneNodeGroupModel3D GroupModel { get; set; }
         public Geometry3D PLY { get; set; }
-        public MeshGeometry3D PointsLayer
+        public MeshGeometry3D Planes
         {
-            get { return _pointsLayer; }
+            get { return _planes; }
             set
             {
-                _pointsLayer = value;
+                _planes = value;
                 NotifyPropertyChanged();
             }
         }
-        public BillboardText3D PointsLabel { private set; get; }
-        public LineGeometry3D AxisModel { get; private set; }
-        public BillboardText3D AxisLabel { get; private set; }
-
-        public Vector3Collection Vectors { get; private set; }
-
-        public PhongMaterial PLYMaterial { get; set; } = PhongMaterials.Gray;
+        public LineGeometry3D CoordinateSystem { get; private set; }
 
         public ViewModel3D()
         {
-            Camera = new OrthographicCamera()
+            ResetCamera();
+            ResetAxixModel();
+
+            GroupModel = new SceneNodeGroupModel3D();
+            _planes = new MeshGeometry3D() { Positions = new Vector3Collection() };
+
+            IsLoading = true;
+            ImportSTL("Madi_Cloud_mesh_center");
+
+            LeftClickCommand = new RelayCommand<object>(AddPlane);
+        }
+
+        private void AddPlane(object parameter)
+        {
+            var vector = GetVector(parameter);
+
+            var meshBuilder = new MeshBuilder();
+            for (int i = 0; i < Planes.Positions.Count; i+=4)
             {
-                LookDirection = new System.Windows.Media.Media3D.Vector3D(0, 0, -10),
-                Position = new System.Windows.Media.Media3D.Point3D(0, 0, 10),
-                UpDirection = new System.Windows.Media.Media3D.Vector3D(0, 1, 0),
-                FarPlaneDistance = 100000,
-                NearPlaneDistance = 0.01f
-            };
+                meshBuilder.AddBox(Planes.Positions[i], 0.02, 0.02, 0, BoxFaces.PositiveZ);
+            }
+            meshBuilder.AddBox(vector, 0.02, 0.02, 0, BoxFaces.PositiveZ);
 
-            //GroupModel = new SceneNodeGroupModel3D();
+            Planes = meshBuilder.ToMeshGeometry3D();
+            NotifyPropertyChanged("Vectors");
+        }
 
+        private void ResetAxixModel()
+        {
             var lineBuilder = new LineBuilder();
-            lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3(100, 0, 0));
-            lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3(0, 100, 0));
-            lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3(0, 0, 100));
+            lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3(10, 0, 0));
+            lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3(0, 10, 0));
+            lineBuilder.AddLine(new Vector3(0, 0, 0), new Vector3(0, 0, 10));
 
-            AxisModel = lineBuilder.ToLineGeometry3D();
-            AxisModel.Colors = new Color4Collection(AxisModel.Positions.Count)
+            CoordinateSystem = lineBuilder.ToLineGeometry3D();
+            CoordinateSystem.Colors = new Color4Collection(CoordinateSystem.Positions.Count)
             {
                 Colors.Red.ToColor4(),
                 Colors.Red.ToColor4(),
@@ -62,20 +74,7 @@ namespace AnnotationTool.ViewModel
                 Colors.Blue.ToColor4(),
                 Colors.Blue.ToColor4()
             };
-
-            AxisLabel = new BillboardText3D();
-            AxisLabel.TextInfo.Add(new TextInfo() { Origin = new Vector3(1100, 0, 0), Text = "X", Foreground = Colors.Red.ToColor4() });
-            AxisLabel.TextInfo.Add(new TextInfo() { Origin = new Vector3(0, 1100, 0), Text = "Y", Foreground = Colors.Green.ToColor4() });
-            AxisLabel.TextInfo.Add(new TextInfo() { Origin = new Vector3(0, 0, 1100), Text = "Z", Foreground = Colors.Blue.ToColor4() });
-
-            PointsLabel = new BillboardText3D();
-            _pointsLayer = new MeshGeometry3D() { Positions = new Vector3Collection() };
-
-            Vectors = new Vector3Collection();
-            IsLoading = true;
-            ImportSTL("Madi_Cloud_mesh_center");
         }
-
 
         public void ImportSTL(string fileName)
         {
@@ -90,6 +89,7 @@ namespace AnnotationTool.ViewModel
                 {
                     var scene = result.Result;
                     GroupModel.Clear();
+
                     if (scene != null)
                     {
                         //if (scene.Root != null)
@@ -100,11 +100,11 @@ namespace AnnotationTool.ViewModel
                         //        {
                         //            if (m.Material is PBRMaterialCore pbr)
                         //            {
-                        //                pbr.RenderEnvironmentMap = RenderEnvironmentMap;
+                        //                pbr.RenderEnvironmentMap = true;
                         //            }
                         //            else if (m.Material is PhongMaterialCore phong)
                         //            {
-                        //                phong.RenderEnvironmentMap = RenderEnvironmentMap;
+                        //                phong.RenderEnvironmentMap = true;
                         //            }
                         //        }
                         //    }
@@ -137,9 +137,20 @@ namespace AnnotationTool.ViewModel
             //}
             meshBuilder.AddBox(vector, 0.02, 0.02, 0, BoxFaces.PositiveZ);
 
-            PointsLayer = meshBuilder.ToMeshGeometry3D();
-            Vectors.Add(vector);
+            Planes = meshBuilder.ToMeshGeometry3D();
             NotifyPropertyChanged("Vectors");
+        }
+
+        private void ResetCamera()
+        {
+            Camera = new OrthographicCamera()
+            {
+                Position = new Media3D.Point3D(10, 10, 10),
+                LookDirection = new Media3D.Vector3D(-10, -10, -10),
+                UpDirection = new Media3D.Vector3D(0, 1, 0),
+                FarPlaneDistance = 100000,
+                NearPlaneDistance = 0.01f
+            };
         }
     }
 }

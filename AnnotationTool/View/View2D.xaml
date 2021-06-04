@@ -73,7 +73,7 @@
                     Material="{Binding PlaneMaterial}"
                     Transform="{Binding PlaneTransform}" >
                 </hx:MeshGeometryModel3D>
-                <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="Purple"/>
+                <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="{Binding PurpleColor}"/>
                 <hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="Red"/>
             </hx:Viewport3DX>
             <StatusBar Grid.Row="1" VerticalAlignment="Bottom">
@@ -131,7 +131,7 @@
                         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                         <Style.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="Purple"/>
+                                <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext.PurpleBrush}"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </Style.Triggers>

@@ -9,6 +9,7 @@
              xmlns:hx="http://helix-toolkit.org/wpf/SharpDX"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:ie="http://schemas.microsoft.com/expression/2010/interactions"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.DataContext>
@@ -17,6 +18,11 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:Vector3Converter x:Key="Vector3Converter"/>
+
+        <sys:Int32 x:Key="Zero">0</sys:Int32>
+        <sys:Int32 x:Key="One">1</sys:Int32>
+        <sys:Int32 x:Key="Two">2</sys:Int32>
     </UserControl.Resources>
 
     <Grid Background="White">
@@ -47,30 +53,22 @@
                     <KeyBinding Key="L" Command="hx:ViewportCommands.LeftView" />
                     <KeyBinding Key="R" Command="hx:ViewportCommands.RightView" />
 
-                    <KeyBinding Command="hx:ViewportCommands.ZoomExtents" Gesture="Control+E" />
+                    <MouseBinding Command="{Binding LeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="LeftClick"/>
                     <MouseBinding Command="hx:ViewportCommands.Rotate" Gesture="RightClick" />
                     <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="MiddleClick"/>
                 </hx:Viewport3DX.InputBindings>
 
                 <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="MouseDown3D">
+                    <!--<i:EventTrigger EventName="MouseDown3D">
                         <ie:CallMethodAction MethodName="MouseDown3DHandler" TargetObject="{Binding}" />
-                    </i:EventTrigger>
+                    </i:EventTrigger>-->
                 </i:Interaction.Triggers>
 
                 <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
                 <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />
                 <hx:Element3DPresenter Content="{Binding GroupModel}" />
-                <!--<hx:PostEffectMeshBorderHighlight EffectName="highlight" />-->
-                <!--<hx:MeshGeometryModel3D Geometry="{Binding PLY}" Material="{Binding PLYMaterial}"/>-->
-                <hx:LineGeometryModel3D Geometry="{Binding AxisModel}" Color="White" />
-                <!--<hx:BillboardTextModel3D Geometry="{Binding AxisLabel}" IsTransparent="True" />-->
-                <!--<hx:BillboardTextModel3D Geometry="{Binding PointsLabel}" IsTransparent="True" />-->
-                <hx:MeshGeometryModel3D Geometry="{Binding PointsLayer}" IsTransparent="True" >
-                    <hx:MeshGeometryModel3D.Material>
-                        <hx:PhongMaterial DiffuseColor="Red" AmbientColor="black" ReflectiveColor="Black" EmissiveColor="Black" SpecularColor="Black"/>
-                    </hx:MeshGeometryModel3D.Material>
-                </hx:MeshGeometryModel3D>
+                <hx:LineGeometryModel3D Geometry="{Binding CoordinateSystem}" Color="White" />
+                <hx:MeshGeometryModel3D Geometry="{Binding Planes}" Material="{Binding PurpleMaterial}"/>
             </hx:Viewport3DX>
 
             <StatusBar Grid.Row="1" VerticalAlignment="Bottom">
@@ -98,10 +96,40 @@
                 <RowDefinition Height="200" />
             </Grid.RowDefinitions>
 
-            <DataGrid x:Name="dataGrid" ItemsSource="{Binding Vectors}" AutoGenerateColumns="True" Grid.Row="0" Margin="10">
+            <DataGrid x:Name="dataGrid" Grid.Row="0" ItemsSource="{Binding Planes.Positions}" Margin="10" IsReadOnly="True" AutoGenerateColumns="False">
+                <!--<i:Interaction.Triggers>
+                    <i:EventTrigger EventName="SelectionChanged">
+                        <ie:CallMethodAction MethodName="SelectionChangedHandler" TargetObject="{Binding}" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>-->
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="X1" Binding="{Binding IsNormalized}" Width="1*"/>
+                    <DataGridTextColumn Header="X" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Zero}}" Width="1*"/>
+                    <DataGridTextColumn Header="Y" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource One}}" Width="1*"/>
+                    <DataGridTextColumn Header="Z" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Two}}" Width="1*"/>
                 </DataGrid.Columns>
+
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext.PurpleBrush}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.CellStyle>
+
+                <DataGrid.RowStyle >
+                    <Style TargetType="DataGridRow">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="LightGray"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
             </DataGrid>
         </Grid>
     </Grid>

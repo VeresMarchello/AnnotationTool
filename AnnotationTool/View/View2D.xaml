@@ -20,17 +20,26 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:Vector3Converter x:Key="Vector3Converter"/>
+        <converters:MarkingTypeConverter x:Key="MarkingTypeConverter"/>
 
         <sys:Int32 x:Key="Zero">0</sys:Int32>
         <sys:Int32 x:Key="One">1</sys:Int32>
         <sys:Int32 x:Key="Two">2</sys:Int32>
         <sys:Int32 x:Key="Three">3</sys:Int32>
+        <sys:Int32 x:Key="Four">4</sys:Int32>
     </UserControl.Resources>
-    
+
+    <UserControl.InputBindings>
+        <KeyBinding Command="{Binding KeyCommand}" Key="D1" CommandParameter="{StaticResource One}"/>
+        <KeyBinding Command="{Binding KeyCommand}" Key="D2" CommandParameter="{StaticResource Two}"/>
+        <KeyBinding Command="{Binding KeyCommand}" Key="D3" CommandParameter="{StaticResource Three}"/>
+        <KeyBinding Command="{Binding CTRLRCommand}" Key="R" Modifiers="Ctrl"/>
+    </UserControl.InputBindings>
+
     <Grid Background="White">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="3*"/>
-            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
 
 
@@ -39,12 +48,11 @@
                 <RowDefinition/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <view:ProgressBar Grid.RowSpan="2" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            <!--<view:ProgressBar Grid.RowSpan="2" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>-->
             <hx:Viewport3DX
                 Grid.Row="0"
                 x:Name="view"
-                Camera="{Binding Camera}"
-                TextBrush="Purple"
+                Camera="{Binding Camera, Mode=TwoWay}"
                 ShowViewCube="False"
                 ShowCameraInfo="False"
                 UseDefaultGestures="False"
@@ -56,7 +64,7 @@
                     <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="RightClick"/>
                     <MouseBinding Command="{Binding CTRLLeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+LeftClick"/>
                     <MouseBinding Command="{Binding CTRLRigtClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+RightClick"/>
-                    <MouseBinding Command="{Binding MiddleClickCommand}" Gesture="MiddleClick"/>
+                    <KeyBinding Command="{Binding MiddleClickCommand}" Key="Esc"/>
                 </hx:Viewport3DX.InputBindings>
 
                 <i:Interaction.Triggers>
@@ -73,8 +81,8 @@
                     Material="{Binding PlaneMaterial}"
                     Transform="{Binding PlaneTransform}" >
                 </hx:MeshGeometryModel3D>
-                <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="{Binding PurpleColor}"/>
-                <hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="Red"/>
+                <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="White"/>
+                <hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="White"/>
             </hx:Viewport3DX>
             <StatusBar Grid.Row="1" VerticalAlignment="Bottom">
                 <StatusBar.Background>
@@ -100,7 +108,7 @@
                 </StatusBarItem>
                 <Separator />
                 <StatusBarItem>
-                    <TextBlock Text="{Binding Lines.Lines.Count, StringFormat=Number of Lines: {0}}" />
+                    <TextBlock Text="{Binding _2DLineList.Count, StringFormat=Number of Lines: {0}}" />
                 </StatusBarItem>
             </StatusBar>
         </Grid>
@@ -108,21 +116,22 @@
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="200" />
+                <RowDefinition Height="auto" />
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
 
-            <DataGrid x:Name="dataGrid" Grid.Row="0" SelectedItem="{Binding SelectedLine, Mode=TwoWay}" ItemsSource="{Binding Lines.Lines}" Margin="10" IsReadOnly="True">
+            <DataGrid x:Name="dataGrid" Grid.Row="0" AutoGenerateColumns="False" SelectedItem="{Binding Selected2dLine, Mode=TwoWay}" ItemsSource="{Binding _2DLineList}" Margin="10" IsReadOnly="True">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="SelectionChanged">
                         <ie:CallMethodAction MethodName="SelectionChangedHandler" TargetObject="{Binding}" />
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="X1" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Zero}}" Width="1*"/>
-                    <DataGridTextColumn Header="Y1" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource One}}" Width="1*"/>
-                    <DataGridTextColumn Header="X2" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Two}}" Width="1*"/>
-                    <DataGridTextColumn Header="Y2" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Three}}" Width="1*"/>
+                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="2*"/>
+                    <DataGridTextColumn Header="First Point" Binding="{Binding FirstPoint}" Width="1*"/>
+                    <DataGridTextColumn Header="Center Point" Binding="{Binding SelectedPoint}" Width="1*"/>
+                    <DataGridTextColumn Header="Mirrored Point" Binding="{Binding MirroredPoint}" Width="1*"/>
                 </DataGrid.Columns>
 
                 <DataGrid.CellStyle>
@@ -131,8 +140,8 @@
                         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                         <Style.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext.PurpleBrush}"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="Background" Value="{Binding Converter={StaticResource MarkingTypeConverter}}"/>
+                                <Setter Property="Foreground" Value="Black"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
@@ -140,6 +149,7 @@
 
                 <DataGrid.RowStyle >
                     <Style TargetType="DataGridRow">
+                        <Setter Property="Background" Value="{Binding Converter={StaticResource MarkingTypeConverter}}"/>
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="LightGray"/>
@@ -148,8 +158,15 @@
                     </Style>
                 </DataGrid.RowStyle>
             </DataGrid>
-
-            <Grid Grid.Row="1" Margin="10, 10, 5, 10">
+            <ListBox Grid.Row="1" Margin="10, 0, 10, 10" BorderThickness="0" SelectedItem="{Binding MarkingType, Mode=TwoWay}" ItemsSource="{Binding MarkingTypes}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <RadioButton GroupName="RB" Background="{Binding Path=., Converter={StaticResource MarkingTypeConverter}}" Content="{Binding}" IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            
+            <Grid Grid.Row="2" Margin="10, 10, 5, 10">
                 <ScrollViewer x:Name="scrollViewer">
                     <ItemsControl ItemsSource="{Binding Images}">
                         <ItemsControl.ItemTemplate>

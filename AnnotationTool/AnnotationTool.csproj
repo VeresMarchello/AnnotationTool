@@ -135,7 +135,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Commands\RelayCommand.cs" />
+    <Compile Include="Converters\MarkingTypeConverter.cs" />
     <Compile Include="Converters\Vector3Converter.cs" />
+    <Compile Include="Model\2DLine.cs" />
+    <Compile Include="Model\3DPlane.cs" />
     <Compile Include="ViewModel\ViewModel2D.cs" />
     <Compile Include="ViewModel\ViewModel3D.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />

@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.ComponentModel;
 using HelixToolkit.Wpf.SharpDX;
 using System.Windows.Input;
+using AnnotationTool.Model;
 
 namespace AnnotationTool.ViewModel
 {
@@ -23,24 +24,15 @@ namespace AnnotationTool.ViewModel
         public ViewModelBase()
         {
             _effectsManager = new DefaultEffectsManager();
-            _camera = new PerspectiveCamera
-            {
-                Position = new Media3D.Point3D(0, 0, 10),
-                LookDirection = new Media3D.Vector3D(0, 0, -5),
-                UpDirection = new Media3D.Vector3D(0, 1, 0),
-                NearPlaneDistance = 0.5,
-                FarPlaneDistance = 150,
-            };
+            ResetCamera(null);
 
             _directionalLightDirection = new Media3D.Vector3D(-0, -0, -10);
             _directionalLightColor = Media.Colors.White;
             _ambientLightColor = Media.Colors.Black;
 
-            PurpleColor = Media.Color.FromArgb(255, 255, 0, 255);
-            PurpleBrush = new Media.SolidColorBrush(PurpleColor);
             var material = PhongMaterials.Red;
-            material.DiffuseColor = PurpleColor.ToColor4();
-            PurpleMaterial = material;
+            material.DiffuseColor = GetColor(MarkingType.GeneralPruning).ToColor4();
+            LineMaterial = material;
         }
 
 
@@ -91,9 +83,8 @@ namespace AnnotationTool.ViewModel
             }
         }
 
-        public PhongMaterial PurpleMaterial { get; private set; }
-        public Media.Color PurpleColor { get; private set; }
-        public Media.Brush PurpleBrush { get; private set; }
+        public PhongMaterial LineMaterial { get; private set; }
+        
         public bool IsLoading
         {
             get { return _isLoading; }
@@ -121,7 +112,36 @@ namespace AnnotationTool.ViewModel
             return vector;
         }
 
+        public static Media.Color GetColor(MarkingType markingType)
+        {
+            var color = new Media.Color();
 
+            switch (markingType)
+            {
+                case MarkingType.GeneralPruning:
+                    color = Media.Color.FromArgb(255, 255, 0, 255);
+                    break;
+                case MarkingType.UncertainPruning:
+                    color = Media.Color.FromArgb(255, 0, 255, 0);
+                    break;
+                case MarkingType.PruningFromStems:
+                    color = Media.Color.FromArgb(255, 0, 0, 255);
+                    break;
+            }
+
+            return color;
+        }
+        protected void ResetCamera(object parameter)
+        {
+            Camera = new PerspectiveCamera
+            {
+                Position = new Media3D.Point3D(0, 0, 10),
+                LookDirection = new Media3D.Vector3D(0, 0, -10),
+                UpDirection = new Media3D.Vector3D(0, 1, 0),
+                NearPlaneDistance = 0,
+                FarPlaneDistance = 1500,
+            };
+        }
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void NotifyPropertyChanged([CallerMemberName] string info = "")

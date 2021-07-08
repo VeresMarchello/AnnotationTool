@@ -13,13 +13,13 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <Menu Grid.Row="0">
+        <!--<Menu Grid.Row="0">
             <MenuItem Header="File">
                 <MenuItem Header="Open PLY" />
                 <MenuItem Header="Export" />
                 <MenuItem Header="Import" />
             </MenuItem>
-        </Menu>
+        </Menu>-->
         <TabControl Grid.Row="1">
             <TabItem Header="3D">
                 <view:View3D/>

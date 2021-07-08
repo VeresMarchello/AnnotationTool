@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SharpDX;
+using System;
 using System.Globalization;
 using System.Windows.Data;
 using static HelixToolkit.Wpf.SharpDX.Geometry3D;
@@ -9,44 +10,22 @@ namespace AnnotationTool.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var result = 0f;
+            var result = "";
 
-            if (value is Line)
+            if (value is Vector3)
             {
-                var line = (Line)value;
-
+                var vector = (Vector3)value;
 
                 switch ((int)parameter)
                 {
                     case 0:
-                        result = line.P0.X;
+                        result = vector.X.ToString();
                         break;
                     case 1:
-                        result = line.P0.Y;
+                        result = vector.Y.ToString();
                         break;
                     case 2:
-                        result = line.P1.X;
-                        break;
-                    case 3:
-                        result = line.P1.Y;
-                        break;
-                }
-            }
-
-            if (value is SharpDX.Vector3)
-            {
-                var vector = (SharpDX.Vector3)value;
-
-                switch ((int)parameter)
-                {
-                    case 0:
-                        result = vector.X;
-                        break;
-                    case 1:
-                        result = vector.Y;
-                        break;
-                    case 2:
-                        result = vector.Z;
+                        result = vector.Z.ToString();
                         break;
                 }
             }

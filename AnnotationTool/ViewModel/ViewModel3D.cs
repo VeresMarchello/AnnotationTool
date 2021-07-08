@@ -8,6 +8,10 @@ using HelixToolkit.Wpf.SharpDX.Model.Scene;
 using HelixToolkit.Wpf.SharpDX.Model;
 using AnnotationTool.Commands;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using AnnotationTool.Model;
+using System.Windows.Input;
+using System.Windows.Controls;
 
 namespace AnnotationTool.ViewModel
 {
@@ -28,33 +32,86 @@ namespace AnnotationTool.ViewModel
         }
         public LineGeometry3D CoordinateSystem { get; private set; }
 
+        private ObservableCollection<_3DPlane> _positions;
+
+        public ObservableCollection<_3DPlane> Positions
+        {
+            get { return _positions; }
+            set
+            {
+                _positions = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private _3DPlane _selectedPlane;
+
+        public _3DPlane SelectedPlane
+        {
+            get { return _selectedPlane; }
+            set
+            {
+                _selectedPlane = value;
+                NotifyPropertyChanged();
+
+                SetCameraTarget(new Vector3(value.X, value.Y, value.Z));
+            }
+        }
+
+
         public ViewModel3D()
         {
-            ResetCamera();
+            ResetCamera(null);
             ResetAxixModel();
 
             GroupModel = new SceneNodeGroupModel3D();
-            _planes = new MeshGeometry3D() { Positions = new Vector3Collection() };
+            _planes = new MeshGeometry3D()
+            {
+                Positions = new Vector3Collection(),
+                TriangleIndices = new IntCollection(),
+                Normals = new Vector3Collection(),
+                Indices = new IntCollection(),
+                Colors = new Color4Collection()
+            };
+            _positions = new ObservableCollection<_3DPlane>();
 
             IsLoading = true;
-            ImportSTL("Madi_Cloud_mesh_center");
+            //ImportSTL("Madi_Cloud_mesh_center");
+            ImportSTL("toke_scan_photogrammetry");
 
             LeftClickCommand = new RelayCommand<object>(AddPlane);
         }
 
         private void AddPlane(object parameter)
         {
-            var vector = GetVector(parameter);
+            //float size = 0.02f;
+            float size = 5f;
+            var viewPort = (Viewport3DX)parameter;
+            Vector3 vector;
+            object model;
+            viewPort.FindNearest(Mouse.GetPosition(viewPort).ToVector2(), out vector, out _, out model);
 
-            var meshBuilder = new MeshBuilder();
-            for (int i = 0; i < Planes.Positions.Count; i+=4)
+            if (model is MeshNode)
             {
-                meshBuilder.AddBox(Planes.Positions[i], 0.02, 0.02, 0, BoxFaces.PositiveZ);
-            }
-            meshBuilder.AddBox(vector, 0.02, 0.02, 0, BoxFaces.PositiveZ);
+                var meshBuilder = new MeshBuilder();
+                meshBuilder.AddBox(vector, size, size, 0, BoxFaces.PositiveZ);
 
-            Planes = meshBuilder.ToMeshGeometry3D();
-            NotifyPropertyChanged("Vectors");
+                for (int i = 0; i < Planes.Positions.Count; i += 4)
+                {
+                    var position1 = Planes.Positions[i];
+                    var position2 = Planes.Positions[i + 2];
+                    var center = new Vector3((position1.X + position2.X) / 2, (position1.Y + position2.Y) / 2, (position1.Z + position2.Z) / 2);
+                    meshBuilder.AddBox(center, size, size, 0, BoxFaces.PositiveZ);
+                }
+
+                Planes = meshBuilder.ToMeshGeometry3D();
+
+                ObservableCollection<_3DPlane> points = Positions;
+                points.Add(new _3DPlane(vector.X, vector.Y, vector.Z));
+                Positions = points;
+            }
+
+            return;
         }
 
         private void ResetAxixModel()
@@ -92,23 +149,23 @@ namespace AnnotationTool.ViewModel
 
                     if (scene != null)
                     {
-                        //if (scene.Root != null)
-                        //{
-                        //    foreach (var node in scene.Root.Traverse())
-                        //    {
-                        //        if (node is MaterialGeometryNode m)
-                        //        {
-                        //            if (m.Material is PBRMaterialCore pbr)
-                        //            {
-                        //                pbr.RenderEnvironmentMap = true;
-                        //            }
-                        //            else if (m.Material is PhongMaterialCore phong)
-                        //            {
-                        //                phong.RenderEnvironmentMap = true;
-                        //            }
-                        //        }
-                        //    }
-                        //}
+                        if (scene.Root != null)
+                        {
+                            foreach (var node in scene.Root.Traverse())
+                            {
+                                if (node is MaterialGeometryNode m)
+                                {
+                                    if (m.Material is PBRMaterialCore pbr)
+                                    {
+                                        pbr.RenderEnvironmentMap = true;
+                                    }
+                                    else if (m.Material is PhongMaterialCore phong)
+                                    {
+                                        phong.RenderEnvironmentMap = true;
+                                    }
+                                }
+                            }
+                        }
                         GroupModel.AddNode(scene.Root);
                         NotifyPropertyChanged("GroupModel");
                     }
@@ -141,16 +198,19 @@ namespace AnnotationTool.ViewModel
             NotifyPropertyChanged("Vectors");
         }
 
-        private void ResetCamera()
+        public void SelectionChangedHandler(object sender, SelectionChangedEventArgs e)
         {
-            Camera = new OrthographicCamera()
-            {
-                Position = new Media3D.Point3D(10, 10, 10),
-                LookDirection = new Media3D.Vector3D(-10, -10, -10),
-                UpDirection = new Media3D.Vector3D(0, 1, 0),
-                FarPlaneDistance = 100000,
-                NearPlaneDistance = 0.01f
-            };
+            if (e != null && e.AddedItems != null && e.AddedItems.Count >= 1 && e.AddedItems[0] is _3DPlane)
+                SelectedPlane = (_3DPlane)e.AddedItems[0];
+        }
+
+        private void SetCameraTarget(Vector3 target)
+        {
+            //var offset = 0.3;
+            var offset = 75;
+            Camera.Position = new Media3D.Point3D(target.X + offset, target.Y + offset, target.Z + offset);
+            Camera.LookDirection = new Media3D.Vector3D(-offset, -offset, -offset);
+            NotifyPropertyChanged("Camera");
         }
     }
 }

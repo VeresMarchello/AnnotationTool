@@ -27,8 +27,8 @@
 
     <Grid Background="White">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="3*"/>
-            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
 
         <Grid Grid.Column="0">
@@ -36,7 +36,7 @@
                 <RowDefinition/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <view:ProgressBar Grid.RowSpan="2" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            <!--<view:ProgressBar Grid.RowSpan="2" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>-->
 
             <hx:Viewport3DX            
             x:Name="view"
@@ -67,8 +67,8 @@
                 <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
                 <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />
                 <hx:Element3DPresenter Content="{Binding GroupModel}" />
-                <hx:LineGeometryModel3D Geometry="{Binding CoordinateSystem}" Color="White" />
-                <hx:MeshGeometryModel3D Geometry="{Binding Planes}" Material="{Binding PurpleMaterial}"/>
+                <!--<hx:LineGeometryModel3D Geometry="{Binding CoordinateSystem}" Color="White" />-->
+                <hx:MeshGeometryModel3D Geometry="{Binding Planes}" Material="{Binding LineMaterial}"/>
             </hx:Viewport3DX>
 
             <StatusBar Grid.Row="1" VerticalAlignment="Bottom">
@@ -96,28 +96,22 @@
                 <RowDefinition Height="200" />
             </Grid.RowDefinitions>
 
-            <DataGrid x:Name="dataGrid" Grid.Row="0" ItemsSource="{Binding Planes.Positions}" Margin="10" IsReadOnly="True" AutoGenerateColumns="False">
-                <!--<i:Interaction.Triggers>
+            <DataGrid x:Name="dataGrid" Grid.Row="0" ItemsSource="{Binding Positions}" Margin="10" IsReadOnly="True" AutoGenerateColumns="False">
+                <i:Interaction.Triggers>
                     <i:EventTrigger EventName="SelectionChanged">
                         <ie:CallMethodAction MethodName="SelectionChangedHandler" TargetObject="{Binding}" />
                     </i:EventTrigger>
-                </i:Interaction.Triggers>-->
+                </i:Interaction.Triggers>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="X" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Zero}}" Width="1*"/>
-                    <DataGridTextColumn Header="Y" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource One}}" Width="1*"/>
-                    <DataGridTextColumn Header="Z" Binding="{Binding Converter={StaticResource Vector3Converter}, ConverterParameter={StaticResource Two}}" Width="1*"/>
+                    <DataGridTextColumn Header="X" Binding="{Binding X}" Width="1*"/>
+                    <DataGridTextColumn Header="Y" Binding="{Binding Y}" Width="1*"/>
+                    <DataGridTextColumn Header="Z" Binding="{Binding Z}" Width="1*"/>
                 </DataGrid.Columns>
 
                 <DataGrid.CellStyle>
                     <Style TargetType="DataGridCell">
                         <Setter Property="BorderThickness" Value="0"/>
                         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext.PurpleBrush}"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </Trigger>
-                        </Style.Triggers>
                     </Style>
                 </DataGrid.CellStyle>
 

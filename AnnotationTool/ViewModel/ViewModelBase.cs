@@ -6,6 +6,7 @@ using System.ComponentModel;
 using HelixToolkit.Wpf.SharpDX;
 using System.Windows.Input;
 using AnnotationTool.Model;
+using System;
 
 namespace AnnotationTool.ViewModel
 {
@@ -84,7 +85,7 @@ namespace AnnotationTool.ViewModel
         }
 
         public PhongMaterial LineMaterial { get; private set; }
-        
+
         public bool IsLoading
         {
             get { return _isLoading; }
@@ -101,15 +102,17 @@ namespace AnnotationTool.ViewModel
         public Vector3 GetVector(object parameter)
         {
             var viewPort = (Viewport3DX)parameter;
-            var point = viewPort.FindNearestPoint(Mouse.GetPosition(viewPort));
-            var vector = new Vector3();
-
-            if (point.HasValue)
+            var position = Mouse.GetPosition(viewPort);
+            var asd = viewPort.FindHits(position);
+            foreach (var item in asd)
             {
-                vector = point.Value.ToVector3();
+                if (item.ModelHit is MeshGeometryModel3D)
+                {
+                    return item.PointHit;
+                }
             }
 
-            return vector;
+            return new Vector3(1000);
         }
 
         public static Media.Color GetColor(MarkingType markingType)

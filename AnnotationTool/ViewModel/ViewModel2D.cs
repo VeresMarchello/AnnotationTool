@@ -184,7 +184,13 @@ namespace AnnotationTool.ViewModel
 
         private void SelectLine(object parameter)
         {
-            var index = Lines.Lines.ToList().IndexOf(GetNearestLine(GetVector(parameter)));
+            var vector = GetVector(parameter);
+            if (vector == new Vector3(1000))
+            {
+                return;
+            }
+
+            var index = Lines.Lines.ToList().IndexOf(GetNearestLine(vector));
 
             if (index > -1)
                 Selected2dLine = _2DLineList[index];
@@ -204,6 +210,10 @@ namespace AnnotationTool.ViewModel
         private void AddLine(object parameter)
         {
             var vector = GetVector(parameter);
+            if (vector == new Vector3(1000))
+            {
+                return;
+            }
             vector.Z = 0;
             if (IsFirstPoint)
             {
@@ -244,8 +254,13 @@ namespace AnnotationTool.ViewModel
         }
         private void DeleteLine(object parameter)
         {
-            var nearest = GetNearestLine(GetVector(parameter));
+            var vector = GetVector(parameter);
+            if (vector == new Vector3(1000))
+            {
+                return;
+            }
 
+            var nearest = GetNearestLine(vector);
             var remainingPositions = Lines.Positions;
             var index = remainingPositions.IndexOf(nearest.P0);
 
@@ -355,6 +370,11 @@ namespace AnnotationTool.ViewModel
             }
 
             var vector = GetVector(sender);
+
+            if (vector == new Vector3(1000))
+            {
+                return;
+            }
             vector.Z = 0;
             var lineBuilder = new LineBuilder();
 
@@ -363,9 +383,10 @@ namespace AnnotationTool.ViewModel
             lineBuilder.AddCircle(FirstPoint, new Vector3(0, 0, 1), 0.04f, 360);
             var lineGeometry = lineBuilder.ToLineGeometry3D();
             lineGeometry.Colors = new Color4Collection();
-            lineGeometry.Colors.Add(GetColor(MarkingType).ToColor4());
-            lineGeometry.Colors.Add(GetColor(MarkingType).ToColor4());
-
+            for (int i = 0; i < lineGeometry.Positions.Count; i++)
+            {
+                lineGeometry.Colors.Add(GetColor(MarkingType).ToColor4());
+            }
             NewLine = lineGeometry;
         }
         public void SelectionChangedHandler(object sender, SelectionChangedEventArgs e)

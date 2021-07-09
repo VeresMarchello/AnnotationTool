@@ -15,15 +15,15 @@ namespace AnnotationTool.Converters
             var type = MarkingType.GeneralPruning;
 
 
-            if (value is _2DLine)
-            {
-                type = ((_2DLine)value).Type;
+            //if (value is _2DLine)
+            //{
+            //    type = ((_2DLine)value).Type;
 
-            }
-            else if (value is MarkingType)
-            {
-                type = (MarkingType)value;
-            }
+            //}
+            //else if (value is MarkingType)
+            //{
+            type = (MarkingType)value;
+            //}
 
             color = ViewModelBase.GetColor(type);
             color.A = 100;

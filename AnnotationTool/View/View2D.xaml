@@ -4,12 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:AnnotationTool.ViewModel"
-             xmlns:view="clr-namespace:AnnotationTool.View"
              xmlns:converters="clr-namespace:AnnotationTool.Converters"
              xmlns:hx="http://helix-toolkit.org/wpf/SharpDX"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:ie="http://schemas.microsoft.com/expression/2010/interactions"
-             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
@@ -21,12 +19,6 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:Vector3Converter x:Key="Vector3Converter"/>
         <converters:MarkingTypeConverter x:Key="MarkingTypeConverter"/>
-
-        <sys:Int32 x:Key="Zero">0</sys:Int32>
-        <sys:Int32 x:Key="One">1</sys:Int32>
-        <sys:Int32 x:Key="Two">2</sys:Int32>
-        <sys:Int32 x:Key="Three">3</sys:Int32>
-        <sys:Int32 x:Key="Four">4</sys:Int32>
     </UserControl.Resources>
 
     <UserControl.InputBindings>
@@ -59,12 +51,11 @@
                 EffectsManager="{Binding EffectsManager}">
 
                 <hx:Viewport3DX.InputBindings>
-                    <KeyBinding Command="hx:ViewportCommands.ZoomExtents" Key="E" Modifiers="Ctrl" />
                     <MouseBinding Command="{Binding LeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="LeftClick"/>
                     <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="RightClick"/>
                     <MouseBinding Command="{Binding CTRLLeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+LeftClick"/>
                     <MouseBinding Command="{Binding CTRLRigtClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+RightClick"/>
-                    <KeyBinding Command="{Binding MiddleClickCommand}" Key="Esc"/>
+                    <KeyBinding Command="{Binding ESCCommand}" Key="Esc"/>
                 </hx:Viewport3DX.InputBindings>
 
                 <i:Interaction.Triggers>
@@ -140,7 +131,7 @@
                         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                         <Style.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{Binding Converter={StaticResource MarkingTypeConverter}}"/>
+                                <Setter Property="Background" Value="{Binding Path=Type, Converter={StaticResource MarkingTypeConverter}}"/>
                                 <Setter Property="Foreground" Value="Black"/>
                             </Trigger>
                         </Style.Triggers>
@@ -149,7 +140,7 @@
 
                 <DataGrid.RowStyle >
                     <Style TargetType="DataGridRow">
-                        <Setter Property="Background" Value="{Binding Converter={StaticResource MarkingTypeConverter}}"/>
+                        <Setter Property="Background" Value="{Binding Path=Type, Converter={StaticResource MarkingTypeConverter}}"/>
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="LightGray"/>
@@ -161,7 +152,7 @@
             <ListBox Grid.Row="1" Margin="10, 0, 10, 10" BorderThickness="0" SelectedItem="{Binding MarkingType, Mode=TwoWay}" ItemsSource="{Binding MarkingTypes}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <RadioButton GroupName="RB" Background="{Binding Path=., Converter={StaticResource MarkingTypeConverter}}" Content="{Binding}" IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
+                        <RadioButton GroupName="RB" Background="{Binding Converter={StaticResource MarkingTypeConverter}}" Content="{Binding}" IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

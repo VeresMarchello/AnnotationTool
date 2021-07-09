@@ -7,45 +7,42 @@ using HelixToolkit.Wpf.SharpDX;
 using System.Windows.Input;
 using AnnotationTool.Model;
 using System;
+using AnnotationTool.Commands;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace AnnotationTool.ViewModel
 {
     class ViewModelBase : INotifyPropertyChanged
     {
-        private EffectsManager _effectsManager;
         private Camera _camera;
 
-        private Media3D.Vector3D _directionalLightDirection;
-        private Media.Color _directionalLightColor;
-        private Media.Color _ambientLightColor;
-
-        private bool _isLoading;
+        private MarkingType _markingType;
 
 
         public ViewModelBase()
         {
-            _effectsManager = new DefaultEffectsManager();
-            ResetCamera(null);
+            EffectsManager = new DefaultEffectsManager();
+            ResetCamera();
 
-            _directionalLightDirection = new Media3D.Vector3D(-0, -0, -10);
-            _directionalLightColor = Media.Colors.White;
-            _ambientLightColor = Media.Colors.Black;
+            DirectionalLightDirection = new Media3D.Vector3D(-0, -0, -10);
+            DirectionalLightColor = Media.Colors.White;
+            AmbientLightColor = Media.Colors.Black;
+
+            _markingType = MarkingType.GeneralPruning;
+            MarkingTypes = Enum.GetValues(typeof(MarkingType)).Cast<MarkingType>();
+
 
             var material = PhongMaterials.Red;
             material.DiffuseColor = GetColor(MarkingType.GeneralPruning).ToColor4();
             LineMaterial = material;
+
+            SelectTypeCommand = new RelayCommand<object>(SetMarkingType);
+            CTRLRCommand = new RelayCommand<object>(ResetCamera);
+            KeyCommand = new RelayCommand<object>(SetMarkingType);
         }
 
 
-        public EffectsManager EffectsManager
-        {
-            get { return _effectsManager; }
-            set
-            {
-                _effectsManager = value;
-                NotifyPropertyChanged();
-            }
-        }
         public Camera Camera
         {
             get { return _camera; }
@@ -55,48 +52,32 @@ namespace AnnotationTool.ViewModel
                 NotifyPropertyChanged();
             }
         }
+        public EffectsManager EffectsManager { get; private set; }
 
-        public Media3D.Vector3D DirectionalLightDirection
+        public Media3D.Vector3D DirectionalLightDirection { get; private set; }
+        public Media.Color DirectionalLightColor { get; private set; }
+        public Media.Color AmbientLightColor { get; private set; }
+
+        public PhongMaterial LineMaterial { get; protected set; }
+
+        public MarkingType MarkingType
         {
-            get { return _directionalLightDirection; }
+            get { return _markingType; }
             set
             {
-                _directionalLightDirection = value;
+                _markingType = value;
                 NotifyPropertyChanged();
             }
         }
-        public Media.Color DirectionalLightColor
-        {
-            get { return _directionalLightColor; }
-            set
-            {
-                _directionalLightColor = value;
-                NotifyPropertyChanged();
-            }
-        }
-        public Media.Color AmbientLightColor
-        {
-            get { return _ambientLightColor; }
-            set
-            {
-                _ambientLightColor = value;
-                NotifyPropertyChanged();
-            }
-        }
+        public IEnumerable<MarkingType> MarkingTypes { get; set; }
 
-        public PhongMaterial LineMaterial { get; private set; }
-
-        public bool IsLoading
-        {
-            get { return _isLoading; }
-            set
-            {
-                _isLoading = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        public ICommand LeftClickCommand { get; protected set; }
+        public ICommand LeftClickCommand { get; set; }
+        public ICommand CTRLLeftClickCommand { get; set; }
+        public ICommand CTRLRigtClickCommand { get; set; }
+        public ICommand SelectTypeCommand { get; set; }
+        public ICommand ESCCommand { get; set; }
+        public ICommand KeyCommand { get; set; }
+        public ICommand CTRLRCommand { get; set; }
 
 
         public Vector3 GetVector(object parameter)
@@ -114,7 +95,6 @@ namespace AnnotationTool.ViewModel
 
             return new Vector3(1000);
         }
-
         public static Media.Color GetColor(MarkingType markingType)
         {
             var color = new Media.Color();
@@ -134,7 +114,22 @@ namespace AnnotationTool.ViewModel
 
             return color;
         }
-        protected void ResetCamera(object parameter)
+        protected void SetCameraTarget(Vector3 target, double offset = 0)
+        {
+            if (offset == 0)
+            {
+                Camera.Position = new Media3D.Point3D(target.X, target.Y, Camera.Position.Z);
+                Camera.LookDirection = new Media3D.Vector3D(0, 0, -Camera.Position.Z);
+            }
+            else
+            {
+                Camera.Position = new Media3D.Point3D(target.X + offset, target.Y + offset, target.Z + offset);
+                Camera.LookDirection = new Media3D.Vector3D(-offset, -offset, -offset);
+            }
+
+            NotifyPropertyChanged("Camera");
+        }
+        protected void ResetCamera(object parameter = null)
         {
             Camera = new PerspectiveCamera
             {
@@ -145,8 +140,13 @@ namespace AnnotationTool.ViewModel
                 FarPlaneDistance = 1500,
             };
         }
-        public event PropertyChangedEventHandler PropertyChanged;
+        private void SetMarkingType(object parameter)
+        {
+            MarkingType = (MarkingType)Enum.Parse(typeof(MarkingType), parameter.ToString());
+        }
 
+
+        public event PropertyChangedEventHandler PropertyChanged;
         protected void NotifyPropertyChanged([CallerMemberName] string info = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(info));

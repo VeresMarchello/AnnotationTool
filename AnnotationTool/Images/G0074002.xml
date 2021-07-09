@@ -3,16 +3,16 @@
   <Line>
     <Points>
       <Point>
-        <X>1378</X>
-        <Y>886</Y>
+        <X>3366</X>
+        <Y>1967</Y>
       </Point>
       <Point>
-        <X>1876</X>
-        <Y>956</Y>
+        <X>1892</X>
+        <Y>1790</Y>
       </Point>
       <Point>
-        <X>2373</X>
-        <Y>1026</Y>
+        <X>418</X>
+        <Y>1612</Y>
       </Point>
     </Points>
     <Type>UncertainPruning</Type>
@@ -20,16 +20,33 @@
   <Line>
     <Points>
       <Point>
-        <X>995</X>
-        <Y>966</Y>
+        <X>3785</X>
+        <Y>2188</Y>
       </Point>
       <Point>
-        <X>1767</X>
-        <Y>870</Y>
+        <X>3931</X>
+        <Y>1811</Y>
       </Point>
       <Point>
-        <X>2539</X>
-        <Y>773</Y>
+        <X>4078</X>
+        <Y>1433</Y>
+      </Point>
+    </Points>
+    <Type>UncertainPruning</Type>
+  </Line>
+  <Line>
+    <Points>
+      <Point>
+        <X>3655</X>
+        <Y>680</Y>
+      </Point>
+      <Point>
+        <X>3004</X>
+        <Y>988</Y>
+      </Point>
+      <Point>
+        <X>2354</X>
+        <Y>1297</Y>
       </Point>
     </Points>
     <Type>GeneralPruning</Type>
@@ -37,16 +54,16 @@
   <Line>
     <Points>
       <Point>
-        <X>196</X>
-        <Y>1764</Y>
+        <X>3108</X>
+        <Y>529</Y>
       </Point>
       <Point>
-        <X>623</X>
-        <Y>1599</Y>
+        <X>2916</X>
+        <Y>547</Y>
       </Point>
       <Point>
-        <X>1050</X>
-        <Y>1434</Y>
+        <X>2724</X>
+        <Y>565</Y>
       </Point>
     </Points>
     <Type>PruningFromStems</Type>
@@ -54,18 +71,18 @@
   <Line>
     <Points>
       <Point>
-        <X>3659</X>
-        <Y>2191</Y>
+        <X>1729</X>
+        <Y>1887</Y>
       </Point>
       <Point>
-        <X>2875</X>
-        <Y>2266</Y>
+        <X>2468</X>
+        <Y>1192</Y>
       </Point>
       <Point>
-        <X>2091</X>
-        <Y>2341</Y>
+        <X>3208</X>
+        <Y>497</Y>
       </Point>
     </Points>
-    <Type>GeneralPruning</Type>
+    <Type>PruningFromStems</Type>
   </Line>
 </Lines>

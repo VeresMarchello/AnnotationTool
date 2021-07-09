@@ -18,9 +18,11 @@ namespace AnnotationTool.ViewModel
     class ViewModel3D : ViewModelBase
     {
         private MeshGeometry3D _planes;
+        private _3DPlane _selectedPlane;
+        private ObservableCollection<_3DPlane> _3dPlaneList;
 
         public SceneNodeGroupModel3D GroupModel { get; set; }
-        public Geometry3D PLY { get; set; }
+        public LineGeometry3D CoordinateSystem { get; private set; }
         public MeshGeometry3D Planes
         {
             get { return _planes; }
@@ -30,22 +32,6 @@ namespace AnnotationTool.ViewModel
                 NotifyPropertyChanged();
             }
         }
-        public LineGeometry3D CoordinateSystem { get; private set; }
-
-        private ObservableCollection<_3DPlane> _positions;
-
-        public ObservableCollection<_3DPlane> Positions
-        {
-            get { return _positions; }
-            set
-            {
-                _positions = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private _3DPlane _selectedPlane;
-
         public _3DPlane SelectedPlane
         {
             get { return _selectedPlane; }
@@ -54,14 +40,23 @@ namespace AnnotationTool.ViewModel
                 _selectedPlane = value;
                 NotifyPropertyChanged();
 
-                SetCameraTarget(new Vector3(value.X, value.Y, value.Z));
+                SetCameraTarget(new Vector3(value.X, value.Y, value.Z), 75);
+            }
+        }
+        public ObservableCollection<_3DPlane> _3DPlaneList
+        {
+            get { return _3dPlaneList; }
+            set
+            {
+                _3dPlaneList = value;
+                NotifyPropertyChanged();
             }
         }
 
 
         public ViewModel3D()
         {
-            ResetCamera(null);
+            ResetCamera();
             ResetAxixModel();
 
             GroupModel = new SceneNodeGroupModel3D();
@@ -73,10 +68,8 @@ namespace AnnotationTool.ViewModel
                 Indices = new IntCollection(),
                 Colors = new Color4Collection()
             };
-            _positions = new ObservableCollection<_3DPlane>();
+            _3dPlaneList = new ObservableCollection<_3DPlane>();
 
-            IsLoading = true;
-            //ImportSTL("Madi_Cloud_mesh_center");
             ImportSTL("toke_scan_photogrammetry");
 
             LeftClickCommand = new RelayCommand<object>(AddPlane);
@@ -84,7 +77,6 @@ namespace AnnotationTool.ViewModel
 
         private void AddPlane(object parameter)
         {
-            //float size = 0.02f;
             float size = 5f;
             var viewPort = (Viewport3DX)parameter;
             Vector3 vector;
@@ -105,10 +97,14 @@ namespace AnnotationTool.ViewModel
                 }
 
                 Planes = meshBuilder.ToMeshGeometry3D();
+                var material = PhongMaterials.Red;
+                material.DiffuseColor = GetColor(MarkingType).ToColor4();
+                LineMaterial = material;
+                NotifyPropertyChanged("LineMaterial");
 
-                ObservableCollection<_3DPlane> points = Positions;
-                points.Add(new _3DPlane(vector.X, vector.Y, vector.Z));
-                Positions = points;
+                ObservableCollection<_3DPlane> points = _3DPlaneList;
+                points.Add(new _3DPlane(vector.X, vector.Y, vector.Z, 5, MarkingType));
+                _3DPlaneList = points;
             }
 
             return;
@@ -141,7 +137,6 @@ namespace AnnotationTool.ViewModel
                 return loader.Load($"../../PLYs/{ fileName }.ply");
             }).ContinueWith((result) =>
             {
-                IsLoading = false;
                 if (result.IsCompleted)
                 {
                     var scene = result.Result;
@@ -202,15 +197,6 @@ namespace AnnotationTool.ViewModel
         {
             if (e != null && e.AddedItems != null && e.AddedItems.Count >= 1 && e.AddedItems[0] is _3DPlane)
                 SelectedPlane = (_3DPlane)e.AddedItems[0];
-        }
-
-        private void SetCameraTarget(Vector3 target)
-        {
-            //var offset = 0.3;
-            var offset = 75;
-            Camera.Position = new Media3D.Point3D(target.X + offset, target.Y + offset, target.Z + offset);
-            Camera.LookDirection = new Media3D.Vector3D(-offset, -offset, -offset);
-            NotifyPropertyChanged("Camera");
         }
     }
 }

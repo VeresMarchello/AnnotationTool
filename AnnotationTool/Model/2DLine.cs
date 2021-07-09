@@ -1,10 +1,4 @@
 ﻿using SharpDX;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace AnnotationTool.Model
 {
     public class _2DLine
@@ -21,21 +15,5 @@ namespace AnnotationTool.Model
             MirroredPoint = mirroredPoint;
             Type = type;
         }
-    }
-
-    public enum MarkingType
-    {
-        /// <summary>
-        /// Általános metszés
-        /// </summary>
-        GeneralPruning = 1,
-        /// <summary>
-        /// Bizonytalan metszés
-        /// </summary>
-        UncertainPruning,
-        /// <summary>
-        /// Tőből metszés
-        /// </summary>
-        PruningFromStems,
     }
 }

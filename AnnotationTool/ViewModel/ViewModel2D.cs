@@ -28,7 +28,6 @@ namespace AnnotationTool.ViewModel
         private string[] _images;
         private _2DLine _selected2dLine;
         private List<_2DLine> _2dLineList;
-        private MarkingType _markingType;
 
 
         public ViewModel2D()
@@ -43,13 +42,10 @@ namespace AnnotationTool.ViewModel
             _planeTransform = new Media3D.TranslateTransform3D(0, 0, 0);
 
             _2dLineList = new List<_2DLine>();
-            _markingType = MarkingType.GeneralPruning;
 
             IsFirstPoint = true;
 
-            IsLoading = true;
             _images = GetFolderFiles();
-            IsLoading = false;
 
             ChangeSelectedImage(Images[0]);
 
@@ -57,13 +53,7 @@ namespace AnnotationTool.ViewModel
             LeftClickCommand = new RelayCommand<object>(AddLine);
             CTRLLeftClickCommand = new RelayCommand<object>(SelectLine);
             CTRLRigtClickCommand = new RelayCommand<object>(DeleteLine);
-            MiddleClickCommand = new RelayCommand<object>(CancelLine);
-            SelectTypeCommand = new RelayCommand<object>(SelectType);
-            KeyCommand = new RelayCommand<object>(SelectType);
-            CTRLRigtClickCommand = new RelayCommand<object>(DeleteLine);
-            CTRLRCommand = new RelayCommand<object>(ResetCamera);
-
-            MarkingTypes = Enum.GetValues(typeof(MarkingType)).Cast<MarkingType>();
+            ESCCommand = new RelayCommand<object>(CancelLine);
         }
 
 
@@ -157,29 +147,12 @@ namespace AnnotationTool.ViewModel
                 NotifyPropertyChanged();
             }
         }
-        public MarkingType MarkingType
-        {
-            get { return _markingType; }
-            set
-            {
-                _markingType = value;
-                NotifyPropertyChanged();
-            }
-        }
-        public IEnumerable<MarkingType> MarkingTypes { get; set; }
 
 
         public Vector3 FirstPoint { get; set; }
         public bool IsFirstPoint { get; set; }
 
-        public ICommand CTRLLeftClickCommand { get; private set; }
-        public ICommand CTRLRigtClickCommand { get; private set; }
-        public ICommand CTRLLeftDoubleClickCommand { get; private set; }
-        public ICommand MiddleClickCommand { get; private set; }
         public ICommand SelectImageCommand { get; private set; }
-        public ICommand SelectTypeCommand { get; private set; }
-        public ICommand KeyCommand { get; private set; }
-        public ICommand CTRLRCommand { get; private set; }
 
 
         private void SelectLine(object parameter)
@@ -203,10 +176,6 @@ namespace AnnotationTool.ViewModel
                 ResetNewLine();
             }
         }
-        private void SelectType(object parameter)
-        {
-            MarkingType = (MarkingType)Enum.Parse(typeof(MarkingType), parameter.ToString());
-        }
         private void AddLine(object parameter)
         {
             var vector = GetVector(parameter);
@@ -228,7 +197,7 @@ namespace AnnotationTool.ViewModel
                 var p2 = GetPixelFromVector(FirstPoint);
                 var p3 = GetPixelFromVector(newVector);
 
-                var newLine = new _2DLine(p1, p2, p3, _markingType);
+                var newLine = new _2DLine(p1, p2, p3, MarkingType);
                 _2DLineList = _2DLineList.Append(newLine).ToList();
 
                 Lines.Positions.Add(newVector);
@@ -322,9 +291,7 @@ namespace AnnotationTool.ViewModel
 
             LoadLinesFromXML(SelectedImage);
 
-            ResetCamera(null);
-
-            //Selected2dLine = new _2DLine(new Vector2(), new Vector2(), new Vector2(), MarkingType.GeneralPruning);
+            ResetCamera();
         }
         private void SetImage(BitmapSource image)
         {
@@ -395,12 +362,6 @@ namespace AnnotationTool.ViewModel
                 Selected2dLine = (_2DLine)e.AddedItems[0];
         }
 
-        private void SetCameraTarget(Vector3 target)
-        {
-            Camera.Position = new Media3D.Point3D(target.X, target.Y, Camera.Position.Z);
-            Camera.LookDirection = new Media3D.Vector3D(0, 0, -Camera.Position.Z);
-            NotifyPropertyChanged("Camera");
-        }
         private void ResetLines()
         {
             Lines = new LineGeometry3D()

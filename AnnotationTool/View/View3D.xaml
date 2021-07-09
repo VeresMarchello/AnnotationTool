@@ -4,14 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:AnnotationTool.ViewModel"
-             xmlns:view="clr-namespace:AnnotationTool.View"
              xmlns:converters="clr-namespace:AnnotationTool.Converters"
              xmlns:hx="http://helix-toolkit.org/wpf/SharpDX"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:ie="http://schemas.microsoft.com/expression/2010/interactions"
-             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    
     <UserControl.DataContext>
         <vm:ViewModel3D/>
     </UserControl.DataContext>
@@ -19,12 +18,16 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:Vector3Converter x:Key="Vector3Converter"/>
-
-        <sys:Int32 x:Key="Zero">0</sys:Int32>
-        <sys:Int32 x:Key="One">1</sys:Int32>
-        <sys:Int32 x:Key="Two">2</sys:Int32>
+        <converters:MarkingTypeConverter x:Key="MarkingTypeConverter"/>
     </UserControl.Resources>
 
+    <UserControl.InputBindings>
+        <KeyBinding Command="{Binding KeyCommand}" Key="D1" CommandParameter="{StaticResource One}"/>
+        <KeyBinding Command="{Binding KeyCommand}" Key="D2" CommandParameter="{StaticResource Two}"/>
+        <KeyBinding Command="{Binding KeyCommand}" Key="D3" CommandParameter="{StaticResource Three}"/>
+        <KeyBinding Command="{Binding CTRLRCommand}" Key="R" Modifiers="Ctrl"/>
+    </UserControl.InputBindings>
+    
     <Grid Background="White">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="5*"/>
@@ -36,7 +39,6 @@
                 <RowDefinition/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <!--<view:ProgressBar Grid.RowSpan="2" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>-->
 
             <hx:Viewport3DX            
             x:Name="view"
@@ -58,15 +60,9 @@
                     <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="MiddleClick"/>
                 </hx:Viewport3DX.InputBindings>
 
-                <i:Interaction.Triggers>
-                    <!--<i:EventTrigger EventName="MouseDown3D">
-                        <ie:CallMethodAction MethodName="MouseDown3DHandler" TargetObject="{Binding}" />
-                    </i:EventTrigger>-->
-                </i:Interaction.Triggers>
-
                 <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
                 <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />
-                <hx:Element3DPresenter Content="{Binding GroupModel}" />
+                <hx:Element3DPresenter Content="{Binding GroupModel}"/>
                 <!--<hx:LineGeometryModel3D Geometry="{Binding CoordinateSystem}" Color="White" />-->
                 <hx:MeshGeometryModel3D Geometry="{Binding Planes}" Material="{Binding LineMaterial}"/>
             </hx:Viewport3DX>
@@ -94,29 +90,39 @@
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="200" />
+                <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
 
-            <DataGrid x:Name="dataGrid" Grid.Row="0" ItemsSource="{Binding Positions}" Margin="10" IsReadOnly="True" AutoGenerateColumns="False">
+            <DataGrid x:Name="dataGrid" Grid.Row="0" ItemsSource="{Binding _3DPlaneList}" Margin="10" IsReadOnly="True" AutoGenerateColumns="False">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="SelectionChanged">
                         <ie:CallMethodAction MethodName="SelectionChangedHandler" TargetObject="{Binding}" />
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="X" Binding="{Binding X}" Width="1*"/>
-                    <DataGridTextColumn Header="Y" Binding="{Binding Y}" Width="1*"/>
-                    <DataGridTextColumn Header="Z" Binding="{Binding Z}" Width="1*"/>
+                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="3*"/>
+                    <DataGridTextColumn Header="X" Binding="{Binding X}" Width="2*"/>
+                    <DataGridTextColumn Header="Y" Binding="{Binding Y}" Width="2*"/>
+                    <DataGridTextColumn Header="Z" Binding="{Binding Z}" Width="2*"/>
+                    <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="1.5*"/>
                 </DataGrid.Columns>
 
                 <DataGrid.CellStyle>
                     <Style TargetType="DataGridCell">
                         <Setter Property="BorderThickness" Value="0"/>
                         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{Binding Path=Type, Converter={StaticResource MarkingTypeConverter}}"/>
+                                <Setter Property="Foreground" Value="Black"/>
+                            </Trigger>
+                        </Style.Triggers>
                     </Style>
                 </DataGrid.CellStyle>
 
                 <DataGrid.RowStyle >
                     <Style TargetType="DataGridRow">
+                        <Setter Property="Background" Value="{Binding Path=Type, Converter={StaticResource MarkingTypeConverter}}"/>
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="LightGray"/>
@@ -125,6 +131,14 @@
                     </Style>
                 </DataGrid.RowStyle>
             </DataGrid>
+
+            <ListBox Grid.Row="1" Margin="10, 0, 10, 10" BorderThickness="0" SelectedItem="{Binding MarkingType, Mode=TwoWay}" ItemsSource="{Binding MarkingTypes}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <RadioButton GroupName="RB" Background="{Binding Path=., Converter={StaticResource MarkingTypeConverter}}" Content="{Binding}" IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
         </Grid>
     </Grid>
 </UserControl>

@@ -292,6 +292,9 @@ namespace AnnotationTool.ViewModel
             LoadLinesFromXML(SelectedImage);
 
             ResetCamera();
+            
+            IsFirstPoint = true;
+            ResetNewLine();
         }
         private void SetImage(BitmapSource image)
         {
@@ -346,15 +349,30 @@ namespace AnnotationTool.ViewModel
             var lineBuilder = new LineBuilder();
 
             var newVector = new Vector3(FirstPoint.X - (vector.X - FirstPoint.X), FirstPoint.Y - (vector.Y - FirstPoint.Y), 0);
+
             lineBuilder.AddLine(newVector, vector);
             lineBuilder.AddCircle(FirstPoint, new Vector3(0, 0, 1), 0.04f, 360);
             var lineGeometry = lineBuilder.ToLineGeometry3D();
-            lineGeometry.Colors = new Color4Collection();
-            for (int i = 0; i < lineGeometry.Positions.Count; i++)
+
+            bool newLineIsValid = true;
+            for (int i = 0; i < Lines.Positions.Count - 1; i += 2)
             {
-                lineGeometry.Colors.Add(GetColor(MarkingType).ToColor4());
+                newLineIsValid = !LineIntersect(lineGeometry.Positions[0], lineGeometry.Positions[1], Lines.Positions[i], Lines.Positions[i + 1]);
+                if (!newLineIsValid)
+                {
+                    break;
+                }
             }
-            NewLine = lineGeometry;
+
+            if (newLineIsValid)
+            {
+                lineGeometry.Colors = new Color4Collection();
+                for (int i = 0; i < lineGeometry.Positions.Count; i++)
+                {
+                    lineGeometry.Colors.Add(GetColor(MarkingType).ToColor4());
+                }
+                NewLine = lineGeometry;
+            }
         }
         public void SelectionChangedHandler(object sender, SelectionChangedEventArgs e)
         {
@@ -381,6 +399,28 @@ namespace AnnotationTool.ViewModel
                 Indices = new IntCollection(),
                 Colors = new Color4Collection()
             };
+        }
+
+        static bool LineIntersect(Vector3 p01, Vector3 p11, Vector3 p02, Vector3 p12)
+        {
+            var dx = p11.X - p01.X;
+            var dy = p11.Y - p01.Y;
+            var da = p12.X - p02.X;
+            var db = p12.Y - p02.Y;
+
+            if (da * dy - db * dx == 0)
+            {
+                // The segments are parallel.
+                return false;
+            }
+
+            var s = (dx * (p02.Y - p01.Y) + dy * (p01.X - p02.X)) / (da * dy - db * dx);
+            var t = (da * (p01.Y - p02.Y) + db * (p02.X - p01.X)) / (db * dx - da * dy);
+
+            if ((s >= 0) & (s <= 1) & (t >= 0) & (t <= 1))
+                return true;
+            else
+                return false;
         }
 
         private Vector2 GetPixelFromVector(Vector3 vector)

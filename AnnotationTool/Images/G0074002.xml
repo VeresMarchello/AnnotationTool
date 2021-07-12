@@ -3,50 +3,16 @@
   <Line>
     <Points>
       <Point>
-        <X>3366</X>
-        <Y>1967</Y>
+        <X>3873</X>
+        <Y>1892</Y>
       </Point>
       <Point>
-        <X>1892</X>
-        <Y>1790</Y>
+        <X>3393</X>
+        <Y>1619</Y>
       </Point>
       <Point>
-        <X>418</X>
-        <Y>1612</Y>
-      </Point>
-    </Points>
-    <Type>UncertainPruning</Type>
-  </Line>
-  <Line>
-    <Points>
-      <Point>
-        <X>3785</X>
-        <Y>2188</Y>
-      </Point>
-      <Point>
-        <X>3931</X>
-        <Y>1811</Y>
-      </Point>
-      <Point>
-        <X>4078</X>
-        <Y>1433</Y>
-      </Point>
-    </Points>
-    <Type>UncertainPruning</Type>
-  </Line>
-  <Line>
-    <Points>
-      <Point>
-        <X>3655</X>
-        <Y>680</Y>
-      </Point>
-      <Point>
-        <X>3004</X>
-        <Y>988</Y>
-      </Point>
-      <Point>
-        <X>2354</X>
-        <Y>1297</Y>
+        <X>2913</X>
+        <Y>1347</Y>
       </Point>
     </Points>
     <Type>GeneralPruning</Type>
@@ -54,35 +20,18 @@
   <Line>
     <Points>
       <Point>
-        <X>3108</X>
-        <Y>529</Y>
+        <X>2325</X>
+        <Y>1383</Y>
       </Point>
       <Point>
-        <X>2916</X>
-        <Y>547</Y>
+        <X>2119</X>
+        <Y>1415</Y>
       </Point>
       <Point>
-        <X>2724</X>
-        <Y>565</Y>
+        <X>1913</X>
+        <Y>1447</Y>
       </Point>
     </Points>
-    <Type>PruningFromStems</Type>
-  </Line>
-  <Line>
-    <Points>
-      <Point>
-        <X>1729</X>
-        <Y>1887</Y>
-      </Point>
-      <Point>
-        <X>2468</X>
-        <Y>1192</Y>
-      </Point>
-      <Point>
-        <X>3208</X>
-        <Y>497</Y>
-      </Point>
-    </Points>
-    <Type>PruningFromStems</Type>
+    <Type>UncertainPruning</Type>
   </Line>
 </Lines>

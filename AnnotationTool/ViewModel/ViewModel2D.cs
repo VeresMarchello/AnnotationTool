@@ -30,6 +30,26 @@ namespace AnnotationTool.ViewModel
         private List<_2DLine> _2dLineList;
 
 
+        private string _selectedRearImage;
+
+        public string SelectedRearImage
+        {
+            get { return _selectedRearImage; }
+            set
+            {
+                _selectedRearImage = value;
+                NotifyPropertyChanged();
+            }
+        }
+        public ICommand SwapImagesCommand { get; private set; }
+
+        private void SwapImages(object parameter)
+        {
+            var temp = SelectedImage;
+            ChangeSelectedImage(SelectedRearImage);
+            SelectedRearImage = temp;
+        }
+
         public ViewModel2D()
         {
             ResetLines();
@@ -54,6 +74,8 @@ namespace AnnotationTool.ViewModel
             CTRLLeftClickCommand = new RelayCommand<object>(SelectLine);
             CTRLRigtClickCommand = new RelayCommand<object>(DeleteLine);
             ESCCommand = new RelayCommand<object>(CancelLine);
+
+            SwapImagesCommand = new RelayCommand<object>(SwapImages);
         }
 
 
@@ -111,6 +133,15 @@ namespace AnnotationTool.ViewModel
             {
                 _selectedImage = value;
                 NotifyPropertyChanged();
+
+                try
+                {
+                    var index = Directory.GetFiles("../../Images/Left", "*.JPG").ToList().IndexOf(value);
+                    SelectedRearImage = Directory.GetFiles("../../Images/Right", "*.JPG")[index];
+                }
+                catch (Exception)
+                {
+                }
             }
         }
         public string[] Images
@@ -292,7 +323,7 @@ namespace AnnotationTool.ViewModel
             LoadLinesFromXML(SelectedImage);
 
             ResetCamera();
-            
+
             IsFirstPoint = true;
             ResetNewLine();
         }
@@ -325,7 +356,7 @@ namespace AnnotationTool.ViewModel
             //    if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
             //    {
             //        files = Directory.GetFiles(fbd.SelectedPath);
-            files = Directory.GetFiles("../../Images", "*.JPG");
+            files = Directory.GetFiles("../../Images/Left", "*.JPG");
             //    }
             //}
 

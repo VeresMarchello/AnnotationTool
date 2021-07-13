@@ -53,6 +53,7 @@ namespace AnnotationTool.ViewModel
             }
         }
 
+        public string PlyName { get; set; }
 
         public ViewModel3D()
         {
@@ -70,7 +71,8 @@ namespace AnnotationTool.ViewModel
             };
             _3dPlaneList = new ObservableCollection<_3DPlane>();
 
-            ImportSTL("toke_scan_photogrammetry");
+            PlyName = "Mesh_Vert_color";
+            ImportSTL(PlyName);
 
             LeftClickCommand = new RelayCommand<object>(AddPlane);
         }

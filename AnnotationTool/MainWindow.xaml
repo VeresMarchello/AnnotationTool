@@ -4,27 +4,27 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:view="clr-namespace:AnnotationTool.View"
+        xmlns:vm="clr-namespace:AnnotationTool.ViewModel"
         mc:Ignorable="d"
         WindowState="Maximized"
         Title="Grapler Annotáló" Height="450" Width="800">
+    
+    <Window.DataContext>
+        <vm:ViewModelBase/>
+    </Window.DataContext>
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <!--<Menu Grid.Row="0">
-            <MenuItem Header="File">
-                <MenuItem Header="Open PLY" />
-                <MenuItem Header="Export" />
-                <MenuItem Header="Import" />
-            </MenuItem>
-        </Menu>-->
-        <TabControl Grid.Row="1">
+        
+        
+        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}">
             <TabItem Header="3D">
                 <view:View3D/>
             </TabItem>
-            <TabItem Header="2D" IsSelected="True">
+            <TabItem Header="2D">
                 <view:View2D/>
             </TabItem>
         </TabControl>

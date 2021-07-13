@@ -32,6 +32,7 @@ namespace AnnotationTool.ViewModel
             _markingType = MarkingType.GeneralPruning;
             MarkingTypes = Enum.GetValues(typeof(MarkingType)).Cast<MarkingType>();
 
+            _selectedTabIndex = 1;
 
             var material = PhongMaterials.Red;
             material.DiffuseColor = GetColor(MarkingType.GeneralPruning).ToColor4();
@@ -40,8 +41,21 @@ namespace AnnotationTool.ViewModel
             SelectTypeCommand = new RelayCommand<object>(SetMarkingType);
             CTRLRCommand = new RelayCommand<object>(ResetCamera);
             KeyCommand = new RelayCommand<object>(SetMarkingType);
+            ChangeTabindexCommand = new RelayCommand<object>(ChangeTabIndex);
         }
 
+
+        private int _selectedTabIndex;
+
+        public int SelectedTabIndex
+        {
+            get { return _selectedTabIndex; }
+            set 
+            { 
+                _selectedTabIndex = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         public Camera Camera
         {
@@ -78,8 +92,16 @@ namespace AnnotationTool.ViewModel
         public ICommand ESCCommand { get; set; }
         public ICommand KeyCommand { get; set; }
         public ICommand CTRLRCommand { get; set; }
+        public ICommand ChangeTabindexCommand { get; set; }
 
-
+        private void ChangeTabIndex(object parameter) 
+        {
+            int index;
+            if (int.TryParse(parameter.ToString(), out index))
+            {
+                SelectedTabIndex = index;
+            }
+        }
         public Vector3 GetVector(object parameter)
         {
             var viewPort = (Viewport3DX)parameter;

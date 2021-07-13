@@ -136,11 +136,33 @@ namespace AnnotationTool.ViewModel
 
                 try
                 {
-                    var index = Directory.GetFiles("../../Images/Left", "*.JPG").ToList().IndexOf(value);
-                    SelectedRearImage = Directory.GetFiles("../../Images/Right", "*.JPG")[index];
+                    var leftImages = Directory.GetFiles("../../Images/Left", "*.JPG").ToList();
+                    var rightImages = Directory.GetFiles("../../Images/Right", "*.JPG").ToList();
+                    var directoryName = "";
+                    var index = leftImages.IndexOf(value);
+
+                    if (index < 0)
+                    {
+                        index = rightImages.ToList().IndexOf(value);
+
+                        if (index > 0)
+                        {
+                            directoryName = "Left";
+                        }
+                    }
+                    else
+                    {
+                        directoryName = "Right";
+                    }
+
+                    if (!String.IsNullOrWhiteSpace(directoryName))
+                    {
+                        SelectedRearImage = Directory.GetFiles($"../../Images/{directoryName}", "*.JPG")[index];
+                    }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    Console.WriteLine(e.StackTrace);
                 }
             }
         }
@@ -164,7 +186,7 @@ namespace AnnotationTool.ViewModel
 
                 if (value != null)
                 {
-                    var target = GetVectorFromPixel(value.SelectedPoint);
+                    var target = GetVectorFromPixel(value.CenterPoint);
                     SetCameraTarget(target);
                 }
             }
@@ -222,32 +244,33 @@ namespace AnnotationTool.ViewModel
             }
             else
             {
-                var newVector = new Vector3(FirstPoint.X + (FirstPoint.X - vector.X), FirstPoint.Y + (FirstPoint.Y - vector.Y), 0);
+                var newLine = new _2DLine(GetPixelFromVector(FirstPoint), GetPixelFromVector(vector), MarkingType);
 
-                var p1 = GetPixelFromVector(vector);
-                var p2 = GetPixelFromVector(FirstPoint);
-                var p3 = GetPixelFromVector(newVector);
-
-                var newLine = new _2DLine(p1, p2, p3, MarkingType);
-                _2DLineList = _2DLineList.Append(newLine).ToList();
-
-                Lines.Positions.Add(newVector);
-                Lines.Positions.Add(vector);
-                Lines.Indices.Add(Lines.Indices.Count);
-                Lines.Indices.Add(Lines.Indices.Count);
-                Lines.Colors.Add(GetColor(MarkingType).ToColor4());
-                Lines.Colors.Add(GetColor(MarkingType).ToColor4());
-
-                Lines = new LineGeometry3D()
+                if (IsNewLineValid(newLine))
                 {
-                    Positions = Lines.Positions,
-                    Indices = Lines.Indices,
-                    Colors = Lines.Colors
-                };
+                    _2DLineList = _2DLineList.Append(newLine).ToList();
 
-                SaveLineToXML(newLine);
+                    Lines.Positions.Add(GetVectorFromPixel(newLine.MirroredPoint));
+                    Lines.Positions.Add(GetVectorFromPixel(newLine.FirstPoint));
+                    Lines.Indices.Add(Lines.Indices.Count);
+                    Lines.Indices.Add(Lines.Indices.Count);
+                    Lines.Colors.Add(GetColor(MarkingType).ToColor4());
+                    Lines.Colors.Add(GetColor(MarkingType).ToColor4());
 
-                ResetNewLine();
+                    Lines = new LineGeometry3D()
+                    {
+                        Positions = Lines.Positions,
+                        Indices = Lines.Indices,
+                        Colors = Lines.Colors
+                    };
+                    SaveLineToXML(newLine);
+
+                    ResetNewLine();
+                }
+                else
+                {
+                    return;
+                }
             }
 
             IsFirstPoint = !IsFirstPoint;
@@ -377,31 +400,22 @@ namespace AnnotationTool.ViewModel
                 return;
             }
             vector.Z = 0;
-            var lineBuilder = new LineBuilder();
 
-            var newVector = new Vector3(FirstPoint.X - (vector.X - FirstPoint.X), FirstPoint.Y - (vector.Y - FirstPoint.Y), 0);
+            var newLine = new _2DLine(GetPixelFromVector(FirstPoint), GetPixelFromVector(vector), MarkingType);
 
-            lineBuilder.AddLine(newVector, vector);
-            lineBuilder.AddCircle(FirstPoint, new Vector3(0, 0, 1), 0.04f, 360);
-            var lineGeometry = lineBuilder.ToLineGeometry3D();
-
-            bool newLineIsValid = true;
-            for (int i = 0; i < Lines.Positions.Count - 1; i += 2)
+            if (IsNewLineValid(newLine))
             {
-                newLineIsValid = !LineIntersect(lineGeometry.Positions[0], lineGeometry.Positions[1], Lines.Positions[i], Lines.Positions[i + 1]);
-                if (!newLineIsValid)
-                {
-                    break;
-                }
-            }
-
-            if (newLineIsValid)
-            {
+                var lineBuilder = new LineBuilder();
+                lineBuilder.AddLine(GetVectorFromPixel(newLine.MirroredPoint), GetVectorFromPixel(newLine.FirstPoint));
+                lineBuilder.AddCircle(GetVectorFromPixel(FirstPoint), new Vector3(0, 0, 1), 0.04f, 360);
+                var lineGeometry = lineBuilder.ToLineGeometry3D();
                 lineGeometry.Colors = new Color4Collection();
+
                 for (int i = 0; i < lineGeometry.Positions.Count; i++)
                 {
                     lineGeometry.Colors.Add(GetColor(MarkingType).ToColor4());
                 }
+
                 NewLine = lineGeometry;
             }
         }
@@ -432,7 +446,7 @@ namespace AnnotationTool.ViewModel
             };
         }
 
-        static bool LineIntersect(Vector3 p01, Vector3 p11, Vector3 p02, Vector3 p12)
+        private bool LineIntersect(Vector3 p01, Vector3 p11, Vector3 p02, Vector3 p12)
         {
             var dx = p11.X - p01.X;
             var dy = p11.Y - p01.Y;
@@ -453,8 +467,26 @@ namespace AnnotationTool.ViewModel
             else
                 return false;
         }
+        private bool IsNewLineValid(_2DLine line)
+        {
+            bool newLineIsValid = true;
 
-        private Vector2 GetPixelFromVector(Vector3 vector)
+            var mirroredPoint = GetVectorFromPixel(line.MirroredPoint);
+            var selectedPoint = GetVectorFromPixel(line.FirstPoint);
+            for (int i = 0; i < Lines.Positions.Count - 1; i += 2)
+            {
+                newLineIsValid = !LineIntersect(mirroredPoint, selectedPoint, Lines.Positions[i], Lines.Positions[i + 1]);
+
+                if (!newLineIsValid)
+                {
+                    break;
+                }
+            }
+
+            return newLineIsValid;
+        }
+
+        private Vector3 GetPixelFromVector(Vector3 vector)
         {
             var image = new BitmapImage(new Uri(SelectedImage, UriKind.RelativeOrAbsolute));
             int imageWidth = image.PixelWidth;
@@ -463,7 +495,7 @@ namespace AnnotationTool.ViewModel
             double vertical = 5.0;
             double horizontal = imageWidth / (imageHeight / vertical);
             Vector2 center = new Vector2(imageWidth / 2, imageHeight / 2);
-            Vector2 computedPoint = new Vector2();
+            Vector3 computedPoint = new Vector3(0);
 
             double computedX = Math.Abs(center.X / vertical * vector.X);
             if (vector.X >= 0)
@@ -479,7 +511,7 @@ namespace AnnotationTool.ViewModel
 
             return computedPoint;
         }
-        private Vector3 GetVectorFromPixel(Vector2 vector)
+        private Vector3 GetVectorFromPixel(Vector3 vector)
         {
             var image = new BitmapImage(new Uri(SelectedImage, UriKind.RelativeOrAbsolute));
             int imageWidth = image.PixelWidth;
@@ -521,7 +553,7 @@ namespace AnnotationTool.ViewModel
                     var asd = node.SelectNodes("//Points/Point");
                     foreach (XmlNode item in asd)
                     {
-                        if (item["X"].InnerText == line.FirstPoint.X.ToString() && item["Y"].InnerText == line.FirstPoint.Y.ToString())
+                        if (item["X"].InnerText == line.CenterPoint.X.ToString() && item["Y"].InnerText == line.CenterPoint.Y.ToString())
                         {
                             equal = true;
                             break;
@@ -572,7 +604,7 @@ namespace AnnotationTool.ViewModel
                 XmlElement pointsElement = document.CreateElement(string.Empty, "Points", string.Empty);
                 lineElement.AppendChild(pointsElement);
 
-                Vector2Collection points = new Vector2Collection() { line.FirstPoint, line.SelectedPoint, line.MirroredPoint };
+                Vector3Collection points = new Vector3Collection() { line.CenterPoint, line.FirstPoint, line.MirroredPoint };
 
                 foreach (var point in points)
                 {
@@ -613,18 +645,15 @@ namespace AnnotationTool.ViewModel
 
                 foreach (XmlNode line in lines)
                 {
-                    var firstPointX = Convert.ToInt32(line.ChildNodes[0].ChildNodes[0].FirstChild.InnerText);
-                    var firstPointY = Convert.ToInt32(line.ChildNodes[0].ChildNodes[0].LastChild.InnerText);
+                    var centerPointX = Convert.ToInt32(line.ChildNodes[0].ChildNodes[0].FirstChild.InnerText);
+                    var centerPointY = Convert.ToInt32(line.ChildNodes[0].ChildNodes[0].LastChild.InnerText);
 
-                    var selectedPointX = Convert.ToInt32(line.ChildNodes[0].ChildNodes[1].FirstChild.InnerText);
-                    var selectedPointY = Convert.ToInt32(line.ChildNodes[0].ChildNodes[1].LastChild.InnerText);
-
-                    var mirroredPointX = Convert.ToInt32(line.ChildNodes[0].ChildNodes[2].FirstChild.InnerText);
-                    var mirroredPointY = Convert.ToInt32(line.ChildNodes[0].ChildNodes[2].LastChild.InnerText);
+                    var firstPointX = Convert.ToInt32(line.ChildNodes[0].ChildNodes[1].FirstChild.InnerText);
+                    var firstPointY = Convert.ToInt32(line.ChildNodes[0].ChildNodes[1].LastChild.InnerText);
 
                     string type = line.ChildNodes[1].InnerText;
 
-                    lineList.Add(new _2DLine(new Vector2(firstPointX, firstPointY), new Vector2(selectedPointX, selectedPointY), new Vector2(mirroredPointX, mirroredPointY), (MarkingType)Enum.Parse(typeof(MarkingType), type)));
+                    lineList.Add(new _2DLine(new Vector3(centerPointX, centerPointY, 0), new Vector3(firstPointX, firstPointY, 0), (MarkingType)Enum.Parse(typeof(MarkingType), type)));
                 }
 
                 _2DLineList = lineList;

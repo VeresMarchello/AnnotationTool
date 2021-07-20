@@ -12,6 +12,7 @@ using System.Collections.ObjectModel;
 using AnnotationTool.Model;
 using System.Windows.Input;
 using System.Windows.Controls;
+using System.Deployment.Application;
 
 namespace AnnotationTool.ViewModel
 {

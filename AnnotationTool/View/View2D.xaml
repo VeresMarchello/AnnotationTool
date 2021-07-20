@@ -4,11 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:AnnotationTool.ViewModel"
+             xmlns:view="clr-namespace:AnnotationTool.View"
              xmlns:converters="clr-namespace:AnnotationTool.Converters"
              xmlns:hx="http://helix-toolkit.org/wpf/SharpDX"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:ie="http://schemas.microsoft.com/expression/2010/interactions"
+             xmlns:a="clr-namespace:AnnotationTool.Attach"
              mc:Ignorable="d" 
+             x:Name="view2d"
              d:DesignHeight="450" d:DesignWidth="800">
 
     <UserControl.DataContext>
@@ -29,8 +32,7 @@
             </Style.Triggers>
         </Style>
 
-
-        <Style x:Key="ButtonStyle" TargetType="{x:Type Button}">
+        <Style TargetType="{x:Type Button}">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -42,6 +44,20 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style TargetType="{x:Type view:ViewPort}">
+            <Setter Property="Camera" Value="{Binding ElementName=view2d, Path=DataContext.Camera}"/>
+            <Setter Property="Lines" Value="{Binding ElementName=view2d, Path=DataContext.Lines}"/>
+            <!--<Setter Property="Image" Value="{Binding SelectedImage}"/>-->
+            <!--<Setter Property="a:Attach.InputBindings">
+                <Setter.Value>
+                    <InputBindingCollection>
+                        <MouseBinding Command="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext.LeftClickCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Self}}" Gesture="LeftClick"/>
+                    </InputBindingCollection>
+                </Setter.Value>
+            </Setter>-->
+        </Style>
+        
     </UserControl.Resources>
 
     <UserControl.InputBindings>
@@ -49,7 +65,6 @@
         <KeyBinding Command="{Binding KeyCommand}" Key="D2" CommandParameter="{StaticResource Two}"/>
         <KeyBinding Command="{Binding KeyCommand}" Key="D3" CommandParameter="{StaticResource Three}"/>
         <KeyBinding Command="{Binding CTRLRCommand}" Key="R" Modifiers="Ctrl"/>
-        <KeyBinding Command="{Binding SwapImagesCommand}" Key="D0"/>
     </UserControl.InputBindings>
 
     <Grid Background="White">
@@ -60,93 +75,25 @@
 
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="3*"/>
+                <RowDefinition/>
+                <RowDefinition/>
             </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
 
-
-            <Expander Margin="0,0,0,5" FlowDirection="RightToLeft">
-                <Expander.Header>
-                    <TextBlock Text="Rear View"/>
-                </Expander.Header>
-                <Grid FlowDirection="LeftToRight" MaxHeight="{Binding ElementName=view, Path=ActualHeight, Converter={StaticResource HeightConverter}}">
-                    <Button Background="Transparent" BorderThickness="0" Command="{Binding SwapImagesCommand}">
-                        <Image x:Name="Image" Source="{Binding SelectedRearImage}" />
-                    </Button>
-                </Grid>
-            </Expander>
-
-            <hx:Viewport3DX
-                Grid.Row="1"
-                x:Name="view"
-                Camera="{Binding Camera, Mode=TwoWay}"
-                ShowViewCube="False"
-                ShowCameraInfo="False"
-                UseDefaultGestures="False"
-                IsRotationEnabled="False"
-                EffectsManager="{Binding EffectsManager}">
-
-                <hx:Viewport3DX.InputBindings>
-                    <MouseBinding Command="{Binding LeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="LeftClick"/>
-                    <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="RightClick"/>
-                    <MouseBinding Command="{Binding CTRLLeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+LeftClick"/>
-                    <MouseBinding Command="{Binding CTRLRigtClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+RightClick"/>
-                    <KeyBinding Command="{Binding ESCCommand}" Key="Esc"/>
-                </hx:Viewport3DX.InputBindings>
-
-                <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="MouseMove3D">
-                        <ie:CallMethodAction MethodName="MouseMove3DHandler" TargetObject="{Binding}"/>
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>
-
-                <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
-                <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />
-                <hx:MeshGeometryModel3D 
-                    x:Name="plane"
-                    Geometry="{Binding Plane}"
-                    Material="{Binding PlaneMaterial}"
-                    Transform="{Binding PlaneTransform}" >
-                </hx:MeshGeometryModel3D>
-                <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="White"/>
-                <hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="White"/>
-            </hx:Viewport3DX>
-
-            <StatusBar Grid.Row="1" VerticalAlignment="Bottom">
-                <StatusBar.Background>
-                    <SolidColorBrush Opacity="0.5" Color="WhiteSmoke" />
-                </StatusBar.Background>
-                <StatusBarItem>
-                    <TextBlock
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Text="{Binding ElementName=view, Path=FrameRate, StringFormat=FrameRate: \{0:0.00\} FPS}" />
-                </StatusBarItem>
-                <Separator />
-                <StatusBarItem>
-                    <TextBlock Text="{Binding Camera.Position, StringFormat=Position: \{0:0.0\}}" />
-                </StatusBarItem>
-                <Separator />
-                <StatusBarItem>
-                    <TextBlock Text="{Binding Camera.LookDirection, StringFormat=LookDirection: \{0:0.0\}}" />
-                </StatusBarItem>
-                <Separator />
-                <StatusBarItem>
-                    <TextBlock Text="{Binding SelectedImage, StringFormat=Image: {0}}" />
-                </StatusBarItem>
-                <Separator />
-                <StatusBarItem>
-                    <TextBlock Text="{Binding _2DLineList.Count, StringFormat=Number of Lines: {0}}" />
-                </StatusBarItem>
-            </StatusBar>
+            <view:ViewPort Grid.Column="0" Grid.Row="0" SelectedImage="{Binding ElementName=view2d, Path=DataContext.SelectedImage}"/>
+            <view:ViewPort Grid.Column="0" Grid.Row="1" SelectedImage="{Binding ElementName=view2d, Path=DataContext.SelectedImage}"/>
+            <view:ViewPort Grid.Column="1" Grid.Row="0" SelectedImage="{Binding ElementName=view2d, Path=DataContext.SelectedImage}"/>
+            <view:ViewPort Grid.Column="1" Grid.Row="1" SelectedImage="{Binding ElementName=view2d, Path=DataContext.SelectedImage}"/>
         </Grid>
 
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="1*" />
+                <RowDefinition Height="auto" />
                 <RowDefinition Height="auto"/>
-                <RowDefinition Height="1*"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="200"/>
             </Grid.RowDefinitions>
 
 
@@ -213,37 +160,6 @@
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
                 </ScrollViewer>
-            </Grid>
-
-            <Grid Grid.Row="3" Margin="10, 0, 10, 0">
-                <Grid.DataContext>
-                    <vm:ViewModel3D/>
-                </Grid.DataContext>
-                <hx:Viewport3DX Camera="{Binding Camera}" EffectsManager="{Binding EffectsManager}" UseDefaultGestures="False" ShowViewCube="False">
-                    <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
-                    <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />
-                    <hx:Element3DPresenter Content="{Binding GroupModel}"/>
-
-                    <hx:Viewport3DX.InputBindings>
-                        <MouseBinding Command="hx:ViewportCommands.Rotate" Gesture="RightClick" />
-                        <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="MiddleClick"/>
-                    </hx:Viewport3DX.InputBindings>
-                </hx:Viewport3DX>
-
-                <StatusBar VerticalAlignment="Bottom">
-                    <StatusBar.Background>
-                        <SolidColorBrush Opacity="0.5" Color="WhiteSmoke" />
-                    </StatusBar.Background>
-                    <StatusBarItem>
-                        <TextBlock
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Text="{Binding Path=SelectedTabIndex, StringFormat=Model: {0}.ply}" />
-                    </StatusBarItem>
-                    <StatusBarItem HorizontalAlignment="Right">
-                        <Button Content="Go to 3D" Cursor="Hand" Background="Transparent" Foreground="Green" Command="{Binding ChangeTabindexCommand}" CommandParameter="0"/>
-                    </StatusBarItem>
-                </StatusBar>
             </Grid>
 
         </Grid>

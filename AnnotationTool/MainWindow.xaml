@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         WindowState="Maximized"
         Title="Grapler Annotáló" Height="450" Width="800">
-    
+
     <Window.DataContext>
         <vm:ViewModelBase/>
     </Window.DataContext>
@@ -18,15 +18,15 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        
-        
-        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}">
+
+
+        <!--<TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}">
             <TabItem Header="3D">
                 <view:View3D/>
             </TabItem>
-            <TabItem Header="2D">
-                <view:View2D/>
-            </TabItem>
-        </TabControl>
+            <TabItem Header="2D">-->
+        <view:View2D/>
+        <!--</TabItem>
+        </TabControl>-->
     </Grid>
 </Window>

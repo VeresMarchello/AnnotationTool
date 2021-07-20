@@ -9,7 +9,7 @@ namespace AnnotationTool.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var height = (double)value;
-            return height/3;
+            return height/2;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

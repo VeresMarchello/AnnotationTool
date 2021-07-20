@@ -10,6 +10,7 @@ using System;
 using AnnotationTool.Commands;
 using System.Linq;
 using System.Collections.Generic;
+using System.IO;
 
 namespace AnnotationTool.ViewModel
 {
@@ -22,17 +23,17 @@ namespace AnnotationTool.ViewModel
 
         public ViewModelBase()
         {
-            EffectsManager = new DefaultEffectsManager();
-            ResetCamera();
-
-            DirectionalLightDirection = new Media3D.Vector3D(-0, -0, -10);
-            DirectionalLightColor = Media.Colors.White;
-            AmbientLightColor = Media.Colors.Black;
+            _camera = new PerspectiveCamera
+            {
+                Position = new Media3D.Point3D(0, 0, 10),
+                LookDirection = new Media3D.Vector3D(0, 0, -10),
+                UpDirection = new Media3D.Vector3D(0, 1, 0),
+                NearPlaneDistance = 0,
+                FarPlaneDistance = 1500,
+            };
 
             _markingType = MarkingType.GeneralPruning;
             MarkingTypes = Enum.GetValues(typeof(MarkingType)).Cast<MarkingType>();
-
-            _selectedTabIndex = 1;
 
             var material = PhongMaterials.Red;
             material.DiffuseColor = GetColor(MarkingType.GeneralPruning).ToColor4();
@@ -43,6 +44,8 @@ namespace AnnotationTool.ViewModel
             KeyCommand = new RelayCommand<object>(SetMarkingType);
             ChangeTabindexCommand = new RelayCommand<object>(ChangeTabIndex);
         }
+
+        public string AppPath { get; set; } = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName;
 
 
         private int _selectedTabIndex;
@@ -66,12 +69,7 @@ namespace AnnotationTool.ViewModel
                 NotifyPropertyChanged();
             }
         }
-        public EffectsManager EffectsManager { get; private set; }
-
-        public Media3D.Vector3D DirectionalLightDirection { get; private set; }
-        public Media.Color DirectionalLightColor { get; private set; }
-        public Media.Color AmbientLightColor { get; private set; }
-
+        
         public PhongMaterial LineMaterial { get; protected set; }
 
         public MarkingType MarkingType

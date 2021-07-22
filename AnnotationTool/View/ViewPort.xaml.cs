@@ -51,8 +51,8 @@ namespace AnnotationTool.View
 
             LeftClickCommand = new RelayCommand<object>(AddLine);
             CTRLLeftClickCommand = new RelayCommand<object>(SelectLine);
-            //CTRLRigtClickCommand = new RelayCommand<object>(DeleteLine);
-            //ESCCommand = new RelayCommand<object>(CancelLine);
+            CTRLRigtClickCommand = new RelayCommand<object>(DeleteLine);
+            ESCCommand = new RelayCommand<object>(CancelLine);
         }
 
         public EffectsManager EffectsManager { get; private set; }
@@ -132,19 +132,6 @@ namespace AnnotationTool.View
             }
         }
 
-        //private LineGeometry3D _lines;
-
-        //public LineGeometry3D Lines
-        //{
-        //    get { return _lines; }
-        //    set 
-        //    { 
-        //        _lines = value;
-        //        NotifyPropertyChanged();
-        //    }
-        //}
-
-
         private string _selectedPrunedImage;
 
         public string SelectedPrunedImage
@@ -162,7 +149,8 @@ namespace AnnotationTool.View
 
         public ICommand LeftClickCommand { get; set; }
         public ICommand CTRLLeftClickCommand { get; set; }
-
+        public ICommand CTRLRigtClickCommand { get; set; }
+        public ICommand ESCCommand { get; set; }
         private void SetImage(BitmapSource image)
         {
             var ratio = image.PixelWidth / (double)image.PixelHeight;
@@ -311,6 +299,7 @@ namespace AnnotationTool.View
                 Colors = new Color4Collection()
             };
         }
+        
         private void AddLine(object parameter)
         {
             var vector = GetVector(parameter);
@@ -370,10 +359,53 @@ namespace AnnotationTool.View
 
             if (index > -1)
             {
-                var target = new Vector3((lines[index].P0.X + lines[index].P1.X)/2, (lines[index].P0.Y + lines[index].P1.Y) / 2, 0);
+                var target = new Vector3((lines[index].P0.X + lines[index].P1.X) / 2, (lines[index].P0.Y + lines[index].P1.Y) / 2, 0);
                 SetCameraTarget(target);
             }
         }
+        private void CancelLine(object parameter)
+        {
+            if (!IsFirstPoint)
+            {
+                IsFirstPoint = true;
+                ResetNewLine();
+            }
+        }
+
+        private void DeleteLine(object parameter)
+        {
+            var vector = GetVector(parameter);
+            if (vector == new Vector3(1000))
+            {
+                return;
+            }
+
+            var nearest = GetNearestLine(vector);
+            var remainingPositions = Lines.Positions;
+            var index = remainingPositions.IndexOf(nearest.P0);
+
+            if (index > -1)
+            {
+                var remainingIndices = Lines.Indices;
+                var remainingColors = Lines.Colors;
+
+                //DeleteLineFromXML(_2DLineList[index / 2]);
+
+                remainingPositions.RemoveRange(index, 2);
+                remainingIndices.RemoveRange(remainingIndices.Count - 2, 2);
+                remainingColors.RemoveRange(index, 2);
+
+                //_2DLineList = _2DLineList.Where((v, i) => i != index / 2).ToList();
+
+                Lines = new LineGeometry3D()
+                {
+                    Positions = remainingPositions,
+                    Indices = remainingIndices,
+                    Colors = remainingColors
+                };
+            }
+        }
+
         private MeshGeometry3D.Line GetNearestLine(Vector3 vector)
         {
             Dictionary<MeshGeometry3D.Line, float> lineDistancePairs = new Dictionary<MeshGeometry3D.Line, float>();
@@ -469,10 +501,12 @@ namespace AnnotationTool.View
         }
 
         public static readonly DependencyProperty CameraProperty =
-            DependencyProperty.Register("Camera", typeof(Camera), typeof(ViewPort));
+            DependencyProperty.Register("Camera", typeof(Camera), typeof(ViewPort), 
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
         public static readonly DependencyProperty SelectedUnprunedImageProperty =
-            DependencyProperty.Register("SelectedUnprunedImage", typeof(string), typeof(ViewPort), new PropertyMetadata(SelectedUnprunedImagePropertyChanged));
+            DependencyProperty.Register("SelectedUnprunedImage", typeof(string), typeof(ViewPort), 
+                new PropertyMetadata(SelectedUnprunedImagePropertyChanged));
 
         public static readonly DependencyProperty LinesProperty =
             DependencyProperty.Register("Lines", typeof(LineGeometry3D), typeof(ViewPort));

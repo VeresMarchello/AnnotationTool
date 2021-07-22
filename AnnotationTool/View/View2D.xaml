@@ -9,7 +9,6 @@
              xmlns:hx="http://helix-toolkit.org/wpf/SharpDX"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:ie="http://schemas.microsoft.com/expression/2010/interactions"
-             xmlns:a="clr-namespace:AnnotationTool.Attach"
              mc:Ignorable="d" 
              x:Name="view2d"
              d:DesignHeight="450" d:DesignWidth="800">
@@ -45,18 +44,9 @@
             </Setter>
         </Style>
 
-        <Style TargetType="{x:Type view:ViewPort}">
+        <!--<Style TargetType="{x:Type view:ViewPort}">
             <Setter Property="Camera" Value="{Binding ElementName=view2d, Path=DataContext.Camera}"/>
-            <Setter Property="Lines" Value="{Binding ElementName=view2d, Path=DataContext.Lines}"/>
-            <!--<Setter Property="Image" Value="{Binding SelectedImage}"/>-->
-            <!--<Setter Property="a:Attach.InputBindings">
-                <Setter.Value>
-                    <InputBindingCollection>
-                        <MouseBinding Command="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext.LeftClickCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Self}}" Gesture="LeftClick"/>
-                    </InputBindingCollection>
-                </Setter.Value>
-            </Setter>-->
-        </Style>
+        </Style>-->
         
     </UserControl.Resources>
 
@@ -78,15 +68,9 @@
                 <RowDefinition/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
 
-            <view:ViewPort Grid.Column="0" Grid.Row="0" SelectedImage="{Binding ElementName=view2d, Path=DataContext.SelectedImage}"/>
-            <view:ViewPort Grid.Column="0" Grid.Row="1" SelectedImage="{Binding ElementName=view2d, Path=DataContext.SelectedImage}"/>
-            <view:ViewPort Grid.Column="1" Grid.Row="0" SelectedImage="{Binding ElementName=view2d, Path=DataContext.SelectedImage}"/>
-            <view:ViewPort Grid.Column="1" Grid.Row="1" SelectedImage="{Binding ElementName=view2d, Path=DataContext.SelectedImage}"/>
+            <view:ViewPort Grid.Row="0" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedLeftImage}"/>
+            <view:ViewPort Grid.Row="1" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedRightImage}"/>
         </Grid>
 
         <Grid Grid.Column="1">

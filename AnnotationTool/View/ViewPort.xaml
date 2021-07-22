@@ -10,34 +10,55 @@
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
 
-    <hx:Viewport3DX
-        Camera="{Binding Camera}"
-        ShowViewCube="False"
-        ShowCameraInfo="False"
-        UseDefaultGestures="False"
-        IsRotationEnabled="False"
-        EffectsManager="{Binding EffectsManager}">
-        <!--IsInertiaEnabled="False"-->
+    <UserControl.Resources>
+        <Style x:Key="ViewPortStyle" TargetType="{x:Type hx:Viewport3DX}">
+            <Setter Property="ShowViewCube" Value="False"/>
+            <Setter Property="ShowCameraInfo" Value="False"/>
+            <Setter Property="IsRotationEnabled" Value="False"/>
+            <Setter Property="UseDefaultGestures" Value="False"/>
+        </Style>
 
-        <hx:Viewport3DX.InputBindings>
-            <!--<MouseBinding Command="{Binding LeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="LeftClick"/>-->
-            <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="RightClick"/>
-            <!--<MouseBinding Command="{Binding CTRLLeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+LeftClick"/>-->
-            <!--<MouseBinding Command="{Binding CTRLRigtClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+RightClick"/>-->
-            <!--<KeyBinding Command="{Binding ESCCommand}" Key="Esc"/>-->
-        </hx:Viewport3DX.InputBindings>
+    </UserControl.Resources>
 
-        <!--<i:Interaction.Triggers>
-            <i:EventTrigger EventName="MouseMove3D">
-                <ie:CallMethodAction MethodName="MouseMove3DHandler" TargetObject="{Binding}"/>
-            </i:EventTrigger>
-        </i:Interaction.Triggers>-->
 
-        <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
-        <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />
-        <hx:MeshGeometryModel3D Geometry="{Binding Plane}" Material="{Binding PlaneMaterial}" Transform="{Binding PlaneTransform}" />
-        <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="White"/>
-        <!--<hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="White"/>-->
-    </hx:Viewport3DX>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Label Grid.Column="2" Content="{Binding Lines.Positions.Count}"/>
+        <hx:Viewport3DX Grid.Column="0" Camera="{Binding Camera}" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
+            <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
+            <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />
+            <hx:MeshGeometryModel3D Geometry="{Binding Plane}" Material="{Binding PrunedPlaneMaterial}" Transform="{Binding PlaneTransform}" />
+            <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="Transparent"/>
+            <hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="Transparent"/>
+        </hx:Viewport3DX>
+
+        <hx:Viewport3DX x:Name="viewport" Grid.Column="1" Camera="{Binding Camera}" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
+            <hx:Viewport3DX.InputBindings>
+                <MouseBinding Command="{Binding LeftClickCommand}" CommandParameter="{Binding ElementName=viewport}" Gesture="LeftClick"/>
+                <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="RightClick"/>
+                <!--<MouseBinding Command="{Binding CTRLLeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+LeftClick"/>-->
+                <!--<MouseBinding Command="{Binding CTRLRigtClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+RightClick"/>-->
+                <!--<KeyBinding Command="{Binding ESCCommand}" Key="Esc"/>-->
+            </hx:Viewport3DX.InputBindings>
+
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="MouseMove3D">
+                    <ie:CallMethodAction MethodName="MouseMove3DHandler" TargetObject="{Binding}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+
+            <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
+            <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />
+            <hx:MeshGeometryModel3D Geometry="{Binding Plane}" Material="{Binding UnprunedPlaneMaterial}" Transform="{Binding PlaneTransform}" />
+            <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="White"/>
+            <hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="White"/>
+        </hx:Viewport3DX>
+
+    </Grid>
 
 </UserControl>

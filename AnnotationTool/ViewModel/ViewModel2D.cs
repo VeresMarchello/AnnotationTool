@@ -16,54 +16,70 @@ namespace AnnotationTool.ViewModel
 {
     class ViewModel2D : ViewModelBase
     {
-        private string _selectedImage;
+        private string _selectedLeftImage;
+        private string _selectedRightImage;
         private string[] _images;
 
         private _2DLine _selected2dLine;
         private List<_2DLine> _2dLineList;
-        //private LineGeometry3D _newLine;
-        private LineGeometry3D _lines;
+        private LineGeometry3D _leftLines;
 
-        public LineGeometry3D Lines
+        public LineGeometry3D LeftLines
         {
-            get { return _lines; }
+            get { return _leftLines; }
             set
             {
-                _lines = value;
+                _leftLines = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private LineGeometry3D _rightLines;
+
+        public LineGeometry3D RightLines
+        {
+            get { return _rightLines; }
+            set 
+            { 
+                _rightLines = value;
                 NotifyPropertyChanged();
             }
         }
 
 
+
         public ViewModel2D()
         {
-            //ResetLines();
-            //ResetNewLine();
-
             _2dLineList = new List<_2DLine>();
-
-            IsFirstPoint = true;
 
             _images = GetFolderFiles();
 
             ChangeSelectedImage(Images[0]);
 
             SelectImageCommand = new RelayCommand<object>(ChangeSelectedImage);
-            //LeftClickCommand = new RelayCommand<object>(AddLine);
-            //CTRLLeftClickCommand = new RelayCommand<object>(SelectLine);
-            //CTRLRigtClickCommand = new RelayCommand<object>(DeleteLine);
-            //ESCCommand = new RelayCommand<object>(CancelLine);
         }
 
-        public string SelectedImage
+        public string SelectedLeftImage
         {
-            get { return _selectedImage; }
+            get { return _selectedLeftImage; }
             set
             {
-                _selectedImage = value;
+                _selectedLeftImage = value;
+                NotifyPropertyChanged();
+
+                SelectedRightImage = value.Replace("Left", "Right");
+            }
+        }
+        public string SelectedRightImage
+        {
+            get { return _selectedRightImage; }
+            set
+            {
+                _selectedRightImage = value;
                 NotifyPropertyChanged();
             }
         }
+
         public string[] Images
         {
             get { return _images; }
@@ -100,11 +116,7 @@ namespace AnnotationTool.ViewModel
         }
 
 
-        public Vector3 FirstPoint { get; set; }
-        public bool IsFirstPoint { get; set; }
-
         public ICommand SelectImageCommand { get; private set; }
-
 
         //private void SelectLine(object parameter)
         //{
@@ -231,22 +243,14 @@ namespace AnnotationTool.ViewModel
 
         private void ChangeSelectedImage(object newPath)
         {
-            if (SelectedImage == (string)newPath)
+            if (SelectedLeftImage == (string)newPath)
             {
                 return;
             }
 
-            SelectedImage = (string)newPath;
-
-            //var image = new BitmapImage(new Uri(SelectedImage, UriKind.RelativeOrAbsolute));
-            //SetImage(image);
-
-            LoadLinesFromXML(SelectedImage);
-
-            //ResetCamera();
-
-            IsFirstPoint = true;
-            //ResetNewLine();
+            SelectedLeftImage = (string)newPath;
+            LoadLinesFromXML(SelectedLeftImage);
+            ResetCamera();
         }
         
         private string[] GetFolderFiles()
@@ -259,46 +263,14 @@ namespace AnnotationTool.ViewModel
             //    if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
             //    {
             //        files = Directory.GetFiles(fbd.SelectedPath);
-            files = Directory.GetFiles(@"D:\Fork\AnnotationTool\AnnotationTool\Images\Left", "*.JPG");
+            files = Directory.GetFiles(@"D:\Fork\AnnotationTool\AnnotationTool\Images\Left\Unpruned", "*.JPG");
             //    }
             //}
 
             return files;
         }
 
-        //public void MouseMove3DHandler(object sender, MouseMove3DEventArgs e)
-        //{
-        //    if (IsFirstPoint)
-        //    {
-        //        return;
-        //    }
-
-        //    var vector = GetVector(sender);
-
-        //    if (vector == new Vector3(1000))
-        //    {
-        //        return;
-        //    }
-        //    vector.Z = 0;
-
-        //    var newLine = new _2DLine(GetPixelFromVector(FirstPoint), GetPixelFromVector(vector), MarkingType);
-
-        //    if (IsNewLineValid(newLine))
-        //    {
-        //        var lineBuilder = new LineBuilder();
-        //        lineBuilder.AddLine(GetVectorFromPixel(newLine.MirroredPoint), GetVectorFromPixel(newLine.FirstPoint));
-        //        lineBuilder.AddCircle(GetVectorFromPixel(newLine.CenterPoint), new Vector3(0, 0, 1), 0.04f, 360);
-        //        var lineGeometry = lineBuilder.ToLineGeometry3D();
-        //        lineGeometry.Colors = new Color4Collection();
-
-        //        for (int i = 0; i < lineGeometry.Positions.Count; i++)
-        //        {
-        //            lineGeometry.Colors.Add(GetColor(MarkingType).ToColor4());
-        //        }
-
-        //        NewLine = lineGeometry;
-        //    }
-        //}
+        
         public void SelectionChangedHandler(object sender, SelectionChangedEventArgs e)
         {
             if (e != null && e.AddedItems != null && e.AddedItems.Count >= 1 && e.AddedItems[0] is _2DLine)
@@ -307,7 +279,7 @@ namespace AnnotationTool.ViewModel
 
         private void ResetLines()
         {
-            Lines = new LineGeometry3D()
+            LeftLines = new LineGeometry3D()
             {
                 Positions = new Vector3Collection(),
                 Indices = new IntCollection(),
@@ -316,59 +288,12 @@ namespace AnnotationTool.ViewModel
 
             _2DLineList = new List<_2DLine>();
         }
-        //private void ResetNewLine()
-        //{
-        //    NewLine = new LineGeometry3D()
-        //    {
-        //        Positions = new Vector3Collection(),
-        //        Indices = new IntCollection(),
-        //        Colors = new Color4Collection()
-        //    };
-        //}
 
-        private bool LineIntersect(Vector3 p01, Vector3 p11, Vector3 p02, Vector3 p12)
-        {
-            var dx = p11.X - p01.X;
-            var dy = p11.Y - p01.Y;
-            var da = p12.X - p02.X;
-            var db = p12.Y - p02.Y;
-
-            if (da * dy - db * dx == 0)
-            {
-                // The segments are parallel.
-                return false;
-            }
-
-            var s = (dx * (p02.Y - p01.Y) + dy * (p01.X - p02.X)) / (da * dy - db * dx);
-            var t = (da * (p01.Y - p02.Y) + db * (p02.X - p01.X)) / (db * dx - da * dy);
-
-            if ((s >= 0) & (s <= 1) & (t >= 0) & (t <= 1))
-                return true;
-            else
-                return false;
-        }
-        //private bool IsNewLineValid(_2DLine line)
-        //{
-        //    bool newLineIsValid = true;
-
-        //    var mirroredPoint = GetVectorFromPixel(line.MirroredPoint);
-        //    var selectedPoint = GetVectorFromPixel(line.FirstPoint);
-        //    for (int i = 0; i < Lines.Positions.Count - 1; i += 2)
-        //    {
-        //        newLineIsValid = !LineIntersect(mirroredPoint, selectedPoint, Lines.Positions[i], Lines.Positions[i + 1]);
-
-        //        if (!newLineIsValid)
-        //        {
-        //            break;
-        //        }
-        //    }
-
-        //    return newLineIsValid;
-        //}
+        
 
         private Vector3 GetPixelFromVector(Vector3 vector)
         {
-            var image = new BitmapImage(new Uri(SelectedImage, UriKind.RelativeOrAbsolute));
+            var image = new BitmapImage(new Uri(SelectedLeftImage, UriKind.RelativeOrAbsolute));
             int imageWidth = image.PixelWidth;
             int imageHeight = image.PixelHeight;
 
@@ -393,7 +318,7 @@ namespace AnnotationTool.ViewModel
         }
         private Vector3 GetVectorFromPixel(Vector3 vector)
         {
-            var image = new BitmapImage(new Uri(SelectedImage, UriKind.RelativeOrAbsolute));
+            var image = new BitmapImage(new Uri(SelectedLeftImage, UriKind.RelativeOrAbsolute));
             int imageWidth = image.PixelWidth;
             int imageHeight = image.PixelHeight;
 
@@ -423,7 +348,7 @@ namespace AnnotationTool.ViewModel
             XmlDocument document = new XmlDocument();
             try
             {
-                document.Load(SelectedImage.Replace("JPG", "xml"));
+                document.Load(SelectedLeftImage.Replace("JPG", "xml"));
 
                 bool equal = false;
                 var nodelist = document.SelectNodes("/Lines/Line[Type = '" + line.Type + "']");
@@ -443,7 +368,7 @@ namespace AnnotationTool.ViewModel
                     if (equal)
                     {
                         node.ParentNode.RemoveChild(node);
-                        document.Save(SelectedImage.Replace("JPG", "xml"));
+                        document.Save(SelectedLeftImage.Replace("JPG", "xml"));
                         break;
                     }
                 }
@@ -461,7 +386,7 @@ namespace AnnotationTool.ViewModel
 
             try
             {
-                document.Load(SelectedImage.Replace("JPG", "xml"));
+                document.Load(SelectedLeftImage.Replace("JPG", "xml"));
                 linesElement = document.GetElementsByTagName("Lines")[0] as XmlElement;
                 _2DLines = new List<_2DLine>() { newLine };
             }
@@ -509,7 +434,7 @@ namespace AnnotationTool.ViewModel
                 typeElement.AppendChild(typeText);
             }
 
-            document.Save(SelectedImage.Replace("JPG", "xml"));
+            document.Save(SelectedLeftImage.Replace("JPG", "xml"));
         }
         private void LoadLinesFromXML(string fullFileName)
         {
@@ -559,7 +484,7 @@ namespace AnnotationTool.ViewModel
                     lineGeometry.Colors.Add(GetColor(line.Type).ToColor4());
                 }
 
-                Lines = lineGeometry;
+                LeftLines = lineGeometry;
             }
             catch (Exception)
             {

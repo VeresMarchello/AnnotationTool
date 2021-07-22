@@ -25,10 +25,8 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition/>
-            <ColumnDefinition Width="auto"/>
         </Grid.ColumnDefinitions>
 
-        <Label Grid.Column="2" Content="{Binding Lines.Positions.Count}"/>
         <hx:Viewport3DX Grid.Column="0" Camera="{Binding Camera}" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
             <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
             <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />
@@ -41,7 +39,7 @@
             <hx:Viewport3DX.InputBindings>
                 <MouseBinding Command="{Binding LeftClickCommand}" CommandParameter="{Binding ElementName=viewport}" Gesture="LeftClick"/>
                 <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="RightClick"/>
-                <!--<MouseBinding Command="{Binding CTRLLeftClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+LeftClick"/>-->
+                <MouseBinding Command="{Binding CTRLLeftClickCommand}" CommandParameter="{Binding ElementName=viewport}" Gesture="CTRL+LeftClick"/>
                 <!--<MouseBinding Command="{Binding CTRLRigtClickCommand}" CommandParameter="{Binding ElementName=view}" Gesture="CTRL+RightClick"/>-->
                 <!--<KeyBinding Command="{Binding ESCCommand}" Key="Esc"/>-->
             </hx:Viewport3DX.InputBindings>

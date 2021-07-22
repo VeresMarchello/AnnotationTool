@@ -17,6 +17,7 @@ using System.IO;
 using System;
 using AnnotationTool.Commands;
 using AnnotationTool.ViewModel;
+using System.Linq;
 
 namespace AnnotationTool.View
 {
@@ -30,16 +31,10 @@ namespace AnnotationTool.View
         private PhongMaterial _prunedPlaneMaterial;
         private Transform3D _planeTransform;
 
-        //private LineGeometry3D _lines;
-        //private _2DLine _selected2dLine;
-        //private LineGeometry3D _newLine;
-
-
         public ViewPort()
         {
             InitializeComponent();
             DataContext = this;
-
             var box = new MeshBuilder();
             box.AddBox(new Vector3(0, 0, 0), 10, 10, 0, BoxFaces.PositiveZ);
             _plane = box.ToMeshGeometry3D();
@@ -52,12 +47,10 @@ namespace AnnotationTool.View
             DirectionalLightColor = Colors.White;
             AmbientLightColor = Colors.Black;
 
-            //ResetLines();
             ResetNewLine();
 
             LeftClickCommand = new RelayCommand<object>(AddLine);
-            //LeftClickCommand = new RelayCommand<object>(AddLine);
-            //CTRLLeftClickCommand = new RelayCommand<object>(SelectLine);
+            CTRLLeftClickCommand = new RelayCommand<object>(SelectLine);
             //CTRLRigtClickCommand = new RelayCommand<object>(DeleteLine);
             //ESCCommand = new RelayCommand<object>(CancelLine);
         }
@@ -168,6 +161,7 @@ namespace AnnotationTool.View
         public bool IsFirstPoint { get; set; }
 
         public ICommand LeftClickCommand { get; set; }
+        public ICommand CTRLLeftClickCommand { get; set; }
 
         private void SetImage(BitmapSource image)
         {
@@ -328,7 +322,7 @@ namespace AnnotationTool.View
             if (IsFirstPoint)
             {
                 FirstPoint = vector;
-                //SetCameraTarget(vector);
+                SetCameraTarget(vector);
             }
             else
             {
@@ -362,6 +356,60 @@ namespace AnnotationTool.View
             }
 
             IsFirstPoint = !IsFirstPoint;
+        }
+        private void SelectLine(object parameter)
+        {
+            var vector = GetVector(parameter);
+            if (vector == new Vector3(1000))
+            {
+                return;
+            }
+
+            var lines = Lines.Lines.ToList();
+            var index = lines.IndexOf(GetNearestLine(vector));
+
+            if (index > -1)
+            {
+                var target = new Vector3((lines[index].P0.X + lines[index].P1.X)/2, (lines[index].P0.Y + lines[index].P1.Y) / 2, 0);
+                SetCameraTarget(target);
+            }
+        }
+        private MeshGeometry3D.Line GetNearestLine(Vector3 vector)
+        {
+            Dictionary<MeshGeometry3D.Line, float> lineDistancePairs = new Dictionary<MeshGeometry3D.Line, float>();
+            foreach (var line in Lines.Lines)
+            {
+                var dxc = vector.X - line.P0.X;
+                var dyc = vector.Y - line.P0.Y;
+                var dxl = line.P1.X - line.P0.X;
+                var dyl = line.P1.Y - line.P0.Y;
+                var cross = dxc * dyl - dyc * dxl;
+
+                lineDistancePairs.Add(line, Math.Abs(cross));
+            }
+
+            if (lineDistancePairs.Count < 1)
+            {
+                return new MeshGeometry3D.Line();
+            }
+
+            return lineDistancePairs.OrderBy(x => x.Value).First().Key;
+        }
+
+        protected void SetCameraTarget(Vector3 target, double offset = 0)
+        {
+            if (offset == 0)
+            {
+                Camera.Position = new Point3D(target.X, target.Y, Camera.Position.Z);
+                Camera.LookDirection = new Vector3D(0, 0, -Camera.Position.Z);
+            }
+            else
+            {
+                Camera.Position = new Point3D(target.X + offset, target.Y + offset, target.Z + offset);
+                Camera.LookDirection = new Vector3D(-offset, -offset, -offset);
+            }
+
+            Camera = Camera;
         }
 
         public void MouseMove3DHandler(object sender, MouseMove3DEventArgs e)

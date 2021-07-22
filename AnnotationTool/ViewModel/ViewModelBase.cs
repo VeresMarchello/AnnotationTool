@@ -84,7 +84,6 @@ namespace AnnotationTool.ViewModel
         public IEnumerable<MarkingType> MarkingTypes { get; set; }
 
         public ICommand LeftClickCommand { get; set; }
-        public ICommand CTRLLeftClickCommand { get; set; }
         public ICommand CTRLRigtClickCommand { get; set; }
         public ICommand SelectTypeCommand { get; set; }
         public ICommand ESCCommand { get; set; }

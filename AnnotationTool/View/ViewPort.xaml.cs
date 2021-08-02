@@ -30,6 +30,8 @@ namespace AnnotationTool.View
         private PhongMaterial _unprunedPlaneMaterial;
         private PhongMaterial _prunedPlaneMaterial;
         private Transform3D _planeTransform;
+        private LineGeometry3D _newLine;
+        private string _selectedPrunedImage;
 
         public ViewPort()
         {
@@ -103,25 +105,6 @@ namespace AnnotationTool.View
                 NotifyPropertyChanged();
             }
         }
-
-        private LineGeometry3D _newLine;
-
-        //private _2DLine _selected2dLine;
-        //public _2DLine Selected2dLine
-        //{
-        //    get { return _selected2dLine; }
-        //    set
-        //    {
-        //        _selected2dLine = value;
-        //        NotifyPropertyChanged();
-
-        //        if (value != null)
-        //        {
-        //            var target = GetVectorFromPixel(value.CenterPoint);
-        //            SetCameraTarget(target);
-        //        }
-        //    }
-        //}
         public LineGeometry3D NewLine
         {
             get { return _newLine; }
@@ -131,9 +114,6 @@ namespace AnnotationTool.View
                 NotifyPropertyChanged();
             }
         }
-
-        private string _selectedPrunedImage;
-
         public string SelectedPrunedImage
         {
             get { return _selectedPrunedImage; }
@@ -151,7 +131,9 @@ namespace AnnotationTool.View
         public ICommand CTRLLeftClickCommand { get; set; }
         public ICommand CTRLRigtClickCommand { get; set; }
         public ICommand ESCCommand { get; set; }
-        private void SetImage(BitmapSource image)
+
+
+        private void SetPlane(BitmapSource image)
         {
             var ratio = image.PixelWidth / (double)image.PixelHeight;
             var transform = Transform3D.Identity;
@@ -170,8 +152,21 @@ namespace AnnotationTool.View
 
             UnprunedPlaneMaterial = material;
         }
+        private void SetCameraTarget(Vector3 target, double offset = 0)
+        {
+            if (offset == 0)
+            {
+                Camera.Position = new Point3D(target.X, target.Y, Camera.Position.Z);
+                Camera.LookDirection = new Vector3D(0, 0, -Camera.Position.Z);
+            }
+            else
+            {
+                Camera.Position = new Point3D(target.X + offset, target.Y + offset, target.Z + offset);
+                Camera.LookDirection = new Vector3D(-offset, -offset, -offset);
+            }
 
-
+            Camera = Camera;
+        }
         public Vector3 GetVector(object parameter)
         {
             var viewPort = (Viewport3DX)parameter;
@@ -188,56 +183,42 @@ namespace AnnotationTool.View
 
             return new Vector3(1000);
         }
-        private Vector3 GetPixelFromVector(Vector3 vector)
+        private MeshGeometry3D.Line GetNearestLine(Vector3 vector)
         {
-            var image = new BitmapImage(new Uri(SelectedUnprunedImage, UriKind.RelativeOrAbsolute));
-            int imageWidth = image.PixelWidth;
-            int imageHeight = image.PixelHeight;
+            Dictionary<MeshGeometry3D.Line, float> lineDistancePairs = new Dictionary<MeshGeometry3D.Line, float>();
+            foreach (var line in Lines.Lines)
+            {
+                var dxc = vector.X - line.P0.X;
+                var dyc = vector.Y - line.P0.Y;
+                var dxl = line.P1.X - line.P0.X;
+                var dyl = line.P1.Y - line.P0.Y;
+                var cross = dxc * dyl - dyc * dxl;
 
-            double vertical = 5.0;
-            double horizontal = imageWidth / (imageHeight / vertical);
-            Vector2 center = new Vector2(imageWidth / 2, imageHeight / 2);
-            Vector3 computedPoint = new Vector3(0);
+                lineDistancePairs.Add(line, Math.Abs(cross));
+            }
 
-            double computedX = Math.Abs(center.X / vertical * vector.X);
-            if (vector.X >= 0)
-                computedPoint.X = Convert.ToInt32(center.X + computedX);
-            else
-                computedPoint.X = Convert.ToInt32(center.X - computedX);
+            if (lineDistancePairs.Count < 1)
+            {
+                return new MeshGeometry3D.Line();
+            }
 
-            double computedY = Math.Abs(center.Y / horizontal * vector.Y);
-            if (vector.Y >= 0)
-                computedPoint.Y = Convert.ToInt32(center.Y - computedY);
-            else
-                computedPoint.Y = Convert.ToInt32(center.Y + computedY);
-
-            return computedPoint;
+            return lineDistancePairs.OrderBy(x => x.Value).First().Key;
         }
-        private Vector3 GetVectorFromPixel(Vector3 vector)
+        private bool IsNewLineValid(Vector3 p0, Vector3 p1)
         {
-            var image = new BitmapImage(new Uri(SelectedUnprunedImage, UriKind.RelativeOrAbsolute));
-            int imageWidth = image.PixelWidth;
-            int imageHeight = image.PixelHeight;
+            bool newLineIsValid = true;
 
-            double vertical = 5.0;
-            double horizontal = imageWidth / (imageHeight / vertical);
-            Vector2 center = new Vector2(imageWidth / 2, imageHeight / 2);
-            double computedX = Math.Abs(vector.X - center.X);
-            double computedY = Math.Abs(vector.Y - center.Y);
+            for (int i = 0; i < Lines.Positions.Count - 1; i += 2)
+            {
+                newLineIsValid = !LineIntersect(p0, p1, Lines.Positions[i], Lines.Positions[i + 1]);
 
-            double computedPointX;
-            if (vector.X >= center.X)
-                computedPointX = computedX / (center.X / vertical);
-            else
-                computedPointX = -computedX / (center.X / vertical);
+                if (!newLineIsValid)
+                {
+                    break;
+                }
+            }
 
-            double computedPointY;
-            if (vector.Y >= center.Y)
-                computedPointY = -computedY / (center.Y / horizontal);
-            else
-                computedPointY = computedY / (center.Y / horizontal);
-
-            return new Vector3((float)computedPointX, (float)computedPointY, 0);
+            return newLineIsValid;
         }
         private bool LineIntersect(Vector3 p01, Vector3 p11, Vector3 p02, Vector3 p12)
         {
@@ -248,7 +229,6 @@ namespace AnnotationTool.View
 
             if (da * dy - db * dx == 0)
             {
-                // The segments are parallel.
                 return false;
             }
 
@@ -260,45 +240,7 @@ namespace AnnotationTool.View
             else
                 return false;
         }
-        private bool IsNewLineValid(_2DLine line)
-        {
-            bool newLineIsValid = true;
 
-            var mirroredPoint = GetVectorFromPixel(line.MirroredPoint);
-            var selectedPoint = GetVectorFromPixel(line.FirstPoint);
-            for (int i = 0; i < Lines.Positions.Count - 1; i += 2)
-            {
-                newLineIsValid = !LineIntersect(mirroredPoint, selectedPoint, Lines.Positions[i], Lines.Positions[i + 1]);
-
-                if (!newLineIsValid)
-                {
-                    break;
-                }
-            }
-
-            return newLineIsValid;
-        }
-
-
-        private void ResetLines()
-        {
-            Lines = new LineGeometry3D()
-            {
-                Positions = new Vector3Collection(),
-                Indices = new IntCollection(),
-                Colors = new Color4Collection()
-            };
-        }
-
-        private void ResetNewLine()
-        {
-            NewLine = new LineGeometry3D()
-            {
-                Positions = new Vector3Collection(),
-                Indices = new IntCollection(),
-                Colors = new Color4Collection()
-            };
-        }
         
         private void AddLine(object parameter)
         {
@@ -315,18 +257,14 @@ namespace AnnotationTool.View
             }
             else
             {
-                var newLine = new _2DLine(GetPixelFromVector(FirstPoint), GetPixelFromVector(vector), MarkingType);
-
-                if (IsNewLineValid(newLine))
+                if (IsNewLineValid(FirstPoint + (FirstPoint - vector), vector))
                 {
-                    //_2DLineList = _2DLineList.Append(newLine).ToList();
-
-                    Lines.Positions.Add(GetVectorFromPixel(newLine.MirroredPoint));
-                    Lines.Positions.Add(GetVectorFromPixel(newLine.FirstPoint));
+                    Lines.Positions.Add(FirstPoint + (FirstPoint - vector));
+                    Lines.Positions.Add(vector);
                     Lines.Indices.Add(Lines.Indices.Count);
                     Lines.Indices.Add(Lines.Indices.Count);
-                    Lines.Colors.Add(ViewModelBase.GetColor(MarkingType).ToColor4());
-                    Lines.Colors.Add(ViewModelBase.GetColor(MarkingType).ToColor4());
+                    Lines.Colors.Add(ViewModelBase.GetColor(MarkingType));
+                    Lines.Colors.Add(ViewModelBase.GetColor(MarkingType));
 
                     Lines = new LineGeometry3D()
                     {
@@ -371,7 +309,6 @@ namespace AnnotationTool.View
                 ResetNewLine();
             }
         }
-
         private void DeleteLine(object parameter)
         {
             var vector = GetVector(parameter);
@@ -405,45 +342,15 @@ namespace AnnotationTool.View
                 };
             }
         }
-
-        private MeshGeometry3D.Line GetNearestLine(Vector3 vector)
+        private void ResetNewLine()
         {
-            Dictionary<MeshGeometry3D.Line, float> lineDistancePairs = new Dictionary<MeshGeometry3D.Line, float>();
-            foreach (var line in Lines.Lines)
+            NewLine = new LineGeometry3D()
             {
-                var dxc = vector.X - line.P0.X;
-                var dyc = vector.Y - line.P0.Y;
-                var dxl = line.P1.X - line.P0.X;
-                var dyl = line.P1.Y - line.P0.Y;
-                var cross = dxc * dyl - dyc * dxl;
-
-                lineDistancePairs.Add(line, Math.Abs(cross));
-            }
-
-            if (lineDistancePairs.Count < 1)
-            {
-                return new MeshGeometry3D.Line();
-            }
-
-            return lineDistancePairs.OrderBy(x => x.Value).First().Key;
+                Positions = new Vector3Collection(),
+                Indices = new IntCollection(),
+                Colors = new Color4Collection()
+            };
         }
-
-        protected void SetCameraTarget(Vector3 target, double offset = 0)
-        {
-            if (offset == 0)
-            {
-                Camera.Position = new Point3D(target.X, target.Y, Camera.Position.Z);
-                Camera.LookDirection = new Vector3D(0, 0, -Camera.Position.Z);
-            }
-            else
-            {
-                Camera.Position = new Point3D(target.X + offset, target.Y + offset, target.Z + offset);
-                Camera.LookDirection = new Vector3D(-offset, -offset, -offset);
-            }
-
-            Camera = Camera;
-        }
-
         public void MouseMove3DHandler(object sender, MouseMove3DEventArgs e)
         {
             if (IsFirstPoint)
@@ -459,19 +366,17 @@ namespace AnnotationTool.View
             }
             vector.Z = 0;
 
-            var newLine = new _2DLine(GetPixelFromVector(FirstPoint), GetPixelFromVector(vector), MarkingType);
-
-            if (IsNewLineValid(newLine))
+            if (IsNewLineValid(FirstPoint + (FirstPoint - vector), vector))
             {
                 var lineBuilder = new LineBuilder();
-                lineBuilder.AddLine(GetVectorFromPixel(newLine.MirroredPoint), GetVectorFromPixel(newLine.FirstPoint));
-                lineBuilder.AddCircle(GetVectorFromPixel(newLine.CenterPoint), new Vector3(0, 0, 1), 0.04f, 360);
+                lineBuilder.AddLine(FirstPoint + (FirstPoint- vector), vector);
+                lineBuilder.AddCircle(FirstPoint, new Vector3(0, 0, 1), 0.04f, 360);
                 var lineGeometry = lineBuilder.ToLineGeometry3D();
                 lineGeometry.Colors = new Color4Collection();
 
                 for (int i = 0; i < lineGeometry.Positions.Count; i++)
                 {
-                    lineGeometry.Colors.Add(ViewModelBase.GetColor(MarkingType).ToColor4());
+                    lineGeometry.Colors.Add(ViewModelBase.GetColor(MarkingType));
                 }
 
                 NewLine = lineGeometry;
@@ -509,7 +414,8 @@ namespace AnnotationTool.View
                 new PropertyMetadata(SelectedUnprunedImagePropertyChanged));
 
         public static readonly DependencyProperty LinesProperty =
-            DependencyProperty.Register("Lines", typeof(LineGeometry3D), typeof(ViewPort));
+            DependencyProperty.Register("Lines", typeof(LineGeometry3D), typeof(ViewPort), 
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
         public static readonly DependencyProperty MarkingTypeProperty =
             DependencyProperty.Register("MarkingType", typeof(MarkingType), typeof(ViewPort));
@@ -517,10 +423,9 @@ namespace AnnotationTool.View
 
         private static void SelectedUnprunedImagePropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
-            var control = (ViewPort)obj;
+            var viewPort = (ViewPort)obj;
             var image = new BitmapImage(new Uri(e.NewValue.ToString(), UriKind.RelativeOrAbsolute));
-
-            control.SetImage(image);
+            viewPort.SetPlane(image);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

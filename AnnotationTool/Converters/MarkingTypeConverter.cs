@@ -12,20 +12,9 @@ namespace AnnotationTool.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var color = new Color();
-            var type = MarkingType.GeneralPruning;
-
-
-            //if (value is _2DLine)
-            //{
-            //    type = ((_2DLine)value).Type;
-
-            //}
-            //else if (value is MarkingType)
-            //{
-            type = (MarkingType)value;
-            //}
-
-            color = ViewModelBase.GetColor(type);
+            var type = (MarkingType)value;
+            var color4 = ViewModelBase.GetColor(type);
+            color = Color.FromScRgb(color4.Alpha, color4.Red, color4.Green, color4.Blue);
             color.A = 100;
 
             return new SolidColorBrush(color);

@@ -19,9 +19,7 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-        <converters:Vector3Converter x:Key="Vector3Converter"/>
         <converters:MarkingTypeConverter x:Key="MarkingTypeConverter"/>
-        <converters:HeightConverter x:Key="HeightConverter"/>
 
         <Style TargetType="{x:Type Button}">
             <Setter Property="Background" Value="Transparent" />
@@ -38,10 +36,9 @@
 
         <Style TargetType="{x:Type DataGrid}">
             <Setter Property="AutoGenerateColumns" Value="False"/>
-            <Setter Property="Margin" Value="10"/>
             <Setter Property="IsReadOnly" Value="True"/>
         </Style>
-        
+
         <Style TargetType="{x:Type DataGridCell}">
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
@@ -83,37 +80,41 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
 
-            <view:ViewPort Grid.Row="0" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedLeftImage}"/>
-            <view:ViewPort Grid.Row="1" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedRightImage}"/>
+            <view:ViewPort Grid.Row="0" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedLeftImage}"/>
+            <view:ViewPort Grid.Row="1" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.RightLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedRightImage}"/>
         </Grid>
 
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="1*"/>
-                <RowDefinition Height="1*"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
 
+            <TabControl Grid.Row="0" Margin="10, 0, 10, 10">
+                <TabItem Header="Left Side">
+                    <DataGrid Grid.Row="0" SelectedItem="{Binding Selected2dLine, Mode=TwoWay}" ItemsSource="{Binding _2DLeftLineList}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="2*"/>
+                            <DataGridTextColumn Header="First Point" Binding="{Binding FirstPoint}" Width="1*"/>
+                            <DataGridTextColumn Header="Center Point" Binding="{Binding CenterPoint}" Width="1*"/>
+                            <DataGridTextColumn Header="Mirrored Point" Binding="{Binding MirroredPoint}" Width="1*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+                <TabItem Header="Right Side">
+                    <DataGrid Grid.Row="1" SelectedItem="{Binding Selected2dLine, Mode=TwoWay}" ItemsSource="{Binding _2DRightLineList}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="2*"/>
+                            <DataGridTextColumn Header="First Point" Binding="{Binding FirstPoint}" Width="1*"/>
+                            <DataGridTextColumn Header="Center Point" Binding="{Binding CenterPoint}" Width="1*"/>
+                            <DataGridTextColumn Header="Mirrored Point" Binding="{Binding MirroredPoint}" Width="1*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+            </TabControl>
 
-            <DataGrid Grid.Row="0" SelectedItem="{Binding Selected2dLine, Mode=TwoWay}" ItemsSource="{Binding _2DLeftLineList}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="2*"/>
-                    <DataGridTextColumn Header="First Point" Binding="{Binding FirstPoint}" Width="1*"/>
-                    <DataGridTextColumn Header="Center Point" Binding="{Binding CenterPoint}" Width="1*"/>
-                    <DataGridTextColumn Header="Mirrored Point" Binding="{Binding MirroredPoint}" Width="1*"/>
-                </DataGrid.Columns>
-            </DataGrid>
-            <DataGrid Grid.Row="1" SelectedItem="{Binding Selected2dLine, Mode=TwoWay}" ItemsSource="{Binding _2DLeftLineList}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="2*"/>
-                    <DataGridTextColumn Header="First Point" Binding="{Binding FirstPoint}" Width="1*"/>
-                    <DataGridTextColumn Header="Center Point" Binding="{Binding CenterPoint}" Width="1*"/>
-                    <DataGridTextColumn Header="Mirrored Point" Binding="{Binding MirroredPoint}" Width="1*"/>
-                </DataGrid.Columns>
-            </DataGrid>
-
-            <ListBox Grid.Row="2" Margin="10, 0, 10, 10" BorderThickness="0" SelectedItem="{Binding MarkingType, Mode=TwoWay}" ItemsSource="{Binding MarkingTypes}">
+            <ListBox Grid.Row="1" Margin="10, 0, 10, 10" BorderThickness="0" SelectedItem="{Binding MarkingType, Mode=TwoWay}" ItemsSource="{Binding MarkingTypes}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <RadioButton GroupName="RB" Background="{Binding Converter={StaticResource MarkingTypeConverter}}" Content="{Binding}" IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
@@ -121,12 +122,12 @@
                 </ListBox.ItemTemplate>
             </ListBox>
 
-            <Grid Grid.Row="3" Margin="10, 0, 5, 10">
+            <Grid Grid.Row="2" Margin="10, 0, 5, 10">
                 <ScrollViewer x:Name="scrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                     <ItemsControl ItemsSource="{Binding Images}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button MaxHeight="200" Margin="0,2,2,0" Command="{Binding Path=DataContext.SelectImageCommand, ElementName=scrollViewer}" CommandParameter="{Binding}">
+                                <Button Margin="0,2,2,0" Command="{Binding Path=DataContext.SelectImageCommand, ElementName=scrollViewer}" CommandParameter="{Binding}">
                                     <Image x:Name="Image" Source="{Binding}"/>
                                 </Button>
                             </DataTemplate>

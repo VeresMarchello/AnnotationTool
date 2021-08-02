@@ -17,7 +17,6 @@
             <Setter Property="IsRotationEnabled" Value="False"/>
             <Setter Property="UseDefaultGestures" Value="False"/>
         </Style>
-
     </UserControl.Resources>
 
 
@@ -25,9 +24,9 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition/>
-            <!--<ColumnDefinition Width="auto"/>-->
         </Grid.ColumnDefinitions>
-        <!--<TextBlock Text="{Binding Lines.Positions.Count}" Grid.Column="2"/>-->
+        
+        
         <hx:Viewport3DX Grid.Column="0" Camera="{Binding Camera}" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
             <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
             <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />

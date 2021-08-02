@@ -10,16 +10,20 @@ using System;
 using AnnotationTool.Commands;
 using System.Linq;
 using System.Collections.Generic;
-using System.IO;
 
 namespace AnnotationTool.ViewModel
 {
     class ViewModelBase : INotifyPropertyChanged
     {
         private Camera _camera;
-
         private MarkingType _markingType;
 
+        private static readonly Dictionary<Color4, MarkingType> colorMarkingTypePairs =
+            new Dictionary<Color4, MarkingType> {
+                { Media.Color.FromArgb(255, 255, 0, 255).ToColor4(), MarkingType.GeneralPruning },
+                { Media.Color.FromArgb(255, 0, 255, 0).ToColor4(), MarkingType.UncertainPruning },
+                { Media.Color.FromArgb(255, 0, 0, 255).ToColor4(), MarkingType.PruningFromStems }
+            };
 
         public ViewModelBase()
         {
@@ -35,29 +39,9 @@ namespace AnnotationTool.ViewModel
             _markingType = MarkingType.GeneralPruning;
             MarkingTypes = Enum.GetValues(typeof(MarkingType)).Cast<MarkingType>();
 
-            var material = PhongMaterials.Red;
-            material.DiffuseColor = GetColor(MarkingType.GeneralPruning).ToColor4();
-            LineMaterial = material;
-
             SelectTypeCommand = new RelayCommand<object>(SetMarkingType);
-            CTRLRCommand = new RelayCommand<object>(ResetCamera);
             KeyCommand = new RelayCommand<object>(SetMarkingType);
-            ChangeTabindexCommand = new RelayCommand<object>(ChangeTabIndex);
-        }
-
-        public string AppPath { get; set; } = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName;
-
-
-        private int _selectedTabIndex;
-
-        public int SelectedTabIndex
-        {
-            get { return _selectedTabIndex; }
-            set 
-            { 
-                _selectedTabIndex = value;
-                NotifyPropertyChanged();
-            }
+            CTRLRCommand = new RelayCommand<object>(ResetCamera);
         }
 
         public Camera Camera
@@ -69,8 +53,6 @@ namespace AnnotationTool.ViewModel
                 NotifyPropertyChanged();
             }
         }
-        
-        public PhongMaterial LineMaterial { get; protected set; }
 
         public MarkingType MarkingType
         {
@@ -83,55 +65,18 @@ namespace AnnotationTool.ViewModel
         }
         public IEnumerable<MarkingType> MarkingTypes { get; set; }
 
-        public ICommand LeftClickCommand { get; set; }
-        public ICommand CTRLRigtClickCommand { get; set; }
         public ICommand SelectTypeCommand { get; set; }
-        public ICommand ESCCommand { get; set; }
         public ICommand KeyCommand { get; set; }
         public ICommand CTRLRCommand { get; set; }
-        public ICommand ChangeTabindexCommand { get; set; }
 
-        private void ChangeTabIndex(object parameter) 
+
+        public static Color4 GetColor(MarkingType markingType)
         {
-            int index;
-            if (int.TryParse(parameter.ToString(), out index))
-            {
-                SelectedTabIndex = index;
-            }
+            return colorMarkingTypePairs.FirstOrDefault(x => x.Value == markingType).Key;
         }
-        public Vector3 GetVector(object parameter)
+        public static MarkingType GetMarkingType(Color4 color)
         {
-            var viewPort = (Viewport3DX)parameter;
-            var position = Mouse.GetPosition(viewPort);
-            var asd = viewPort.FindHits(position);
-            foreach (var item in asd)
-            {
-                if (item.ModelHit is MeshGeometryModel3D)
-                {
-                    return item.PointHit;
-                }
-            }
-
-            return new Vector3(1000);
-        }
-        public static Media.Color GetColor(MarkingType markingType)
-        {
-            var color = new Media.Color();
-
-            switch (markingType)
-            {
-                case MarkingType.GeneralPruning:
-                    color = Media.Color.FromArgb(255, 255, 0, 255);
-                    break;
-                case MarkingType.UncertainPruning:
-                    color = Media.Color.FromArgb(255, 0, 255, 0);
-                    break;
-                case MarkingType.PruningFromStems:
-                    color = Media.Color.FromArgb(255, 0, 0, 255);
-                    break;
-            }
-
-            return color;
+            return colorMarkingTypePairs[color];
         }
         protected void SetCameraTarget(Vector3 target, double offset = 0)
         {

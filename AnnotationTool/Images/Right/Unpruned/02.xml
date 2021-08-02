@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Lines>
+  <Line>
+    <Points>
+      <Point>
+        <X>1303</X>
+        <Y>1523</Y>
+      </Point>
+      <Point>
+        <X>821</X>
+        <Y>1401</Y>
+      </Point>
+      <Point>
+        <X>1785</X>
+        <Y>1645</Y>
+      </Point>
+    </Points>
+    <Type>PruningFromStems</Type>
+  </Line>
+</Lines>

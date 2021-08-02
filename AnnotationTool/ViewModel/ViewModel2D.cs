@@ -1,5 +1,4 @@
-﻿using Media3D = System.Windows.Media.Media3D;
-using SharpDX;
+﻿using SharpDX;
 using System.Windows.Input;
 using System.IO;
 using AnnotationTool.Commands;
@@ -9,7 +8,6 @@ using System;
 using System.Xml;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Controls;
 using AnnotationTool.Model;
 
 namespace AnnotationTool.ViewModel
@@ -23,42 +21,16 @@ namespace AnnotationTool.ViewModel
         private _2DLine _selected2dLine;
         private List<_2DLine> _2dLeftLineList;
         private List<_2DLine> _2dRightLineList;
-        private LineGeometry3D _leftLines;
-
-        public LineGeometry3D LeftLines
-        {
-            get { return _leftLines; }
-            set
-            {
-                _leftLines = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private LineGeometry3D _rightLines;
-
-        public LineGeometry3D RightLines
-        {
-            get { return _rightLines; }
-            set 
-            { 
-                _rightLines = value;
-                NotifyPropertyChanged();
-            }
-        }
-
 
 
         public ViewModel2D()
         {
-            _2dLeftLineList = new List<_2DLine>();
-
             _images = GetFolderFiles();
-
-            ChangeSelectedImage(Images[0]);
+            ChangeSelectedImage(_images[0]);
 
             SelectImageCommand = new RelayCommand<object>(ChangeSelectedImage);
         }
+
 
         public string SelectedLeftImage
         {
@@ -80,7 +52,6 @@ namespace AnnotationTool.ViewModel
                 NotifyPropertyChanged();
             }
         }
-
         public string[] Images
         {
             get { return _images; }
@@ -113,57 +84,125 @@ namespace AnnotationTool.ViewModel
             {
                 _2dLeftLineList = value;
                 NotifyPropertyChanged();
+                NotifyPropertyChanged("LeftLines");
             }
         }
-
+        public List<_2DLine> _2DRightLineList
+        {
+            get { return _2dRightLineList; }
+            set
+            {
+                _2dRightLineList = value;
+                NotifyPropertyChanged();
+                NotifyPropertyChanged("RightLines");
+            }
+        }
+        public LineGeometry3D LeftLines
+        {
+            get { return GetLineGeometry(_2DLeftLineList); }
+            set
+            {
+                var lineList = Get_2DLineList(value);
+                if (lineList.Count > _2DLeftLineList.Count)
+                {
+                    var newItem = lineList[lineList.Count-1];
+                    SaveLineToXML(newItem, SelectedLeftImage);
+                }
+                else
+                {
+                    var deletedItem = _2DLeftLineList.Except(lineList).First();
+                    DeleteLineFromXML(deletedItem, SelectedLeftImage);
+                }
+                _2DLeftLineList = lineList;
+            }
+        }
+        public LineGeometry3D RightLines
+        {
+            get { return GetLineGeometry(_2DRightLineList); }
+            set
+            {
+                var lineList = Get_2DLineList(value);
+                if (lineList.Count > _2DRightLineList.Count)
+                {
+                    var newItem = lineList[lineList.Count - 1];
+                    SaveLineToXML(newItem, SelectedRightImage);
+                }
+                else
+                {
+                    var deletedItem = _2DRightLineList.Except(lineList).First();
+                    DeleteLineFromXML(deletedItem, SelectedRightImage);
+                }
+                _2DRightLineList = lineList;
+            }
+        }
 
         public ICommand SelectImageCommand { get; private set; }
 
 
-        private void ChangeSelectedImage(object newPath)
+        private LineGeometry3D GetLineGeometry(List<_2DLine> _2DLines)
         {
-            if (SelectedLeftImage == (string)newPath)
-            {
-                Console.WriteLine(Selected2dLine);
-                return;
-            }
-
-            SelectedLeftImage = (string)newPath;
-            LoadLinesFromXML(SelectedLeftImage);
-            ResetCamera();
-        }
-        
-        private string[] GetFolderFiles()
-        {
-            string[] files = null;
-            //using (var fbd = new System.Windows.Forms.FolderBrowserDialog())
-            //{
-            //    System.Windows.Forms.DialogResult result = fbd.ShowDialog();
-
-            //    if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
-            //    {
-            //        files = Directory.GetFiles(fbd.SelectedPath);
-            files = Directory.GetFiles(@"D:\Fork\AnnotationTool\AnnotationTool\Images\Left\Unpruned", "*.JPG");
-            //    }
-            //}
-
-            return files;
-        }
-
-        
-        private void ResetLines()
-        {
-            LeftLines = new LineGeometry3D()
+            LineGeometry3D lineGeometry = new LineGeometry3D()
             {
                 Positions = new Vector3Collection(),
                 Indices = new IntCollection(),
                 Colors = new Color4Collection()
             };
 
-            _2DLeftLineList = new List<_2DLine>();
+            foreach (var line in _2DLines)
+            {
+                var v1 = GetVectorFromPixel(line.FirstPoint);
+                var v2 = GetVectorFromPixel(line.MirroredPoint);
+
+                lineGeometry.Positions.Add(v1);
+                lineGeometry.Positions.Add(v2);
+                lineGeometry.Indices.Add(lineGeometry.Indices.Count);
+                lineGeometry.Indices.Add(lineGeometry.Indices.Count);
+                lineGeometry.Colors.Add(GetColor(line.Type));
+                lineGeometry.Colors.Add(GetColor(line.Type));
+            }
+
+            return lineGeometry;
+        }
+        private List<_2DLine> Get_2DLineList(LineGeometry3D lineGeometry)
+        {
+            var lineList = new List<_2DLine>();
+            var count = lineGeometry.Positions.Count;
+
+            for (int i = 0; i < count; i += 2)
+            {
+                //var center = new Vector3((lineGeometry.Positions[i].X + lineGeometry.Positions[i+1].X) / 2, (lineGeometry.Positions[i].Y + lineGeometry.Positions[i + 1].Y) / 2, 0);
+                var center = (lineGeometry.Positions[i] + lineGeometry.Positions[i + 1]) / 2;
+                var newLine = new _2DLine(GetPixelFromVector(center), GetPixelFromVector(lineGeometry.Positions[i]), GetMarkingType(lineGeometry.Colors[i]));
+                lineList.Add(newLine);
+            }
+
+            return lineList;
         }
 
-        
+
+        private void ChangeSelectedImage(object newPath)
+        {
+            if (SelectedLeftImage == (string)newPath)
+            {
+                return;
+            }
+
+            SelectedLeftImage = (string)newPath;
+
+            _2DLeftLineList = LoadLinesFromXML(SelectedLeftImage);
+            _2DRightLineList = LoadLinesFromXML(SelectedRightImage);
+
+            ResetCamera();
+        }
+
+        private string[] GetFolderFiles()
+        {
+            string[] files = null;
+            files = Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}\Images\Left\Unpruned", "*.JPG");
+
+            return files;
+        }
+
 
         private Vector3 GetVectorFromPixel(Vector3 vector)
         {
@@ -191,101 +230,119 @@ namespace AnnotationTool.ViewModel
 
             return new Vector3((float)computedPointX, (float)computedPointY, 0);
         }
+        private Vector3 GetPixelFromVector(Vector3 vector)
+        {
+            var image = new BitmapImage(new Uri(SelectedLeftImage, UriKind.RelativeOrAbsolute));
+            int imageWidth = image.PixelWidth;
+            int imageHeight = image.PixelHeight;
 
-        //private void DeleteLineFromXML(_2DLine line)
-        //{
-        //    XmlDocument document = new XmlDocument();
-        //    try
-        //    {
-        //        document.Load(SelectedLeftImage.Replace("JPG", "xml"));
+            double vertical = 5.0;
+            double horizontal = imageWidth / (imageHeight / vertical);
+            Vector2 center = new Vector2(imageWidth / 2, imageHeight / 2);
+            Vector3 computedPoint = new Vector3(0);
 
-        //        bool equal = false;
-        //        var nodelist = document.SelectNodes("/Lines/Line[Type = '" + line.Type + "']");
-        //        //var nodelist = document.SelectNodes("/Lines/Line");
-        //        foreach (XmlNode node in nodelist)
-        //        {
-        //            var asd = node.SelectNodes("//Points/Point");
-        //            foreach (XmlNode item in asd)
-        //            {
-        //                if (item["X"].InnerText == line.CenterPoint.X.ToString() && item["Y"].InnerText == line.CenterPoint.Y.ToString())
-        //                {
-        //                    equal = true;
-        //                    break;
-        //                }
-        //            }
+            double computedX = Math.Abs(center.X / vertical * vector.X);
+            if (vector.X >= 0)
+                computedPoint.X = Convert.ToInt32(center.X + computedX);
+            else
+                computedPoint.X = Convert.ToInt32(center.X - computedX);
 
-        //            if (equal)
-        //            {
-        //                node.ParentNode.RemoveChild(node);
-        //                document.Save(SelectedLeftImage.Replace("JPG", "xml"));
-        //                break;
-        //            }
-        //        }
-        //    }
-        //    catch (Exception)
-        //    {
-        //        return;
-        //    }
-        //}
-        //private void SaveLineToXML(_2DLine newLine)
-        //{
-        //    XmlDocument document = new XmlDocument();
-        //    XmlElement linesElement;
-        //    IEnumerable<_2DLine> _2DLines;
+            double computedY = Math.Abs(center.Y / horizontal * vector.Y);
+            if (vector.Y >= 0)
+                computedPoint.Y = Convert.ToInt32(center.Y - computedY);
+            else
+                computedPoint.Y = Convert.ToInt32(center.Y + computedY);
 
-        //    try
-        //    {
-        //        document.Load(SelectedLeftImage.Replace("JPG", "xml"));
-        //        linesElement = document.GetElementsByTagName("Lines")[0] as XmlElement;
-        //        _2DLines = new List<_2DLine>() { newLine };
-        //    }
-        //    catch (Exception)
-        //    {
-        //        XmlDeclaration xmlDeclaration = document.CreateXmlDeclaration("1.0", "UTF-8", null);
-        //        XmlElement root = document.DocumentElement;
-        //        document.InsertBefore(xmlDeclaration, root);
+            return computedPoint;
+        }
+        private void DeleteLineFromXML(_2DLine line, string fullFileName)
+        {
+            XmlDocument document = new XmlDocument();
+            try
+            {
+                document.Load(fullFileName.Replace("JPG", "xml"));
 
-        //        linesElement = document.CreateElement(string.Empty, "Lines", string.Empty);
-        //        document.AppendChild(linesElement);
-        //        _2DLines = _2DLineList;
-        //    }
+                bool equal = false;
+                var nodelist = document.SelectNodes("/Lines/Line[Type = '" + line.Type + "']");
+                //var nodelist = document.SelectNodes("/Lines/Line");
+                foreach (XmlNode node in nodelist)
+                {
+                    var asd = node.SelectNodes("//Points/Point");
+                    foreach (XmlNode item in asd)
+                    {
+                        if (item["X"].InnerText == line.CenterPoint.X.ToString() && item["Y"].InnerText == line.CenterPoint.Y.ToString())
+                        {
+                            equal = true;
+                            break;
+                        }
+                    }
 
-        //    foreach (var line in _2DLines)
-        //    {
-        //        XmlElement lineElement = document.CreateElement(string.Empty, "Line", string.Empty);
-        //        linesElement.AppendChild(lineElement);
+                    if (equal)
+                    {
+                        node.ParentNode.RemoveChild(node);
+                        document.Save(fullFileName.Replace("JPG", "xml"));
+                        break;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return;
+            }
+        }
+        private void SaveLineToXML(_2DLine newLine, string fullFileName)
+        {
+            XmlDocument document = new XmlDocument();
+            XmlElement linesElement;
 
-        //        XmlElement pointsElement = document.CreateElement(string.Empty, "Points", string.Empty);
-        //        lineElement.AppendChild(pointsElement);
+            try
+            {
+                document.Load(fullFileName.Replace("JPG", "xml"));
+                linesElement = document.GetElementsByTagName("Lines")[0] as XmlElement;
+            }
+            catch (Exception)
+            {
+                XmlDeclaration xmlDeclaration = document.CreateXmlDeclaration("1.0", "UTF-8", null);
+                XmlElement root = document.DocumentElement;
+                document.InsertBefore(xmlDeclaration, root);
 
-        //        Vector3Collection points = new Vector3Collection() { line.CenterPoint, line.FirstPoint, line.MirroredPoint };
+                linesElement = document.CreateElement(string.Empty, "Lines", string.Empty);
+                document.AppendChild(linesElement);
+            }
 
-        //        foreach (var point in points)
-        //        {
-        //            XmlElement pointElement = document.CreateElement(string.Empty, "Point", string.Empty);
-        //            pointsElement.AppendChild(pointElement);
+            XmlElement lineElement = document.CreateElement(string.Empty, "Line", string.Empty);
+            linesElement.AppendChild(lineElement);
 
-        //            XmlText xText = document.CreateTextNode(point.X.ToString());
-        //            XmlText yText = document.CreateTextNode(point.Y.ToString());
+            XmlElement pointsElement = document.CreateElement(string.Empty, "Points", string.Empty);
+            lineElement.AppendChild(pointsElement);
 
-        //            XmlElement xElement = document.CreateElement(string.Empty, "X", string.Empty);
-        //            pointElement.AppendChild(xElement);
-        //            xElement.AppendChild(xText);
+            Vector3Collection points = new Vector3Collection() { newLine.CenterPoint, newLine.FirstPoint, newLine.MirroredPoint };
 
-        //            XmlElement yElement = document.CreateElement(string.Empty, "Y", string.Empty);
-        //            pointElement.AppendChild(yElement);
-        //            yElement.AppendChild(yText);
-        //        }
+            foreach (var point in points)
+            {
+                XmlElement pointElement = document.CreateElement(string.Empty, "Point", string.Empty);
+                pointsElement.AppendChild(pointElement);
 
-        //        XmlText typeText = document.CreateTextNode(line.Type.ToString());
-        //        XmlElement typeElement = document.CreateElement(string.Empty, "Type", string.Empty);
-        //        lineElement.AppendChild(typeElement);
-        //        typeElement.AppendChild(typeText);
-        //    }
+                XmlText xText = document.CreateTextNode(point.X.ToString());
+                XmlText yText = document.CreateTextNode(point.Y.ToString());
 
-        //    document.Save(SelectedLeftImage.Replace("JPG", "xml"));
-        //}
-        private void LoadLinesFromXML(string fullFileName)
+                XmlElement xElement = document.CreateElement(string.Empty, "X", string.Empty);
+                pointElement.AppendChild(xElement);
+                xElement.AppendChild(xText);
+
+                XmlElement yElement = document.CreateElement(string.Empty, "Y", string.Empty);
+                pointElement.AppendChild(yElement);
+                yElement.AppendChild(yText);
+            }
+
+            XmlText typeText = document.CreateTextNode(newLine.Type.ToString());
+            XmlElement typeElement = document.CreateElement(string.Empty, "Type", string.Empty);
+            lineElement.AppendChild(typeElement);
+            typeElement.AppendChild(typeText);
+
+            document.Save(fullFileName.Replace("JPG", "xml"));
+        }
+        private List<_2DLine> LoadLinesFromXML(string fullFileName)
         {
             XmlDocument document = new XmlDocument();
 
@@ -309,36 +366,12 @@ namespace AnnotationTool.ViewModel
 
                     lineList.Add(new _2DLine(new Vector3(centerPointX, centerPointY, 0), new Vector3(firstPointX, firstPointY, 0), (MarkingType)Enum.Parse(typeof(MarkingType), type)));
                 }
-
-                _2DLeftLineList = lineList;
-
-
-                LineGeometry3D lineGeometry = new LineGeometry3D()
-                {
-                    Positions = new Vector3Collection(),
-                    Indices = new IntCollection(),
-                    Colors = new Color4Collection()
-                };
-
-                foreach (var line in _2DLeftLineList)
-                {
-                    var v1 = GetVectorFromPixel(line.FirstPoint);
-                    var v2 = GetVectorFromPixel(line.MirroredPoint);
-
-                    lineGeometry.Positions.Add(v1);
-                    lineGeometry.Positions.Add(v2);
-                    lineGeometry.Indices.Add(lineGeometry.Indices.Count);
-                    lineGeometry.Indices.Add(lineGeometry.Indices.Count);
-                    lineGeometry.Colors.Add(GetColor(line.Type).ToColor4());
-                    lineGeometry.Colors.Add(GetColor(line.Type).ToColor4());
-                }
-
-                LeftLines = lineGeometry;
             }
-            catch (Exception)
+            catch
             {
-                ResetLines();
             }
+
+            return lineList;
         }
     }
 }

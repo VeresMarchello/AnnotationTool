@@ -10,6 +10,7 @@ using System;
 using AnnotationTool.Commands;
 using System.Linq;
 using System.Collections.Generic;
+using System.Windows.Forms;
 
 namespace AnnotationTool.ViewModel
 {
@@ -24,7 +25,6 @@ namespace AnnotationTool.ViewModel
                 { Media.Color.FromArgb(255, 0, 255, 0).ToColor4(), MarkingType.UncertainPruning },
                 { Media.Color.FromArgb(255, 0, 0, 255).ToColor4(), MarkingType.PruningFromStems }
             };
-        //private static readonly Dictionary<MarkingType, string> markingTypeNamePairs = new Dictionary<MarkingType, string>();
 
 
         public ViewModelBase()
@@ -39,11 +39,6 @@ namespace AnnotationTool.ViewModel
             };
 
             _markingType = MarkingType.GeneralPruning;
-            //var types = Enum.GetValues(typeof(MarkingType)).Cast<MarkingType>().Where(x => (int)x > 0);
-            //foreach (var type in types)
-            //{
-            //    markingTypeNamePairs.Add(type, GetMarkingTypeName(type));
-            //}
             MarkingTypes = Enum.GetValues(typeof(MarkingType)).Cast<MarkingType>().Where(x => x != MarkingType.None);
 
             SelectTypeCommand = new RelayCommand<object>(SetMarkingType);
@@ -85,10 +80,6 @@ namespace AnnotationTool.ViewModel
         {
             return colorMarkingTypePairs[color];
         }
-        //public static MarkingType GetMarkingType(string typeName)
-        //{
-        //    return markingTypeNamePairs.First(x => x.Value == typeName).Key;
-        //}
         protected void SetCameraTarget(Vector3 target, double offset = 0)
         {
             if (offset == 0)
@@ -117,14 +108,6 @@ namespace AnnotationTool.ViewModel
         }
         private void SetMarkingType(object parameter)
         {
-            //if (parameter is string)
-            //{
-            //    MarkingType = GetMarkingType((string)parameter);
-            //}
-            //else if (parameter is int)
-            //{
-            //    MarkingType = markingTypeNamePairs.First(x => (int)x.Key == (int)parameter).Key;
-            //}
             MarkingType = (MarkingType)Enum.Parse(typeof(MarkingType), parameter.ToString());
         }
 

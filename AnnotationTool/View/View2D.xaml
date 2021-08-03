@@ -81,8 +81,8 @@
             </Grid.RowDefinitions>
 
 
-            <view:ViewPort Grid.Row="0" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedLeftImage}"/>
-            <view:ViewPort Grid.Row="1" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.RightLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedRightImage}"/>
+            <view:ViewPort Grid.Row="0" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedLeftImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}"/>
+            <view:ViewPort Grid.Row="1" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.RightLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedRightImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}"/>
 
             <Expander Grid.Row="2" ExpandDirection="Up" Visibility="{Binding ErrorMessages.Count, Converter={StaticResource IntToVisibilityConverter}}">
                 <Expander.Header>

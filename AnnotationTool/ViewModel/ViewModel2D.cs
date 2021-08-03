@@ -15,7 +15,7 @@ using System.Threading;
 
 namespace AnnotationTool.ViewModel
 {
-    class ViewModel2D : ViewModelBase
+    class ViewModel2D : ViewModelBase, IDisposable
     {
         private string _selectedLeftImage;
         private string _selectedRightImage;
@@ -28,6 +28,9 @@ namespace AnnotationTool.ViewModel
         private CancellationTokenSource _source;
         private ObservableCollection<string> _errorMessages;
 
+        private bool disposedValue;
+        private readonly ReaderWriterLockSlim xmlLock = new ReaderWriterLockSlim();
+
 
         public ViewModel2D()
         {
@@ -38,7 +41,7 @@ namespace AnnotationTool.ViewModel
             }
             _2dLeftLineList = new List<_2DLine>();
             _2dRightLineList = new List<_2DLine>();
-
+            _selected2dLine = new _2DLine(new Vector3(0), new Vector3(0), MarkingType.GeneralPruning);
             _source = new CancellationTokenSource();
             _errorMessages = new ObservableCollection<string>() { };
             SelectImageCommand = new RelayCommand<object>(ChangeSelectedImage);
@@ -83,6 +86,7 @@ namespace AnnotationTool.ViewModel
             {
                 _selected2dLine = value;
                 NotifyPropertyChanged();
+                NotifyPropertyChanged("SelectedLine");
 
                 if (value != null)
                 {
@@ -111,6 +115,13 @@ namespace AnnotationTool.ViewModel
                 NotifyPropertyChanged("RightLines");
             }
         }
+
+        public Geometry3D.Line SelectedLine
+        {
+            get { return GetLine(Selected2dLine); }
+            set { Selected2dLine = Get_2DLine(value); }
+        }
+
         public LineGeometry3D LeftLines
         {
             get { return GetLineGeometry(_2DLeftLineList); }
@@ -181,6 +192,37 @@ namespace AnnotationTool.ViewModel
             }
 
             return lineList;
+        }
+
+        private Geometry3D.Line GetLine(_2DLine line)
+        {
+            if (line == null)
+            {
+                return new Geometry3D.Line();
+            }
+
+            return new Geometry3D.Line()
+            {
+                P0 = GetVectorFromPixel(line.FirstPoint),
+                P1 = GetVectorFromPixel(line.MirroredPoint),
+            };
+        }
+
+        private _2DLine Get_2DLine(Geometry3D.Line line)
+        {
+            var index = _2DLeftLineList.IndexOf(_2DLeftLineList.Where(x => ((x.MirroredPoint == GetPixelFromVector(line.P0)) && (x.FirstPoint == GetPixelFromVector(line.P1))) || ((x.FirstPoint == GetPixelFromVector(line.P0)) && (x.MirroredPoint == GetPixelFromVector(line.P1)))).FirstOrDefault());
+            if (index < 0)
+            {
+                index = _2DRightLineList.IndexOf(_2dRightLineList.Where(x => ((x.MirroredPoint == GetPixelFromVector(line.P0)) && (x.FirstPoint == GetPixelFromVector(line.P1))) || ((x.FirstPoint == GetPixelFromVector(line.P0)) && (x.MirroredPoint == GetPixelFromVector(line.P1)))).FirstOrDefault());
+
+                if (index < 0)
+                {
+                    return new _2DLine(new Vector3(0), new Vector3(0), MarkingType.GeneralPruning);
+                }
+
+                return _2dRightLineList[index];
+            }
+            return _2dLeftLineList[index];
         }
 
 
@@ -295,9 +337,8 @@ namespace AnnotationTool.ViewModel
                   {
                       App.Current.Dispatcher.Invoke(() =>
                       {
-                          ErrorMessages.Add($"Mentés Sikertelen: {fullFileName} nem található. Fájl létrehozása...");
+                          ErrorMessages.Add($"{new FileInfo(fullFileName).Name} nem található. Fájl létrehozása...");
                       });
-                      return;
                   }
 
                   Lines lines = new Lines()
@@ -322,8 +363,22 @@ namespace AnnotationTool.ViewModel
                       });
                   }
 
-                  XmlSerializer serializer = new XmlSerializer(typeof(Lines));
-                  serializer.Serialize(File.OpenWrite(fullFileName), lines);
+                  if (!xmlLock.TryEnterWriteLock(500))
+                  {
+                      return;
+                  }
+                  try
+                  {
+                      using (Stream stream = File.Open(fullFileName, FileMode.Create))
+                      {
+                          XmlSerializer serializer = new XmlSerializer(typeof(Lines));
+                          serializer.Serialize(stream, lines);
+                      }
+                  }
+                  finally
+                  {
+                      xmlLock.ExitWriteLock();
+                  }
               });
         }
         private Task<List<_2DLine>> LoadLinesFromXML(string fullFileName, CancellationToken cancellationToken)
@@ -336,7 +391,7 @@ namespace AnnotationTool.ViewModel
                 {
                     App.Current.Dispatcher.Invoke(() =>
                     {
-                        ErrorMessages.Add($"Betöltés Sikertelen: {fullFileName} nem található.");
+                        ErrorMessages.Add($"Betöltés Sikertelen: {new FileInfo(fullFileName).Name} nem található.");
                     });
                     return list;
                 }
@@ -355,6 +410,36 @@ namespace AnnotationTool.ViewModel
 
                 return list;
             }, cancellationToken);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    xmlLock.Dispose();
+                    // TODO: dispose managed state (managed objects)
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        ~ViewModel2D()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: false);
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

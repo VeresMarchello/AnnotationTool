@@ -18,6 +18,7 @@ using System;
 using AnnotationTool.Commands;
 using AnnotationTool.ViewModel;
 using System.Linq;
+using Geometry3D = HelixToolkit.Wpf.SharpDX.Geometry3D;
 
 namespace AnnotationTool.View
 {
@@ -258,7 +259,7 @@ namespace AnnotationTool.View
             if (IsFirstPoint)
             {
                 FirstPoint = vector;
-                SetCameraTarget(vector);
+                //SetCameraTarget(vector);
             }
             else
             {
@@ -294,14 +295,7 @@ namespace AnnotationTool.View
                 return;
             }
 
-            var lines = Lines.Lines.ToList();
-            var index = lines.IndexOf(GetNearestLine(vector));
-
-            if (index > -1)
-            {
-                var target = new Vector3((lines[index].P0.X + lines[index].P1.X) / 2, (lines[index].P0.Y + lines[index].P1.Y) / 2, 0);
-                SetCameraTarget(target);
-            }
+            SelectedLine = GetNearestLine(vector);
         }
         private void CancelLine(object parameter)
         {
@@ -417,6 +411,20 @@ namespace AnnotationTool.View
 
         public static readonly DependencyProperty MarkingTypeProperty =
             DependencyProperty.Register("MarkingType", typeof(MarkingType), typeof(ViewPort));
+
+
+
+        public Geometry3D.Line SelectedLine
+        {
+            get { return (Geometry3D.Line)GetValue(SelectedLineProperty); }
+            set { SetValue(SelectedLineProperty, value); }
+        }
+
+        public static readonly DependencyProperty SelectedLineProperty =
+            DependencyProperty.Register("SelectedLine", typeof(Geometry3D.Line), typeof(ViewPort),
+                new FrameworkPropertyMetadata(new Geometry3D.Line(), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+
+
 
 
         private static void SelectedUnprunedImagePropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)

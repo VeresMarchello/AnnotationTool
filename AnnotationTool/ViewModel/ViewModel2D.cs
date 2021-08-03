@@ -5,10 +5,13 @@ using AnnotationTool.Commands;
 using System.Windows.Media.Imaging;
 using HelixToolkit.Wpf.SharpDX;
 using System;
-using System.Xml;
 using System.Collections.Generic;
 using System.Linq;
 using AnnotationTool.Model;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using System.Xml.Serialization;
+using System.Threading;
 
 namespace AnnotationTool.ViewModel
 {
@@ -22,13 +25,24 @@ namespace AnnotationTool.ViewModel
         private List<_2DLine> _2dLeftLineList;
         private List<_2DLine> _2dRightLineList;
 
+        private CancellationTokenSource _source;
+        private ObservableCollection<string> _errorMessages;
+
 
         public ViewModel2D()
         {
             _images = GetFolderFiles();
-            ChangeSelectedImage(_images[0]);
+            if (_images.Count() > 0)
+            {
+                ChangeSelectedImage(_images[0]);
+            }
+            _2dLeftLineList = new List<_2DLine>();
+            _2dRightLineList = new List<_2DLine>();
 
+            _source = new CancellationTokenSource();
+            _errorMessages = new ObservableCollection<string>() { };
             SelectImageCommand = new RelayCommand<object>(ChangeSelectedImage);
+            DeleteErrorMessageCommand = new RelayCommand<object>(DeleteErrorMessage);
         }
 
 
@@ -102,18 +116,8 @@ namespace AnnotationTool.ViewModel
             get { return GetLineGeometry(_2DLeftLineList); }
             set
             {
-                var lineList = Get_2DLineList(value);
-                if (lineList.Count > _2DLeftLineList.Count)
-                {
-                    var newItem = lineList[lineList.Count-1];
-                    SaveLineToXML(newItem, SelectedLeftImage);
-                }
-                else
-                {
-                    var deletedItem = _2DLeftLineList.Except(lineList).First();
-                    DeleteLineFromXML(deletedItem, SelectedLeftImage);
-                }
-                _2DLeftLineList = lineList;
+                _2DLeftLineList = Get_2DLineList(value);
+                SaveLineToXML(_2DLeftLineList, SelectedLeftImage);
             }
         }
         public LineGeometry3D RightLines
@@ -121,22 +125,23 @@ namespace AnnotationTool.ViewModel
             get { return GetLineGeometry(_2DRightLineList); }
             set
             {
-                var lineList = Get_2DLineList(value);
-                if (lineList.Count > _2DRightLineList.Count)
-                {
-                    var newItem = lineList[lineList.Count - 1];
-                    SaveLineToXML(newItem, SelectedRightImage);
-                }
-                else
-                {
-                    var deletedItem = _2DRightLineList.Except(lineList).First();
-                    DeleteLineFromXML(deletedItem, SelectedRightImage);
-                }
-                _2DRightLineList = lineList;
+                _2DRightLineList = Get_2DLineList(value);
+                SaveLineToXML(_2DRightLineList, SelectedRightImage);
+            }
+        }
+
+        public ObservableCollection<string> ErrorMessages
+        {
+            get { return _errorMessages; }
+            set
+            {
+                _errorMessages = value;
+                NotifyPropertyChanged();
             }
         }
 
         public ICommand SelectImageCommand { get; private set; }
+        public ICommand DeleteErrorMessageCommand { get; private set; }
 
 
         private LineGeometry3D GetLineGeometry(List<_2DLine> _2DLines)
@@ -170,7 +175,6 @@ namespace AnnotationTool.ViewModel
 
             for (int i = 0; i < count; i += 2)
             {
-                //var center = new Vector3((lineGeometry.Positions[i].X + lineGeometry.Positions[i+1].X) / 2, (lineGeometry.Positions[i].Y + lineGeometry.Positions[i + 1].Y) / 2, 0);
                 var center = (lineGeometry.Positions[i] + lineGeometry.Positions[i + 1]) / 2;
                 var newLine = new _2DLine(GetPixelFromVector(center), GetPixelFromVector(lineGeometry.Positions[i]), GetMarkingType(lineGeometry.Colors[i]));
                 lineList.Add(newLine);
@@ -180,29 +184,55 @@ namespace AnnotationTool.ViewModel
         }
 
 
-        private void ChangeSelectedImage(object newPath)
+        private async void ChangeSelectedImage(object newPath)
         {
-            if (SelectedLeftImage == (string)newPath)
+            if (newPath is string imagePath && SelectedLeftImage != imagePath)
             {
-                return;
+                if (_source != null && !_source.IsCancellationRequested)
+                {
+                    _source.Cancel();
+                    await Task.Delay(500);
+                    _source.Dispose();
+                    _source = null;
+                }
+
+                _source = new CancellationTokenSource();
+
+                SelectedLeftImage = imagePath;
+
+                var results = await Task.WhenAll(
+                    LoadLinesFromXML(SelectedLeftImage, _source.Token),
+                    LoadLinesFromXML(SelectedRightImage, _source.Token));
+
+                _2DLeftLineList = results[0];
+                _2DRightLineList = results[1];
+
+                _source.Dispose();
+                _source = null;
+
+                ResetCamera();
             }
-
-            SelectedLeftImage = (string)newPath;
-
-            _2DLeftLineList = LoadLinesFromXML(SelectedLeftImage);
-            _2DRightLineList = LoadLinesFromXML(SelectedRightImage);
-
-            ResetCamera();
         }
-
         private string[] GetFolderFiles()
         {
-            string[] files = null;
-            files = Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}\Images\Left\Unpruned", "*.JPG");
+            try
+            {
+                return Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}\Images\Left\Unpruned", "*.JPG");
+            }
+            catch
+            {
+                ErrorMessages.Add("Képek betöltése sikertelen. Ellenőrizze a fájlokat. Újraindítás szükséges.");
 
-            return files;
+                return new string[] { };
+            }
         }
-
+        private void DeleteErrorMessage(object parameter)
+        {
+            if (parameter is string message)
+            {
+                ErrorMessages.Remove(message);
+            }
+        }
 
         private Vector3 GetVectorFromPixel(Vector3 vector)
         {
@@ -255,123 +285,76 @@ namespace AnnotationTool.ViewModel
 
             return computedPoint;
         }
-        private void DeleteLineFromXML(_2DLine line, string fullFileName)
+        private void SaveLineToXML(List<_2DLine> newLines, string fullFileName)
         {
-            XmlDocument document = new XmlDocument();
-            try
-            {
-                document.Load(fullFileName.Replace("JPG", "xml"));
+            Task.Run(() =>
+              {
+                  fullFileName = fullFileName.Replace("JPG", "XML");
 
-                bool equal = false;
-                var nodelist = document.SelectNodes("/Lines/Line[Type = '" + line.Type + "']");
-                //var nodelist = document.SelectNodes("/Lines/Line");
-                foreach (XmlNode node in nodelist)
-                {
-                    var asd = node.SelectNodes("//Points/Point");
-                    foreach (XmlNode item in asd)
-                    {
-                        if (item["X"].InnerText == line.CenterPoint.X.ToString() && item["Y"].InnerText == line.CenterPoint.Y.ToString())
-                        {
-                            equal = true;
-                            break;
-                        }
-                    }
+                  if (!File.Exists(fullFileName))
+                  {
+                      App.Current.Dispatcher.Invoke(() =>
+                      {
+                          ErrorMessages.Add($"Mentés Sikertelen: {fullFileName} nem található. Fájl létrehozása...");
+                      });
+                      return;
+                  }
 
-                    if (equal)
-                    {
-                        node.ParentNode.RemoveChild(node);
-                        document.Save(fullFileName.Replace("JPG", "xml"));
-                        break;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                return;
-            }
+                  Lines lines = new Lines()
+                  {
+                      Line = new List<Line>(newLines.Count)
+                  };
+
+                  foreach (_2DLine item in newLines)
+                  {
+                      lines.Line.Add(new Line
+                      {
+                          Points = new Points
+                          {
+                              Point = new List<Model.Point>(3)
+                          {
+                            new Model.Point(item.CenterPoint.X, item.CenterPoint.Y),
+                            new Model.Point(item.FirstPoint.X, item.FirstPoint.Y),
+                            new Model.Point(item.MirroredPoint.X, item.MirroredPoint.Y)
+                          },
+                          },
+                          Type = item.Type
+                      });
+                  }
+
+                  XmlSerializer serializer = new XmlSerializer(typeof(Lines));
+                  serializer.Serialize(File.OpenWrite(fullFileName), lines);
+              });
         }
-        private void SaveLineToXML(_2DLine newLine, string fullFileName)
+        private Task<List<_2DLine>> LoadLinesFromXML(string fullFileName, CancellationToken cancellationToken)
         {
-            XmlDocument document = new XmlDocument();
-            XmlElement linesElement;
-
-            try
+            return Task.Run(() =>
             {
-                document.Load(fullFileName.Replace("JPG", "xml"));
-                linesElement = document.GetElementsByTagName("Lines")[0] as XmlElement;
-            }
-            catch (Exception)
-            {
-                XmlDeclaration xmlDeclaration = document.CreateXmlDeclaration("1.0", "UTF-8", null);
-                XmlElement root = document.DocumentElement;
-                document.InsertBefore(xmlDeclaration, root);
-
-                linesElement = document.CreateElement(string.Empty, "Lines", string.Empty);
-                document.AppendChild(linesElement);
-            }
-
-            XmlElement lineElement = document.CreateElement(string.Empty, "Line", string.Empty);
-            linesElement.AppendChild(lineElement);
-
-            XmlElement pointsElement = document.CreateElement(string.Empty, "Points", string.Empty);
-            lineElement.AppendChild(pointsElement);
-
-            Vector3Collection points = new Vector3Collection() { newLine.CenterPoint, newLine.FirstPoint, newLine.MirroredPoint };
-
-            foreach (var point in points)
-            {
-                XmlElement pointElement = document.CreateElement(string.Empty, "Point", string.Empty);
-                pointsElement.AppendChild(pointElement);
-
-                XmlText xText = document.CreateTextNode(point.X.ToString());
-                XmlText yText = document.CreateTextNode(point.Y.ToString());
-
-                XmlElement xElement = document.CreateElement(string.Empty, "X", string.Empty);
-                pointElement.AppendChild(xElement);
-                xElement.AppendChild(xText);
-
-                XmlElement yElement = document.CreateElement(string.Empty, "Y", string.Empty);
-                pointElement.AppendChild(yElement);
-                yElement.AppendChild(yText);
-            }
-
-            XmlText typeText = document.CreateTextNode(newLine.Type.ToString());
-            XmlElement typeElement = document.CreateElement(string.Empty, "Type", string.Empty);
-            lineElement.AppendChild(typeElement);
-            typeElement.AppendChild(typeText);
-
-            document.Save(fullFileName.Replace("JPG", "xml"));
-        }
-        private List<_2DLine> LoadLinesFromXML(string fullFileName)
-        {
-            XmlDocument document = new XmlDocument();
-
-            var lineList = new List<_2DLine>();
-
-            try
-            {
-                document.Load(fullFileName.Replace("JPG", "xml"));
-
-                XmlNodeList lines = document.GetElementsByTagName("Line");
-
-                foreach (XmlNode line in lines)
+                var list = new List<_2DLine>();
+                fullFileName = fullFileName.Replace("JPG", "XML");
+                if (!File.Exists(fullFileName))
                 {
-                    var centerPointX = Convert.ToInt32(line.ChildNodes[0].ChildNodes[0].FirstChild.InnerText);
-                    var centerPointY = Convert.ToInt32(line.ChildNodes[0].ChildNodes[0].LastChild.InnerText);
-
-                    var firstPointX = Convert.ToInt32(line.ChildNodes[0].ChildNodes[1].FirstChild.InnerText);
-                    var firstPointY = Convert.ToInt32(line.ChildNodes[0].ChildNodes[1].LastChild.InnerText);
-
-                    string type = line.ChildNodes[1].InnerText;
-
-                    lineList.Add(new _2DLine(new Vector3(centerPointX, centerPointY, 0), new Vector3(firstPointX, firstPointY, 0), (MarkingType)Enum.Parse(typeof(MarkingType), type)));
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        ErrorMessages.Add($"Betöltés Sikertelen: {fullFileName} nem található.");
+                    });
+                    return list;
                 }
-            }
-            catch
-            {
-            }
 
-            return lineList;
+                XmlSerializer serializer = new XmlSerializer(typeof(Lines));
+
+                if (serializer.Deserialize(File.OpenRead(fullFileName)) is Lines lines)
+                {
+                    list = lines.Line.ConvertAll(line =>
+                    {
+                        var firstPoint = line.Points.Point[0];
+                        var secondPoint = line.Points.Point[1];
+                        return new _2DLine(new Vector3(firstPoint.X, firstPoint.Y, 0), new Vector3(secondPoint.X, secondPoint.Y, 0), line.Type);
+                    });
+                }
+
+                return list;
+            }, cancellationToken);
         }
     }
 }

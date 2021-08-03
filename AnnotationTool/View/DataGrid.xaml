@@ -1,0 +1,25 @@
+﻿<UserControl x:Class="AnnotationTool.View.DataGrid"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:converters="clr-namespace:AnnotationTool.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:_2DLineConverter x:Key="_2DLineConverter"/>
+    </UserControl.Resources>
+
+    <DataGrid Grid.Row="0" SelectedItem="{Binding Selected2dLine, Mode=TwoWay}" ItemsSource="{Binding _2DLineList}">
+        <DataGrid.Columns>
+            <DataGridTextColumn Header="Típus" Binding="{Binding Converter={StaticResource _2DLineConverter}, ConverterParameter={StaticResource Zero}}" Width="1*"/>
+            <DataGridTextColumn Header="Első pont" Binding="{Binding Converter={StaticResource _2DLineConverter}, ConverterParameter={StaticResource One}}" Width="1*"/>
+            <DataGridTextColumn Header="Középső pont" Binding="{Binding Converter={StaticResource _2DLineConverter}, ConverterParameter={StaticResource Two}}" Width="1*"/>
+            <DataGridTextColumn Header="Tükrözött pont" Binding="{Binding Converter={StaticResource _2DLineConverter}, ConverterParameter={StaticResource Three}}" Width="1*"/>
+        </DataGrid.Columns>
+    </DataGrid>
+    
+</UserControl>

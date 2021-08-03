@@ -110,7 +110,7 @@ namespace AnnotationTool.View
             get { return _newLine; }
             set
             {
-                _newLine = value; 
+                _newLine = value;
                 NotifyPropertyChanged();
             }
         }
@@ -135,6 +135,11 @@ namespace AnnotationTool.View
 
         private void SetPlane(BitmapSource image)
         {
+            if (image == null)
+            {
+                return;
+            }
+
             var ratio = image.PixelWidth / (double)image.PixelHeight;
             var transform = Transform3D.Identity;
             transform = transform.AppendTransform(new ScaleTransform3D(ratio, 1.0, 1.0));
@@ -172,7 +177,7 @@ namespace AnnotationTool.View
             var viewPort = (Viewport3DX)parameter;
             var position = Mouse.GetPosition(viewPort);
             var hits = viewPort.FindHits(position);
-            
+
             foreach (var hit in hits)
             {
                 if (hit.ModelHit is MeshGeometryModel3D)
@@ -186,7 +191,7 @@ namespace AnnotationTool.View
         private MeshGeometry3D.Line GetNearestLine(Vector3 vector)
         {
             Dictionary<MeshGeometry3D.Line, float> lineDistancePairs = new Dictionary<MeshGeometry3D.Line, float>();
-            foreach (var line in Lines.Lines)
+            foreach (var line in Lines.Lines.Distinct())
             {
                 var dxc = vector.X - line.P0.X;
                 var dyc = vector.Y - line.P0.Y;
@@ -241,7 +246,7 @@ namespace AnnotationTool.View
                 return false;
         }
 
-        
+
         private void AddLine(object parameter)
         {
             var vector = GetVector(parameter);
@@ -257,29 +262,26 @@ namespace AnnotationTool.View
             }
             else
             {
-                if (IsNewLineValid(FirstPoint + (FirstPoint - vector), vector))
-                {
-                    Lines.Positions.Add(FirstPoint + (FirstPoint - vector));
-                    Lines.Positions.Add(vector);
-                    Lines.Indices.Add(Lines.Indices.Count);
-                    Lines.Indices.Add(Lines.Indices.Count);
-                    Lines.Colors.Add(ViewModelBase.GetColor(MarkingType));
-                    Lines.Colors.Add(ViewModelBase.GetColor(MarkingType));
-
-                    Lines = new LineGeometry3D()
-                    {
-                        Positions = Lines.Positions,
-                        Indices = Lines.Indices,
-                        Colors = Lines.Colors
-                    };
-                    //SaveLineToXML(newLine);
-
-                    ResetNewLine();
-                }
-                else
+                if (!IsNewLineValid(FirstPoint + (FirstPoint - vector), vector))
                 {
                     return;
                 }
+
+                Lines.Positions.Add(FirstPoint + (FirstPoint - vector));
+                Lines.Positions.Add(vector);
+                Lines.Indices.Add(Lines.Indices.Count);
+                Lines.Indices.Add(Lines.Indices.Count);
+                Lines.Colors.Add(ViewModelBase.GetColor(MarkingType));
+                Lines.Colors.Add(ViewModelBase.GetColor(MarkingType));
+
+                Lines = new LineGeometry3D()
+                {
+                    Positions = Lines.Positions,
+                    Indices = Lines.Indices,
+                    Colors = Lines.Colors
+                };
+
+                ResetNewLine();
             }
 
             IsFirstPoint = !IsFirstPoint;
@@ -326,13 +328,9 @@ namespace AnnotationTool.View
                 var remainingIndices = Lines.Indices;
                 var remainingColors = Lines.Colors;
 
-                //DeleteLineFromXML(_2DLineList[index / 2]);
-
                 remainingPositions.RemoveRange(index, 2);
                 remainingIndices.RemoveRange(remainingIndices.Count - 2, 2);
                 remainingColors.RemoveRange(index, 2);
-
-                //_2DLineList = _2DLineList.Where((v, i) => i != index / 2).ToList();
 
                 Lines = new LineGeometry3D()
                 {
@@ -369,7 +367,7 @@ namespace AnnotationTool.View
             if (IsNewLineValid(FirstPoint + (FirstPoint - vector), vector))
             {
                 var lineBuilder = new LineBuilder();
-                lineBuilder.AddLine(FirstPoint + (FirstPoint- vector), vector);
+                lineBuilder.AddLine(FirstPoint + (FirstPoint - vector), vector);
                 lineBuilder.AddCircle(FirstPoint, new Vector3(0, 0, 1), 0.04f, 360);
                 var lineGeometry = lineBuilder.ToLineGeometry3D();
                 lineGeometry.Colors = new Color4Collection();
@@ -406,15 +404,15 @@ namespace AnnotationTool.View
         }
 
         public static readonly DependencyProperty CameraProperty =
-            DependencyProperty.Register("Camera", typeof(Camera), typeof(ViewPort), 
+            DependencyProperty.Register("Camera", typeof(Camera), typeof(ViewPort),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
         public static readonly DependencyProperty SelectedUnprunedImageProperty =
-            DependencyProperty.Register("SelectedUnprunedImage", typeof(string), typeof(ViewPort), 
+            DependencyProperty.Register("SelectedUnprunedImage", typeof(string), typeof(ViewPort),
                 new PropertyMetadata(SelectedUnprunedImagePropertyChanged));
 
         public static readonly DependencyProperty LinesProperty =
-            DependencyProperty.Register("Lines", typeof(LineGeometry3D), typeof(ViewPort), 
+            DependencyProperty.Register("Lines", typeof(LineGeometry3D), typeof(ViewPort),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
         public static readonly DependencyProperty MarkingTypeProperty =

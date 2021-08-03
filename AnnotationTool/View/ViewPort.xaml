@@ -13,8 +13,6 @@
     <UserControl.Resources>
         <Style x:Key="ViewPortStyle" TargetType="{x:Type hx:Viewport3DX}">
             <Setter Property="ShowViewCube" Value="False"/>
-            <Setter Property="ShowCameraInfo" Value="False"/>
-            <Setter Property="IsRotationEnabled" Value="False"/>
             <Setter Property="UseDefaultGestures" Value="False"/>
         </Style>
     </UserControl.Resources>

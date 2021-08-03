@@ -38,12 +38,13 @@ namespace AnnotationTool.View
         {
             InitializeComponent();
             DataContext = this;
+
             var box = new MeshBuilder();
             box.AddBox(new Vector3(0, 0, 0), 10, 10, 0, BoxFaces.PositiveZ);
             _plane = box.ToMeshGeometry3D();
             _unprunedPlaneMaterial = PhongMaterials.Blue;
             _planeTransform = new TranslateTransform3D(0, 0, 0);
-
+            
             EffectsManager = new DefaultEffectsManager();
 
             DirectionalLightDirection = new Vector3D(-0, -0, -10);
@@ -51,7 +52,7 @@ namespace AnnotationTool.View
             AmbientLightColor = Colors.Black;
 
             ResetNewLine();
-
+            
             LeftClickCommand = new RelayCommand<object>(AddLine);
             CTRLLeftClickCommand = new RelayCommand<object>(SelectLine);
             CTRLRigtClickCommand = new RelayCommand<object>(DeleteLine);
@@ -158,21 +159,6 @@ namespace AnnotationTool.View
 
             UnprunedPlaneMaterial = material;
         }
-        private void SetCameraTarget(Vector3 target, double offset = 0)
-        {
-            if (offset == 0)
-            {
-                Camera.Position = new Point3D(target.X, target.Y, Camera.Position.Z);
-                Camera.LookDirection = new Vector3D(0, 0, -Camera.Position.Z);
-            }
-            else
-            {
-                Camera.Position = new Point3D(target.X + offset, target.Y + offset, target.Z + offset);
-                Camera.LookDirection = new Vector3D(-offset, -offset, -offset);
-            }
-
-            Camera = Camera;
-        }
         public Vector3 GetVector(object parameter)
         {
             var viewPort = (Viewport3DX)parameter;
@@ -259,7 +245,6 @@ namespace AnnotationTool.View
             if (IsFirstPoint)
             {
                 FirstPoint = vector;
-                //SetCameraTarget(vector);
             }
             else
             {

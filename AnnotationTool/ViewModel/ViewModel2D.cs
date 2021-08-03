@@ -48,6 +48,17 @@ namespace AnnotationTool.ViewModel
             DeleteErrorMessageCommand = new RelayCommand<object>(DeleteErrorMessage);
         }
 
+        private int _selectedTabIndex;
+
+        public int SelectedTabIndex
+        {
+            get { return _selectedTabIndex; }
+            set
+            { 
+                _selectedTabIndex = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         public string SelectedLeftImage
         {
@@ -157,24 +168,19 @@ namespace AnnotationTool.ViewModel
 
         private LineGeometry3D GetLineGeometry(List<_2DLine> _2DLines)
         {
-            LineGeometry3D lineGeometry = new LineGeometry3D()
-            {
-                Positions = new Vector3Collection(),
-                Indices = new IntCollection(),
-                Colors = new Color4Collection()
-            };
-
+            var lineBuilder = new LineBuilder();
             foreach (var line in _2DLines)
             {
                 var v1 = GetVectorFromPixel(line.FirstPoint);
                 var v2 = GetVectorFromPixel(line.MirroredPoint);
-
-                lineGeometry.Positions.Add(v1);
-                lineGeometry.Positions.Add(v2);
-                lineGeometry.Indices.Add(lineGeometry.Indices.Count);
-                lineGeometry.Indices.Add(lineGeometry.Indices.Count);
-                lineGeometry.Colors.Add(GetColor(line.Type));
-                lineGeometry.Colors.Add(GetColor(line.Type));
+                lineBuilder.AddLine(v1, v2);
+            }
+            var lineGeometry = lineBuilder.ToLineGeometry3D();
+            lineGeometry.Colors = new Color4Collection();
+            for (int i = 0; i < lineGeometry.Indices.Count/2; i++)
+            {
+                lineGeometry.Colors.Add(GetColor(_2DLines[i].Type));
+                lineGeometry.Colors.Add(GetColor(_2DLines[i].Type));
             }
 
             return lineGeometry;
@@ -207,7 +213,6 @@ namespace AnnotationTool.ViewModel
                 P1 = GetVectorFromPixel(line.MirroredPoint),
             };
         }
-
         private _2DLine Get_2DLine(Geometry3D.Line line)
         {
             var index = _2DLeftLineList.IndexOf(_2DLeftLineList.Where(x => ((x.MirroredPoint == GetPixelFromVector(line.P0)) && (x.FirstPoint == GetPixelFromVector(line.P1))) || ((x.FirstPoint == GetPixelFromVector(line.P0)) && (x.MirroredPoint == GetPixelFromVector(line.P1)))).FirstOrDefault());
@@ -219,9 +224,10 @@ namespace AnnotationTool.ViewModel
                 {
                     return new _2DLine(new Vector3(0), new Vector3(0), MarkingType.GeneralPruning);
                 }
-
+                SelectedTabIndex = 1;
                 return _2dRightLineList[index];
             }
+            SelectedTabIndex = 0;
             return _2dLeftLineList[index];
         }
 
@@ -427,17 +433,12 @@ namespace AnnotationTool.ViewModel
                 disposedValue = true;
             }
         }
-
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
         ~ViewModel2D()
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: false);
         }
-
         public void Dispose()
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }

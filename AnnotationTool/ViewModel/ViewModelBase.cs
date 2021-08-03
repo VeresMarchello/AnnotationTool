@@ -29,14 +29,7 @@ namespace AnnotationTool.ViewModel
 
         public ViewModelBase()
         {
-            _camera = new PerspectiveCamera
-            {
-                Position = new Media3D.Point3D(0, 0, 10),
-                LookDirection = new Media3D.Vector3D(0, 0, -10),
-                UpDirection = new Media3D.Vector3D(0, 1, 0),
-                NearPlaneDistance = 0,
-                FarPlaneDistance = 1500,
-            };
+            ResetCamera();
 
             _markingType = MarkingType.GeneralPruning;
             MarkingTypes = Enum.GetValues(typeof(MarkingType)).Cast<MarkingType>().Where(x => x != MarkingType.None);
@@ -80,18 +73,10 @@ namespace AnnotationTool.ViewModel
         {
             return colorMarkingTypePairs[color];
         }
-        protected void SetCameraTarget(Vector3 target, double offset = 0)
+        protected void SetCameraTarget(Vector3 target)
         {
-            if (offset == 0)
-            {
-                Camera.Position = new Media3D.Point3D(target.X, target.Y, Camera.Position.Z);
-                Camera.LookDirection = new Media3D.Vector3D(0, 0, -Camera.Position.Z);
-            }
-            else
-            {
-                Camera.Position = new Media3D.Point3D(target.X + offset, target.Y + offset, target.Z + offset);
-                Camera.LookDirection = new Media3D.Vector3D(-offset, -offset, -offset);
-            }
+            Camera.Position = new Media3D.Point3D(target.X, target.Y, Camera.Position.Z);
+            Camera.LookDirection = new Media3D.Vector3D(0, 0, -Camera.Position.Z);
 
             NotifyPropertyChanged("Camera");
         }

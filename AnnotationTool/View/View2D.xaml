@@ -53,9 +53,9 @@
         </Grid.RowDefinitions>
 
 
-        <Menu Grid.Row="0" Grid.ColumnSpan="2">
+        <!--<Menu Grid.Row="0" Grid.ColumnSpan="2">
             <MenuItem Header="Képek tallózása" Command="{Binding ChangePathCommand}"/>
-        </Menu>
+        </Menu>-->
 
         <Grid Grid.Row="1" Grid.Column="0">
             <Grid.RowDefinitions>

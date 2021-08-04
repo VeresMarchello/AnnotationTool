@@ -44,7 +44,7 @@ namespace AnnotationTool.View
             _plane = box.ToMeshGeometry3D();
             _unprunedPlaneMaterial = PhongMaterials.Blue;
             _planeTransform = new TranslateTransform3D(0, 0, 0);
-            
+
             EffectsManager = new DefaultEffectsManager();
 
             DirectionalLightDirection = new Vector3D(-0, -0, -10);
@@ -52,7 +52,7 @@ namespace AnnotationTool.View
             AmbientLightColor = Colors.Black;
 
             ResetNewLine();
-            
+
             LeftClickCommand = new RelayCommand<object>(AddLine);
             CTRLLeftClickCommand = new RelayCommand<object>(SelectLine);
             CTRLRigtClickCommand = new RelayCommand<object>(DeleteLine);
@@ -381,6 +381,11 @@ namespace AnnotationTool.View
             get { return (MarkingType)GetValue(MarkingTypeProperty); }
             set { SetValue(MarkingTypeProperty, value); }
         }
+        public Geometry3D.Line SelectedLine
+        {
+            get { return (Geometry3D.Line)GetValue(SelectedLineProperty); }
+            set { SetValue(SelectedLineProperty, value); }
+        }
 
         public static readonly DependencyProperty CameraProperty =
             DependencyProperty.Register("Camera", typeof(Camera), typeof(ViewPort),
@@ -397,19 +402,9 @@ namespace AnnotationTool.View
         public static readonly DependencyProperty MarkingTypeProperty =
             DependencyProperty.Register("MarkingType", typeof(MarkingType), typeof(ViewPort));
 
-
-
-        public Geometry3D.Line SelectedLine
-        {
-            get { return (Geometry3D.Line)GetValue(SelectedLineProperty); }
-            set { SetValue(SelectedLineProperty, value); }
-        }
-
         public static readonly DependencyProperty SelectedLineProperty =
             DependencyProperty.Register("SelectedLine", typeof(Geometry3D.Line), typeof(ViewPort),
                 new FrameworkPropertyMetadata(new Geometry3D.Line(), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
-
-
 
 
         private static void SelectedUnprunedImagePropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)

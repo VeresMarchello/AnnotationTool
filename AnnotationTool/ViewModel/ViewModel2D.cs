@@ -31,6 +31,8 @@ namespace AnnotationTool.ViewModel
         private bool disposedValue;
         private readonly ReaderWriterLockSlim xmlLock = new ReaderWriterLockSlim();
 
+        private int _selectedTabIndex;
+        
 
         public ViewModel2D()
         {
@@ -48,17 +50,6 @@ namespace AnnotationTool.ViewModel
             DeleteErrorMessageCommand = new RelayCommand<object>(DeleteErrorMessage);
         }
 
-        private int _selectedTabIndex;
-
-        public int SelectedTabIndex
-        {
-            get { return _selectedTabIndex; }
-            set
-            { 
-                _selectedTabIndex = value;
-                NotifyPropertyChanged();
-            }
-        }
 
         public string SelectedLeftImage
         {
@@ -162,6 +153,16 @@ namespace AnnotationTool.ViewModel
             }
         }
 
+        public int SelectedTabIndex
+        {
+            get { return _selectedTabIndex; }
+            set
+            {
+                _selectedTabIndex = value;
+                NotifyPropertyChanged();
+            }
+        }
+
         public ICommand SelectImageCommand { get; private set; }
         public ICommand DeleteErrorMessageCommand { get; private set; }
 
@@ -169,15 +170,18 @@ namespace AnnotationTool.ViewModel
         private LineGeometry3D GetLineGeometry(List<_2DLine> _2DLines)
         {
             var lineBuilder = new LineBuilder();
+
             foreach (var line in _2DLines)
             {
                 var v1 = GetVectorFromPixel(line.FirstPoint);
                 var v2 = GetVectorFromPixel(line.MirroredPoint);
+
                 lineBuilder.AddLine(v1, v2);
             }
+
             var lineGeometry = lineBuilder.ToLineGeometry3D();
             lineGeometry.Colors = new Color4Collection();
-            for (int i = 0; i < lineGeometry.Indices.Count/2; i++)
+            for (int i = 0; i < lineGeometry.Indices.Count / 2; i++)
             {
                 lineGeometry.Colors.Add(GetColor(_2DLines[i].Type));
                 lineGeometry.Colors.Add(GetColor(_2DLines[i].Type));
@@ -199,6 +203,7 @@ namespace AnnotationTool.ViewModel
 
             return lineList;
         }
+
 
         private Geometry3D.Line GetLine(_2DLine line)
         {
@@ -224,13 +229,14 @@ namespace AnnotationTool.ViewModel
                 {
                     return new _2DLine(new Vector3(0), new Vector3(0), MarkingType.GeneralPruning);
                 }
+
                 SelectedTabIndex = 1;
                 return _2dRightLineList[index];
             }
+
             SelectedTabIndex = 0;
             return _2dLeftLineList[index];
         }
-
 
         private async void ChangeSelectedImage(object newPath)
         {
@@ -345,6 +351,7 @@ namespace AnnotationTool.ViewModel
                       {
                           ErrorMessages.Add($"{new FileInfo(fullFileName).Name} nem található. Fájl létrehozása...");
                       });
+                      return;
                   }
 
                   Lines lines = new Lines()
@@ -416,6 +423,8 @@ namespace AnnotationTool.ViewModel
 
                 return list;
             }, cancellationToken);
+
+
         }
 
         protected virtual void Dispose(bool disposing)
@@ -425,11 +434,8 @@ namespace AnnotationTool.ViewModel
                 if (disposing)
                 {
                     xmlLock.Dispose();
-                    // TODO: dispose managed state (managed objects)
                 }
 
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
                 disposedValue = true;
             }
         }

@@ -1,7 +1,18 @@
 ﻿using AnnotationTool.Model;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
 
 namespace AnnotationTool.View
 {
@@ -32,7 +43,7 @@ namespace AnnotationTool.View
         public static readonly DependencyProperty Selected2dLineProperty =
             DependencyProperty.Register("Selected2dLine", typeof(_2DLine), typeof(DataGrid),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
-        
+
         public static readonly DependencyProperty _2DLineListProperty =
             DependencyProperty.Register("_2DLineList", typeof(List<_2DLine>), typeof(DataGrid));
 

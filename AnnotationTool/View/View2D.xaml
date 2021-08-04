@@ -47,17 +47,8 @@
             <ColumnDefinition Width="2*"/>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
-            <RowDefinition/>
-        </Grid.RowDefinitions>
 
-
-        <!--<Menu Grid.Row="0" Grid.ColumnSpan="2">
-            <MenuItem Header="Képek tallózása" Command="{Binding ChangePathCommand}"/>
-        </Menu>-->
-
-        <Grid Grid.Row="1" Grid.Column="0">
+        <Grid Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition/>
                 <RowDefinition/>
@@ -80,7 +71,7 @@
                                     <ColumnDefinition Width="1*"/>
                                     <ColumnDefinition Width="1*"/>
                                 </Grid.ColumnDefinitions>
-
+                                
                                 <TextBlock Grid.Column="0" Text="{Binding}"/>
                                 <Button Grid.Column="1" Content="Üzenet törlése" HorizontalAlignment="Right" Foreground="Red" Command="{Binding ElementName=view2d, Path=DataContext.DeleteErrorMessageCommand}" CommandParameter="{Binding}"/>
                             </Grid>
@@ -90,7 +81,7 @@
             </Expander>
         </Grid>
 
-        <Grid Grid.Row="1" Grid.Column="1">
+        <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="1*"/>
                 <RowDefinition Height="auto"/>

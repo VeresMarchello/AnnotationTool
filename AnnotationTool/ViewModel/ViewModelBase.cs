@@ -11,6 +11,7 @@ using AnnotationTool.Commands;
 using System.Linq;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using System.IO;
 
 namespace AnnotationTool.ViewModel
 {
@@ -26,6 +27,7 @@ namespace AnnotationTool.ViewModel
                 { Media.Color.FromArgb(255, 0, 0, 255).ToColor4(), MarkingType.PruningFromStems }
             };
 
+        public string AppPath { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
         public ViewModelBase()
         {
@@ -37,6 +39,7 @@ namespace AnnotationTool.ViewModel
             SelectTypeCommand = new RelayCommand<object>(SetMarkingType);
             KeyCommand = new RelayCommand<object>(SetMarkingType);
             CTRLRCommand = new RelayCommand<object>(ResetCamera);
+            ChangePathCommand = new RelayCommand<object>(SetPath);
         }
 
         public Camera Camera
@@ -63,6 +66,7 @@ namespace AnnotationTool.ViewModel
         public ICommand SelectTypeCommand { get; set; }
         public ICommand KeyCommand { get; set; }
         public ICommand CTRLRCommand { get; set; }
+        public ICommand ChangePathCommand { get; set; }
 
 
         public static Color4 GetColor(MarkingType markingType)
@@ -94,6 +98,19 @@ namespace AnnotationTool.ViewModel
         private void SetMarkingType(object parameter)
         {
             MarkingType = (MarkingType)Enum.Parse(typeof(MarkingType), parameter.ToString());
+        }
+        private void SetPath(object parameter) 
+        {
+            using (var fbd = new FolderBrowserDialog())
+            {
+                fbd.RootFolder = Environment.SpecialFolder.Desktop;
+                DialogResult result = fbd.ShowDialog();
+
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                {
+                    AppPath = fbd.SelectedPath;
+                }
+            }
         }
 
         public static string GetMarkingTypeName(MarkingType type)

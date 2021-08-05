@@ -15,7 +15,7 @@ using System.Threading;
 
 namespace AnnotationTool.ViewModel
 {
-    class ViewModel2D : ViewModelBase, IDisposable
+    public class ViewModel2D : ViewModelBase, IDisposable
     {
         private string _selectedLeftImage;
         private string _selectedRightImage;
@@ -32,7 +32,8 @@ namespace AnnotationTool.ViewModel
         private readonly ReaderWriterLockSlim xmlLock = new ReaderWriterLockSlim();
 
         private int _selectedTabIndex;
-        
+        private bool _isAnnotationEnabled;
+
 
         public ViewModel2D()
         {
@@ -46,6 +47,7 @@ namespace AnnotationTool.ViewModel
             _selected2dLine = new _2DLine(new Vector3(0), new Vector3(0), MarkingType.GeneralPruning);
             _source = new CancellationTokenSource();
             _errorMessages = new ObservableCollection<string>() { };
+            _isAnnotationEnabled = true;
             SelectImageCommand = new RelayCommand<object>(ChangeSelectedImage);
             DeleteErrorMessageCommand = new RelayCommand<object>(DeleteErrorMessage);
         }
@@ -162,6 +164,15 @@ namespace AnnotationTool.ViewModel
                 NotifyPropertyChanged();
             }
         }
+        public bool IsAnnotationEnabled
+        {
+            get { return _isAnnotationEnabled; }
+            set
+            {
+                _isAnnotationEnabled = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         public ICommand SelectImageCommand { get; private set; }
         public ICommand DeleteErrorMessageCommand { get; private set; }
@@ -242,6 +253,7 @@ namespace AnnotationTool.ViewModel
         {
             if (newPath is string imagePath && SelectedLeftImage != imagePath)
             {
+                IsAnnotationEnabled = false;
                 if (_source != null && !_source.IsCancellationRequested)
                 {
                     _source.Cancel();
@@ -257,6 +269,8 @@ namespace AnnotationTool.ViewModel
                 var results = await Task.WhenAll(
                     LoadLinesFromXML(SelectedLeftImage, _source.Token),
                     LoadLinesFromXML(SelectedRightImage, _source.Token));
+
+                IsAnnotationEnabled = true;
 
                 _2DLeftLineList = results[0];
                 _2DRightLineList = results[1];
@@ -341,17 +355,9 @@ namespace AnnotationTool.ViewModel
         }
         private void SaveLineToXML(List<_2DLine> newLines, string fullFileName)
         {
-            Task.Run(() =>
+            _ = Task.Run(() =>
               {
                   fullFileName = fullFileName.Replace("JPG", "XML");
-
-                  if (!File.Exists(fullFileName))
-                  {
-                      App.Current.Dispatcher.Invoke(() =>
-                      {
-                          ErrorMessages.Add($"{new FileInfo(fullFileName).Name} nem található. Fájl létrehozása...");
-                      });
-                  }
 
                   Lines lines = new Lines()
                   {
@@ -379,16 +385,18 @@ namespace AnnotationTool.ViewModel
                   {
                       return;
                   }
+                  FileStream stream = File.Open(fullFileName, FileMode.OpenOrCreate);
                   try
                   {
-                      using (Stream stream = File.Open(fullFileName, FileMode.OpenOrCreate))
-                      {
-                          XmlSerializer serializer = new XmlSerializer(typeof(Lines));
-                          serializer.Serialize(stream, lines);
-                      }
+                      stream.SetLength(0);
+                      XmlSerializer serializer = new XmlSerializer(typeof(Lines));
+                      serializer.Serialize(stream, lines);
                   }
                   finally
                   {
+                      stream.Flush(true);
+                      stream.Close();
+                      stream.Dispose();
                       xmlLock.ExitWriteLock();
                   }
               });
@@ -401,29 +409,42 @@ namespace AnnotationTool.ViewModel
                 fullFileName = fullFileName.Replace("JPG", "XML");
                 if (!File.Exists(fullFileName))
                 {
-                    App.Current.Dispatcher.Invoke(() =>
-                    {
-                        ErrorMessages.Add($"Betöltés Sikertelen: {new FileInfo(fullFileName).Name} nem található.");
-                    });
                     return list;
                 }
 
-                XmlSerializer serializer = new XmlSerializer(typeof(Lines));
-
-                if (serializer.Deserialize(File.OpenRead(fullFileName)) is Lines lines)
+                FileStream stream = File.OpenRead(fullFileName);
+                try
                 {
-                    list = lines.Line.ConvertAll(line =>
+                    XmlSerializer serializer = new XmlSerializer(typeof(Lines));
+
+                    if (serializer.Deserialize(stream) is Lines lines)
                     {
-                        var firstPoint = line.Points.Point[0];
-                        var secondPoint = line.Points.Point[1];
-                        return new _2DLine(new Vector3(firstPoint.X, firstPoint.Y, 0), new Vector3(secondPoint.X, secondPoint.Y, 0), line.Type);
+                        list = lines.Line.ConvertAll(line =>
+                        {
+                            var firstPoint = line.Points.Point[0];
+                            var secondPoint = line.Points.Point[1];
+                            return new _2DLine(new Vector3(firstPoint.X, firstPoint.Y, 0), new Vector3(secondPoint.X, secondPoint.Y, 0), line.Type);
+                        });
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    using (File.Open(fullFileName, FileMode.Truncate)) { }
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        ErrorMessages.Add($"Hibás xml formátum. {new FileInfo(fullFileName).Name} felülírása...");
                     });
+                    return new List<_2DLine>();
+                }
+                finally
+                {
+                    stream.Flush(true);
+                    stream.Close();
+                    stream.Dispose();
                 }
 
                 return list;
             }, cancellationToken);
-
-
         }
 
         protected virtual void Dispose(bool disposing)

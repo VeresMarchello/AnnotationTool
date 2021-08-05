@@ -6,7 +6,7 @@
              xmlns:hx="http://helix-toolkit.org/wpf/SharpDX"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:ie="http://schemas.microsoft.com/expression/2010/interactions"
-             xmlns:vm="clr-namespace:AnnotationTool.ViewModel"
+             x:Name="usercontrol"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
 
@@ -15,6 +15,7 @@
             <Setter Property="ShowViewCube" Value="False"/>
             <Setter Property="IsRotationEnabled" Value="False"/>
             <Setter Property="UseDefaultGestures" Value="False"/>
+            <Setter Property="IsEnabled" Value="{Binding ElementName=usercontrol, Path=IsEnabled}"/>
         </Style>
     </UserControl.Resources>
 

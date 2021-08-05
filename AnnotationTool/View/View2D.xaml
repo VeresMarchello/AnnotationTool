@@ -56,10 +56,19 @@
             </Grid.RowDefinitions>
 
 
-            <view:ViewPort Grid.Row="0" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedLeftImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}"/>
-            <view:ViewPort Grid.Row="1" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.RightLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedRightImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}"/>
+            <view:ViewPort Grid.Row="0" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedLeftImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}" IsEnabled="{Binding ElementName=view2d, Path=DataContext.IsAnnotationEnabled}"/>
+            <view:ViewPort Grid.Row="1" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.RightLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedRightImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}" IsEnabled="{Binding ElementName=view2d, Path=DataContext.IsAnnotationEnabled}"/>
 
-            <Expander Grid.Row="2" ExpandDirection="Up" Visibility="{Binding ErrorMessages.Count, Converter={StaticResource IntToVisibilityConverter}}">
+        </Grid>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+            <Expander Grid.Row="3" ExpandDirection="Up" Visibility="{Binding ErrorMessages.Count, Converter={StaticResource IntToVisibilityConverter}}">
                 <Expander.Header>
                     <TextBlock Text="{Binding ErrorMessages.Count, StringFormat='Hibaüzenetek: ({0})'}"/>
                 </Expander.Header>
@@ -79,14 +88,6 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Expander>
-        </Grid>
-
-        <Grid Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="1*"/>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="1*"/>
-            </Grid.RowDefinitions>
 
             <TabControl SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}" Grid.Row="0" Margin="10, 0, 10, 10">
                 <TabItem Header="Bal oldal">

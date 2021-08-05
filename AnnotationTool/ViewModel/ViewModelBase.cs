@@ -13,7 +13,7 @@ using System.Collections.Generic;
 
 namespace AnnotationTool.ViewModel
 {
-    class ViewModelBase : INotifyPropertyChanged
+    public class ViewModelBase : INotifyPropertyChanged
     {
         private Camera _camera;
         private MarkingType _markingType;

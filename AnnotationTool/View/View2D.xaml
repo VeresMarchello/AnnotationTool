@@ -63,7 +63,7 @@
                 <Expander.Header>
                     <TextBlock Text="{Binding ErrorMessages.Count, StringFormat='Hibaüzenetek: ({0})'}"/>
                 </Expander.Header>
-                <ListBox ItemsSource="{Binding ErrorMessages}" MaxHeight="50" HorizontalContentAlignment="Stretch">
+                <ListBox ItemsSource="{Binding ErrorMessages}" MaxHeight="100" HorizontalContentAlignment="Stretch">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Grid>

@@ -271,7 +271,7 @@ namespace AnnotationTool.ViewModel
         {
             try
             {
-                return Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}\Images\Left\Unpruned", "*.JPG");
+                return Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}Images\Left\Unpruned", "*.JPG");
             }
             catch
             {
@@ -351,7 +351,6 @@ namespace AnnotationTool.ViewModel
                       {
                           ErrorMessages.Add($"{new FileInfo(fullFileName).Name} nem található. Fájl létrehozása...");
                       });
-                      return;
                   }
 
                   Lines lines = new Lines()
@@ -382,7 +381,7 @@ namespace AnnotationTool.ViewModel
                   }
                   try
                   {
-                      using (Stream stream = File.Open(fullFileName, FileMode.Create))
+                      using (Stream stream = File.Open(fullFileName, FileMode.OpenOrCreate))
                       {
                           XmlSerializer serializer = new XmlSerializer(typeof(Lines));
                           serializer.Serialize(stream, lines);

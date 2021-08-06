@@ -20,7 +20,7 @@
         <converters:MarkingTypeConverter x:Key="MarkingTypeConverter"/>
         <converters:MarkingTypeNameConverter x:Key="MarkingTypeNameConverter"/>
 
-        <Style TargetType="{x:Type Button}">
+        <Style x:Key="ButtonStyle" TargetType="{x:Type Button}">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -63,12 +63,52 @@
 
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="1*"/>
+                <RowDefinition Height="3.2*"/>
+                <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="1*"/>
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
-            <Expander Grid.Row="3" ExpandDirection="Up" Visibility="{Binding ErrorMessages.Count, Converter={StaticResource IntToVisibilityConverter}}">
+
+            <Button Margin="10, 0, 10, 10" Grid.Row="1" Content="Fájlok helyének megnyitása (XML, JPG)" Command="{Binding ShowFilesCommand}"/>
+            
+            <TabControl SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}" Grid.Row="0" Margin="10, 0, 10, 10">
+                <TabItem Header="Bal oldal">
+                    <view:DataGrid Selected2dLine="{Binding ElementName=view2d,Path=DataContext.Selected2dLine}" _2DLineList="{Binding ElementName=view2d, Path=DataContext._2DLeftLineList}"/>
+                </TabItem>
+                <TabItem Header="Jobb oldal">
+                    <view:DataGrid Selected2dLine="{Binding ElementName=view2d,Path=DataContext.Selected2dLine}" _2DLineList="{Binding ElementName=view2d, Path=DataContext._2DRightLineList}"/>
+                </TabItem>
+            </TabControl>
+
+            <ListBox Grid.Row="2" Margin="10, 0, 10, 10" BorderThickness="0" SelectedItem="{Binding MarkingType, Mode=TwoWay}" ItemsSource="{Binding MarkingTypes}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <RadioButton GroupName="RB" Background="{Binding Converter={StaticResource MarkingTypeConverter}}" Content="{Binding Converter={StaticResource MarkingTypeNameConverter}}" IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Grid Grid.Row="3" Margin="10, 0, 5, 10">
+                <ScrollViewer x:Name="scrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding Images}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource ButtonStyle}" Margin="0,2,2,0" Command="{Binding Path=DataContext.SelectImageCommand, ElementName=scrollViewer}" CommandParameter="{Binding}">
+                                    <Image x:Name="Image" Source="{Binding  }"/>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+            
+            <Expander Grid.Row="4" ExpandDirection="Up" Visibility="{Binding ErrorMessages.Count, Converter={StaticResource IntToVisibilityConverter}}">
                 <Expander.Header>
                     <TextBlock Text="{Binding ErrorMessages.Count, StringFormat='Hibaüzenetek: ({0})'}"/>
                 </Expander.Header>
@@ -88,42 +128,6 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Expander>
-
-            <TabControl SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}" Grid.Row="0" Margin="10, 0, 10, 10">
-                <TabItem Header="Bal oldal">
-                    <view:DataGrid Selected2dLine="{Binding ElementName=view2d,Path=DataContext.Selected2dLine}" _2DLineList="{Binding ElementName=view2d, Path=DataContext._2DLeftLineList}"/>
-                </TabItem>
-                <TabItem Header="Jobb oldal">
-                    <view:DataGrid Selected2dLine="{Binding ElementName=view2d,Path=DataContext.Selected2dLine}" _2DLineList="{Binding ElementName=view2d, Path=DataContext._2DRightLineList}"/>
-                </TabItem>
-            </TabControl>
-
-            <ListBox Grid.Row="1" Margin="10, 0, 10, 10" BorderThickness="0" SelectedItem="{Binding MarkingType, Mode=TwoWay}" ItemsSource="{Binding MarkingTypes}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <RadioButton GroupName="RB" Background="{Binding Converter={StaticResource MarkingTypeConverter}}" Content="{Binding Converter={StaticResource MarkingTypeNameConverter}}" IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-
-            <Grid Grid.Row="2" Margin="10, 0, 5, 10">
-                <ScrollViewer x:Name="scrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                    <ItemsControl ItemsSource="{Binding Images}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button Margin="0,2,2,0" Command="{Binding Path=DataContext.SelectImageCommand, ElementName=scrollViewer}" CommandParameter="{Binding}">
-                                    <Image x:Name="Image" Source="{Binding}"/>
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                    </ItemsControl>
-                </ScrollViewer>
-            </Grid>
 
         </Grid>
     </Grid>

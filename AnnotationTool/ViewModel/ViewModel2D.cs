@@ -50,6 +50,7 @@ namespace AnnotationTool.ViewModel
             _isAnnotationEnabled = true;
             SelectImageCommand = new RelayCommand<object>(ChangeSelectedImage);
             DeleteErrorMessageCommand = new RelayCommand<object>(DeleteErrorMessage);
+            ShowFilesCommand = new RelayCommand<object>(ShowFiles);
         }
 
 
@@ -176,6 +177,7 @@ namespace AnnotationTool.ViewModel
 
         public ICommand SelectImageCommand { get; private set; }
         public ICommand DeleteErrorMessageCommand { get; private set; }
+        public ICommand ShowFilesCommand { get; private set; }
 
 
         private LineGeometry3D GetLineGeometry(List<_2DLine> _2DLines)
@@ -445,6 +447,25 @@ namespace AnnotationTool.ViewModel
 
                 return list;
             }, cancellationToken);
+        }
+
+        private void ShowFiles(object parameter = null)
+        {
+            if (String.IsNullOrEmpty(SelectedLeftImage))
+            {
+                ErrorMessages.Add("Fájlok nem találhatók. Újraindítás szükséges");
+                return;
+            }
+
+            using (System.Diagnostics.Process process = new System.Diagnostics.Process())
+            {
+                var startInfo = new System.Diagnostics.ProcessStartInfo();
+                startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+                startInfo.FileName = "cmd.exe";
+                startInfo.Arguments = string.Format("/C start {0}", Path.GetDirectoryName(SelectedLeftImage));
+                process.StartInfo = startInfo;
+                process.Start();
+            }
         }
 
         protected virtual void Dispose(bool disposing)

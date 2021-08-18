@@ -108,6 +108,7 @@ namespace AnnotationTool.ViewModel
                 _2dLeftLineList = value;
                 NotifyPropertyChanged();
                 NotifyPropertyChanged("LeftLines");
+                SelectedTabIndex = 0;
             }
         }
         public List<_2DLine> _2DRightLineList
@@ -118,6 +119,7 @@ namespace AnnotationTool.ViewModel
                 _2dRightLineList = value;
                 NotifyPropertyChanged();
                 NotifyPropertyChanged("RightLines");
+                SelectedTabIndex = 1;
             }
         }
 
@@ -240,7 +242,8 @@ namespace AnnotationTool.ViewModel
 
                 if (index < 0)
                 {
-                    return new _2DLine(new Vector3(0), new Vector3(0), MarkingType.GeneralPruning);
+                    var vector = GetPixelFromVector(new Vector3(0));
+                    return new _2DLine(vector, vector, MarkingType.GeneralPruning);
                 }
 
                 SelectedTabIndex = 1;
@@ -451,7 +454,8 @@ namespace AnnotationTool.ViewModel
 
         private void ShowFiles(object parameter = null)
         {
-            if (String.IsNullOrEmpty(SelectedLeftImage))
+            var fileInfo = new FileInfo(SelectedLeftImage);
+            if (!fileInfo.Exists || !fileInfo.Directory.Exists)
             {
                 ErrorMessages.Add("Fájlok nem találhatók. Újraindítás szükséges");
                 return;
@@ -459,10 +463,11 @@ namespace AnnotationTool.ViewModel
 
             using (System.Diagnostics.Process process = new System.Diagnostics.Process())
             {
-                var startInfo = new System.Diagnostics.ProcessStartInfo();
-                startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-                startInfo.FileName = "cmd.exe";
-                startInfo.Arguments = string.Format("/C start {0}", Path.GetDirectoryName(SelectedLeftImage));
+                var startInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = fileInfo.Directory.FullName
+                };
                 process.StartInfo = startInfo;
                 process.Start();
             }

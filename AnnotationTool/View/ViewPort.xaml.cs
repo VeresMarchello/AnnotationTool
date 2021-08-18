@@ -175,23 +175,21 @@ namespace AnnotationTool.View
 
             return new Vector3(1000);
         }
-        private MeshGeometry3D.Line GetNearestLine(Vector3 vector)
+        private Geometry3D.Line GetNearestLine(Vector3 vector)
         {
-            Dictionary<MeshGeometry3D.Line, float> lineDistancePairs = new Dictionary<MeshGeometry3D.Line, float>();
+            Dictionary<Geometry3D.Line, double> lineDistancePairs = new Dictionary<Geometry3D.Line, double>();
             foreach (var line in Lines.Lines.Distinct())
             {
-                var dxc = vector.X - line.P0.X;
-                var dyc = vector.Y - line.P0.Y;
-                var dxl = line.P1.X - line.P0.X;
-                var dyl = line.P1.Y - line.P0.Y;
-                var cross = dxc * dyl - dyc * dxl;
-
-                lineDistancePairs.Add(line, Math.Abs(cross));
+                var lineLength = (float)(Math.Pow(line.P0.X - line.P1.X, 2) + Math.Pow(line.P0.Y - line.P1.Y, 2));
+                var t = ((vector.X - line.P0.X) * (line.P1.X - line.P0.X) + (vector.Y - line.P0.Y) * (line.P1.Y - line.P0.Y)) / lineLength;
+                t = Math.Max(0, Math.Min(1, t));
+                var vector2 = new Vector3(line.P0.X + t * (line.P1.X - line.P0.X), line.P0.Y + t * (line.P1.Y - line.P0.Y), 0);
+                lineDistancePairs.Add(line, Math.Sqrt((float)(Math.Pow(vector.X - vector2.X, 2) + Math.Pow(vector.Y - vector2.Y, 2))));
             }
 
             if (lineDistancePairs.Count < 1)
             {
-                return new MeshGeometry3D.Line();
+                return new Geometry3D.Line();
             }
 
             return lineDistancePairs.OrderBy(x => x.Value).First().Key;
@@ -232,7 +230,6 @@ namespace AnnotationTool.View
             else
                 return false;
         }
-
 
         private void AddLine(object parameter)
         {

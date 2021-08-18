@@ -16,6 +16,9 @@
         <Style TargetType="{x:Type DataGrid}">
             <Setter Property="AutoGenerateColumns" Value="False"/>
             <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="CanUserResizeRows" Value="False"/>
+            <Setter Property="CanUserReorderColumns" Value="False"/>
+            <Setter Property="SelectionMode" Value="Single"/>
         </Style>
 
         <Style TargetType="{x:Type DataGridCell}">
@@ -25,6 +28,7 @@
                 <Trigger Property="IsSelected" Value="True">
                     <Setter Property="Background" Value="{Binding Path=Type, Converter={StaticResource MarkingTypeConverter}}"/>
                     <Setter Property="Foreground" Value="Black"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
                 </Trigger>
             </Style.Triggers>
         </Style>

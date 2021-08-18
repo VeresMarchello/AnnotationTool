@@ -16,6 +16,7 @@
             <Setter Property="IsRotationEnabled" Value="False"/>
             <Setter Property="UseDefaultGestures" Value="False"/>
             <Setter Property="IsEnabled" Value="{Binding ElementName=usercontrol, Path=IsEnabled}"/>
+            <Setter Property="EnableDeferredRendering" Value="False"/>
         </Style>
     </UserControl.Resources>
 

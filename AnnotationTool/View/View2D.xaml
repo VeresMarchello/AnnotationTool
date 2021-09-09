@@ -172,7 +172,11 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Button Style="{StaticResource ButtonStyle}" Margin="0,2,2,0" Command="{Binding Path=DataContext.SelectImageCommand, ElementName=scrollViewer}" CommandParameter="{Binding}">
-                                    <Image x:Name="Image" Source="{Binding}"/>
+                                    <Image x:Name="Image">
+                                        <Image.Source>
+                                            <BitmapImage UriSource="{Binding}" DecodePixelWidth="200"/>
+                                        </Image.Source>
+                                    </Image>
                                 </Button>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

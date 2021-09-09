@@ -82,7 +82,15 @@ namespace AnnotationTool.View
                 NotifyPropertyChanged();
 
                 var material = value.CloneMaterial();
-                var prunedImage = new BitmapImage(new Uri(SelectedUnprunedImage.Replace("Unpruned", "Pruned"), UriKind.RelativeOrAbsolute));
+                //var prunedImage = new BitmapImage(new Uri(SelectedUnprunedImage.Replace("Unpruned", "Pruned"), UriKind.RelativeOrAbsolute));
+                var prunedImage = new BitmapImage();
+                prunedImage.BeginInit();
+                prunedImage.UriSource = new Uri(SelectedUnprunedImage.Replace("Unpruned", "Pruned"), UriKind.RelativeOrAbsolute);
+                prunedImage.CreateOptions = BitmapCreateOptions.None;
+                prunedImage.CacheOption = BitmapCacheOption.Default;
+                prunedImage.DecodePixelWidth = 1000;
+                prunedImage.EndInit();
+
                 material.DiffuseMap = new MemoryStream(prunedImage.ToByteArray());
                 PrunedPlaneMaterial = material;
 
@@ -242,6 +250,18 @@ namespace AnnotationTool.View
             if (IsFirstPoint)
             {
                 FirstPoint = vector;
+
+                var lineBuilder = new LineBuilder();
+                lineBuilder.AddCircle(FirstPoint, new Vector3(0, 0, 1), 0.04f, 360);
+                var lineGeometry = lineBuilder.ToLineGeometry3D();
+                lineGeometry.Colors = new Color4Collection();
+
+                for (int i = 0; i < lineGeometry.Positions.Count; i++)
+                {
+                    lineGeometry.Colors.Add(ViewModelBase.GetColor(MarkingType));
+                }
+
+                NewLine = lineGeometry;
             }
             else
             {
@@ -397,7 +417,8 @@ namespace AnnotationTool.View
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
         public static readonly DependencyProperty MarkingTypeProperty =
-            DependencyProperty.Register("MarkingType", typeof(MarkingType), typeof(ViewPort));
+            DependencyProperty.Register("MarkingType", typeof(MarkingType), typeof(ViewPort),
+                new PropertyMetadata(MarkingTypePropertyChanged));
 
         public static readonly DependencyProperty SelectedLineProperty =
             DependencyProperty.Register("SelectedLine", typeof(Geometry3D.Line), typeof(ViewPort),
@@ -407,8 +428,38 @@ namespace AnnotationTool.View
         private static void SelectedUnprunedImagePropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
             var viewPort = (ViewPort)obj;
-            var image = new BitmapImage(new Uri(e.NewValue.ToString(), UriKind.RelativeOrAbsolute));
+            //var image = new BitmapImage(new Uri(e.NewValue.ToString(), UriKind.RelativeOrAbsolute));
+            var image = new BitmapImage();
+            image.BeginInit();
+            image.UriSource = new Uri(e.NewValue.ToString(), UriKind.RelativeOrAbsolute);
+            image.CreateOptions = BitmapCreateOptions.None;
+            image.CacheOption = BitmapCacheOption.Default;
+            image.DecodePixelWidth = 1000;
+            image.EndInit();
             viewPort.SetPlane(image);
+        }
+        private static void MarkingTypePropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
+        {
+            var viewPort = (ViewPort)obj;
+            if (viewPort.NewLine.Positions.Count < 1)
+            {
+                return;
+            }
+
+            var newMarkingType = (MarkingType)e.NewValue;
+            var colors = new Color4Collection();
+
+            for (int i = 0; i < viewPort.NewLine.Positions.Count; i++)
+            {
+                colors.Add(ViewModelBase.GetColor(newMarkingType));
+            }
+            
+            viewPort.NewLine = new LineGeometry3D()
+            {
+                Positions = viewPort.NewLine.Positions,
+                Indices = viewPort.NewLine.Indices,
+                Colors = colors
+            };
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

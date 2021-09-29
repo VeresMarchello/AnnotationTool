@@ -41,6 +41,7 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
     </UserControl.Resources>
 
     <DataGrid Grid.Row="0" SelectedItem="{Binding Selected2dLine, Mode=TwoWay}" ItemsSource="{Binding _2DLineList}">

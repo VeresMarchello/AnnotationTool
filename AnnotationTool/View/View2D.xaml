@@ -21,6 +21,40 @@
         <converters:MarkingTypeNameConverter x:Key="MarkingTypeNameConverter"/>
         <converters:ButtonBackgroundConverter x:Key="ButtonBackgroundConverter"/>
 
+        <Style TargetType="{x:Type ListBoxItem}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+            <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+            <Setter Property="Padding" Value="2,0,0,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Border x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="true">
+                                <Setter Property="Background" TargetName="Bd" Value="transparent"/>
+                                <Setter Property="Foreground" Value="Red"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="true"/>
+                                    <Condition Property="Selector.IsSelectionActive" Value="false"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" TargetName="Bd" Value="transparent"/>
+                                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}}"/>
+                            </MultiTrigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="ButtonStyle" TargetType="{x:Type Button}">
             <Setter Property="BorderBrush">
                 <Setter.Value>
@@ -110,14 +144,24 @@
 
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition/>
-                <RowDefinition/>
+                <!--<RowDefinition/>-->
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-
-            <view:ViewPort Grid.Row="0" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedLeftImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}" IsEnabled="{Binding ElementName=view2d, Path=DataContext.IsAnnotationEnabled}"/>
-            <view:ViewPort Grid.Row="1" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.RightLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedRightImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}" IsEnabled="{Binding ElementName=view2d, Path=DataContext.IsAnnotationEnabled}"/>
+            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                <Button Content=" &lt;- " Command="{Binding DecreaseDeltaCommand}"/>
+                <Button Content=" -&gt; " Command="{Binding IncreaseDeltaCommand}"/>
+                <Label Content="{Binding Delta}"/>
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button Content=" &lt;- " Command="{Binding DecreaseIndexCommand}"/>
+                <Button Content=" -&gt; " Command="{Binding IncreaseIndexCommand}"/>
+                <Label Content="{Binding Index}"/>
+            </StackPanel>
+            <view:ViewPort Grid.Row="1" Delta="{Binding ElementName=view2d, Path=DataContext.Delta}" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedLeftImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}" IsEnabled="{Binding ElementName=view2d, Path=DataContext.IsAnnotationEnabled}"/>
+            <!--<view:ViewPort Grid.Row="2" Delta="{Binding ElementName=view2d, Path=DataContext.Delta}" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.RightLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedRightImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}" IsEnabled="{Binding ElementName=view2d, Path=DataContext.IsAnnotationEnabled}"/>-->
 
         </Grid>
 
@@ -131,7 +175,7 @@
             </Grid.RowDefinitions>
 
             <Button Margin="10, 0, 10, 10" Cursor="Hand" Grid.Row="1" Content="Fájlok helyének megnyitása (XML, JPG)" Command="{Binding ShowFilesCommand}"/>
-            
+
             <TabControl SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}" Grid.Row="0" Margin="10, 0, 10, 10">
                 <TabItem Header="Bal oldal">
                     <view:DataGrid Selected2dLine="{Binding ElementName=view2d,Path=DataContext.Selected2dLine}" _2DLineList="{Binding ElementName=view2d, Path=DataContext._2DLeftLineList}"/>
@@ -171,7 +215,7 @@
                     </ItemsControl>
                 </ScrollViewer>
             </Grid>
-            
+
             <Expander Grid.Row="4" Cursor="Hand" ExpandDirection="Up" Visibility="{Binding ErrorMessages.Count, Converter={StaticResource IntToVisibilityConverter}}">
                 <Expander.Header>
                     <TextBlock Text="{Binding ErrorMessages.Count, StringFormat='Hibaüzenetek: ({0})'}"/>
@@ -184,7 +228,7 @@
                                     <ColumnDefinition Width="1*"/>
                                     <ColumnDefinition Width="1*"/>
                                 </Grid.ColumnDefinitions>
-                                
+
                                 <TextBlock Grid.Column="0" Text="{Binding}"/>
                                 <Button Grid.Column="1" Style="{StaticResource DeleteButtonStyle}" Command="{Binding ElementName=view2d, Path=DataContext.DeleteErrorMessageCommand}" CommandParameter="{Binding}"/>
                             </Grid>

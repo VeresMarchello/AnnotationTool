@@ -81,19 +81,17 @@ namespace AnnotationTool.View
                 _unprunedPlaneMaterial = value;
                 NotifyPropertyChanged();
 
-                var material = value.CloneMaterial();
-                //var prunedImage = new BitmapImage(new Uri(SelectedUnprunedImage.Replace("Unpruned", "Pruned"), UriKind.RelativeOrAbsolute));
-                var prunedImage = new BitmapImage();
-                prunedImage.BeginInit();
-                prunedImage.UriSource = new Uri(SelectedUnprunedImage.Replace("Unpruned", "Pruned"), UriKind.RelativeOrAbsolute);
-                prunedImage.CreateOptions = BitmapCreateOptions.None;
-                prunedImage.CacheOption = BitmapCacheOption.Default;
-                prunedImage.DecodePixelWidth = 1000;
-                prunedImage.EndInit();
+                var fileInfo = new FileInfo(SelectedUnprunedImage);
+                var prunedDirectoryInfo = new FileInfo(SelectedUnprunedImage.Replace("Unpruned", "Pruned")).Directory;
+                var list = fileInfo.Directory.EnumerateFiles("*.JPG").Select(x => x.FullName).ToList();
+                var index = list.IndexOf(fileInfo.FullName) + Delta;
+                var prunedImages = prunedDirectoryInfo.GetFiles("*.JPG");
+                if (index < 0 || index > prunedImages.Length - 1)
+                {
+                    index = list.IndexOf(fileInfo.FullName);
+                }
 
-                material.DiffuseMap = new MemoryStream(prunedImage.ToByteArray());
-                PrunedPlaneMaterial = material;
-
+                PrunedPlaneMaterial = SetPlane(CreateImage(prunedImages[index].FullName));
                 IsFirstPoint = true;
             }
         }
@@ -143,11 +141,11 @@ namespace AnnotationTool.View
         public ICommand ESCCommand { get; set; }
 
 
-        private void SetPlane(BitmapSource image)
+        private PhongMaterial SetPlane(BitmapSource image)
         {
             if (image == null)
             {
-                return;
+                return new PhongMaterial();
             }
 
             var ratio = image.PixelWidth / (double)image.PixelHeight;
@@ -155,7 +153,7 @@ namespace AnnotationTool.View
             transform = transform.AppendTransform(new ScaleTransform3D(ratio, 1.0, 1.0));
 
             PlaneTransform = transform;
-            var material = new PhongMaterial()
+            return new PhongMaterial()
             {
                 DiffuseColor = Color4.White,
                 AmbientColor = Color4.Black,
@@ -164,8 +162,6 @@ namespace AnnotationTool.View
                 SpecularColor = Color4.Black,
                 DiffuseMap = new MemoryStream(image.ToByteArray()),
             };
-
-            UnprunedPlaneMaterial = material;
         }
         public Vector3 GetVector(object parameter)
         {
@@ -410,7 +406,7 @@ namespace AnnotationTool.View
 
         public static readonly DependencyProperty SelectedUnprunedImageProperty =
             DependencyProperty.Register("SelectedUnprunedImage", typeof(string), typeof(ViewPort),
-                new PropertyMetadata(SelectedUnprunedImagePropertyChanged));
+        new PropertyMetadata(SelectedUnprunedImagePropertyChanged));
 
         public static readonly DependencyProperty LinesProperty =
             DependencyProperty.Register("Lines", typeof(LineGeometry3D), typeof(ViewPort),
@@ -425,18 +421,35 @@ namespace AnnotationTool.View
                 new FrameworkPropertyMetadata(new Geometry3D.Line(), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
 
+        public int Delta
+        {
+            get { return (int)GetValue(DeltaProperty); }
+            set { SetValue(DeltaProperty, value); }
+        }
+
+        public static readonly DependencyProperty DeltaProperty =
+            DependencyProperty.Register("Delta", typeof(int), typeof(ViewPort),
+                new PropertyMetadata(DeltaPropertyChanged));
+
+
+
         private static void SelectedUnprunedImagePropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
             var viewPort = (ViewPort)obj;
-            //var image = new BitmapImage(new Uri(e.NewValue.ToString(), UriKind.RelativeOrAbsolute));
+            viewPort.UnprunedPlaneMaterial = viewPort.SetPlane(CreateImage(e.NewValue.ToString()));
+        }
+
+        private static BitmapImage CreateImage(string path)
+        {
             var image = new BitmapImage();
             image.BeginInit();
-            image.UriSource = new Uri(e.NewValue.ToString(), UriKind.RelativeOrAbsolute);
+            image.UriSource = new Uri(path, UriKind.RelativeOrAbsolute);
             image.CreateOptions = BitmapCreateOptions.None;
             image.CacheOption = BitmapCacheOption.Default;
             image.DecodePixelWidth = 1000;
             image.EndInit();
-            viewPort.SetPlane(image);
+
+            return image;
         }
         private static void MarkingTypePropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
@@ -453,13 +466,30 @@ namespace AnnotationTool.View
             {
                 colors.Add(ViewModelBase.GetColor(newMarkingType));
             }
-            
+
             viewPort.NewLine = new LineGeometry3D()
             {
                 Positions = viewPort.NewLine.Positions,
                 Indices = viewPort.NewLine.Indices,
                 Colors = colors
             };
+        }
+        private static void DeltaPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
+        {
+            var viewPort = (ViewPort)obj;
+            var fileInfo = new FileInfo(viewPort.SelectedUnprunedImage);
+            var prunedDirectoryInfo = new FileInfo(viewPort.SelectedUnprunedImage.Replace("Unpruned", "Pruned")).Directory;
+            var list = fileInfo.Directory.EnumerateFiles("*.JPG").Select(x => x.FullName).ToList();
+            var index = 0;
+            if ((int)e.NewValue <= 0)
+            {
+                index = Math.Max(0, list.IndexOf(fileInfo.FullName) + viewPort.Delta);
+            }
+            else
+            {
+                index = Math.Min(list.Count - 1, list.IndexOf(fileInfo.FullName) + viewPort.Delta);
+            }
+            viewPort.PrunedPlaneMaterial = viewPort.SetPlane(CreateImage(prunedDirectoryInfo.GetFiles("*.JPG")[index].FullName));
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

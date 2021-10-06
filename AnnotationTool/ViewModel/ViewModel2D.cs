@@ -18,7 +18,6 @@ namespace AnnotationTool.ViewModel
     public class ViewModel2D : ViewModelBase, IDisposable
     {
         private string _selectedLeftImage;
-        private string _selectedRightImage;
         private string[] _images;
 
         private _2DLine _selected2dLine;
@@ -34,6 +33,9 @@ namespace AnnotationTool.ViewModel
         private int _selectedTabIndex;
         private bool _isAnnotationEnabled;
 
+        private static string[] LeftDirectoryFiles = Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}Images\Left\Unpruned", "*.JPG");
+        private static string[] RightDirectoryFiles = Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}Images\Right\Unpruned", "*.JPG");
+        private static string[] LeftPrunedDirectoryFiles = Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}Images\Left\Pruned", "*.JPG");
 
         public ViewModel2D()
         {
@@ -51,6 +53,43 @@ namespace AnnotationTool.ViewModel
             SelectImageCommand = new RelayCommand<object>(ChangeSelectedImage);
             DeleteErrorMessageCommand = new RelayCommand<object>(DeleteErrorMessage);
             ShowFilesCommand = new RelayCommand<object>(ShowFiles);
+
+            IncreaseDeltaCommand = new RelayCommand(() => Delta++, (x) => Index + Delta < LeftPrunedDirectoryFiles.Length - 1);
+            DecreaseDeltaCommand = new RelayCommand(() => Delta--, (x) => 0 < Index + Delta);
+            IncreaseIndexCommand = new RelayCommand(() => Index++, (x) => Index < LeftDirectoryFiles.Length - 1);
+            DecreaseIndexCommand = new RelayCommand(() => Index--, (x) => 0 < Index);
+        }
+
+        private int _delta;
+        public int Delta
+        {
+            get { return _delta; }
+            set
+            {
+                _delta = value;
+                NotifyPropertyChanged();
+            }
+        }
+        public int Index
+        {
+            get { return Array.IndexOf(Images, SelectedLeftImage); }
+            set
+            {
+                SelectedLeftImage = LeftDirectoryFiles[value];
+                SetDelta();
+            }
+        }
+
+        private void SetDelta() 
+        {
+            if (Index + Delta < 0)
+            {
+                Delta = -Index;
+            }
+            else if (Index + Delta > LeftPrunedDirectoryFiles.Length - 1)
+            {
+                Delta = LeftPrunedDirectoryFiles.Length - Index - 1;
+            }
         }
 
 
@@ -60,20 +99,14 @@ namespace AnnotationTool.ViewModel
             set
             {
                 _selectedLeftImage = value;
+                NotifyPropertyChanged("Index");
+                SetDelta();
                 NotifyPropertyChanged();
+                NotifyPropertyChanged("SelectedRightImage");
+            }
+        }
+        public string SelectedRightImage => RightDirectoryFiles[Index];
 
-                SelectedRightImage = value.Replace("Left", "Right");
-            }
-        }
-        public string SelectedRightImage
-        {
-            get { return _selectedRightImage; }
-            set
-            {
-                _selectedRightImage = value;
-                NotifyPropertyChanged();
-            }
-        }
         public string[] Images
         {
             get { return _images; }
@@ -180,6 +213,11 @@ namespace AnnotationTool.ViewModel
         public ICommand SelectImageCommand { get; private set; }
         public ICommand DeleteErrorMessageCommand { get; private set; }
         public ICommand ShowFilesCommand { get; private set; }
+
+        public ICommand IncreaseDeltaCommand { get; private set; }
+        public ICommand DecreaseDeltaCommand { get; private set; }
+        public ICommand IncreaseIndexCommand { get; private set; }
+        public ICommand DecreaseIndexCommand { get; private set; }
 
 
         private LineGeometry3D GetLineGeometry(List<_2DLine> _2DLines)
@@ -290,7 +328,7 @@ namespace AnnotationTool.ViewModel
         {
             try
             {
-                return Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}Images\Left\Unpruned", "*.JPG");
+                return LeftDirectoryFiles;
             }
             catch
             {

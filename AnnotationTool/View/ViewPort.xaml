@@ -28,7 +28,7 @@
         </Grid.ColumnDefinitions>
 
 
-        <hx:Viewport3DX Grid.Column="0" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
+        <hx:Viewport3DX Grid.Column="0" Title="{Binding SelectedPrunedImage}" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
             <hx:Viewport3DX.Camera>
                 <hx:PerspectiveCamera Position="{Binding Camera.Position, Mode=TwoWay}" LookDirection="{Binding Camera.LookDirection, Mode=TwoWay}" UpDirection="{Binding Camera.UpDirection, Mode=TwoWay}" NearPlaneDistance="{Binding Camera.NearPlaneDistance, Mode=TwoWay}" FarPlaneDistance="{Binding Camera.FarPlaneDistance, Mode=TwoWay}"/>
             </hx:Viewport3DX.Camera>
@@ -39,7 +39,7 @@
             <hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="Transparent"/>
         </hx:Viewport3DX>
 
-        <hx:Viewport3DX x:Name="viewport" TitleBackground="Red" Grid.Column="1" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
+        <hx:Viewport3DX x:Name="viewport" Title="{Binding SelectedUnprunedImage}" Grid.Column="1" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
             <hx:Viewport3DX.Camera>
                 <hx:PerspectiveCamera Position="{Binding Camera.Position, Mode=TwoWay}" LookDirection="{Binding Camera.LookDirection, Mode=TwoWay}" UpDirection="{Binding Camera.UpDirection, Mode=TwoWay}" NearPlaneDistance="{Binding Camera.NearPlaneDistance, Mode=TwoWay}" FarPlaneDistance="{Binding Camera.FarPlaneDistance, Mode=TwoWay}"/>
             </hx:Viewport3DX.Camera>

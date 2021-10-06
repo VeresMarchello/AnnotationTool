@@ -67,7 +67,6 @@
             <Setter Property="BorderThickness" Value="2"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
-
         <Style x:Key="DeleteButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -84,7 +83,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
         <Style TargetType="{x:Type RadioButton}">
             <Setter Property="SnapsToDevicePixels" Value="true"/>
             <Setter Property="FocusVisualStyle" Value="{DynamicResource RadioButtonFocusVisual}"/>
@@ -125,7 +123,20 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
+        <Style x:Key="StackPanelStyle" TargetType="{x:Type StackPanel}">
+            <Setter Property="Orientation" Value="Horizontal"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Panel.ZIndex" Value="1"/>
+            <Style.Resources>
+                <Style TargetType="{x:Type Button}">
+                    <Setter Property="Margin" Value="10,5,10,5"/>
+                    <Setter Property="Height" Value="30"/>
+                    <Setter Property="Width" Value="30"/>
+                    <Setter Property="Cursor" Value="Hand"/>
+                </Style>
+            </Style.Resources>
+        </Style>
 
     </UserControl.Resources>
 
@@ -144,24 +155,24 @@
 
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
                 <RowDefinition/>
-                <!--<RowDefinition/>-->
-                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
             </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
 
-            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+            <StackPanel Grid.Row="0" Grid.Column="0" Style="{StaticResource StackPanelStyle}">
                 <Button Content=" &lt;- " Command="{Binding DecreaseDeltaCommand}"/>
                 <Button Content=" -&gt; " Command="{Binding IncreaseDeltaCommand}"/>
-                <Label Content="{Binding Delta}"/>
             </StackPanel>
-            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+            <StackPanel Grid.Row="0" Grid.Column="1" Style="{StaticResource StackPanelStyle}">
                 <Button Content=" &lt;- " Command="{Binding DecreaseIndexCommand}"/>
                 <Button Content=" -&gt; " Command="{Binding IncreaseIndexCommand}"/>
-                <Label Content="{Binding Index}"/>
             </StackPanel>
-            <view:ViewPort Grid.Row="1" Delta="{Binding ElementName=view2d, Path=DataContext.Delta}" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedLeftImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}" IsEnabled="{Binding ElementName=view2d, Path=DataContext.IsAnnotationEnabled}"/>
-            <!--<view:ViewPort Grid.Row="2" Delta="{Binding ElementName=view2d, Path=DataContext.Delta}" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.RightLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedRightImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}" IsEnabled="{Binding ElementName=view2d, Path=DataContext.IsAnnotationEnabled}"/>-->
+            <view:ViewPort Grid.Row="0" Grid.ColumnSpan="2" Delta="{Binding ElementName=view2d, Path=DataContext.Delta}" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedLeftImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}" IsEnabled="{Binding ElementName=view2d, Path=DataContext.IsAnnotationEnabled}"/>
+            <view:ViewPort Grid.Row="1" Grid.ColumnSpan="2" Delta="{Binding ElementName=view2d, Path=DataContext.Delta}" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.RightLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedRightImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}" IsEnabled="{Binding ElementName=view2d, Path=DataContext.IsAnnotationEnabled}"/>
 
         </Grid>
 

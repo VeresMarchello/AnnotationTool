@@ -90,7 +90,7 @@ namespace AnnotationTool.View
                 {
                     index = list.IndexOf(fileInfo.FullName);
                 }
-
+                SelectedPrunedImage = prunedImages[index].FullName;
                 PrunedPlaneMaterial = SetPlane(CreateImage(prunedImages[index].FullName));
                 IsFirstPoint = true;
             }
@@ -399,6 +399,12 @@ namespace AnnotationTool.View
             get { return (Geometry3D.Line)GetValue(SelectedLineProperty); }
             set { SetValue(SelectedLineProperty, value); }
         }
+        public int Delta
+        {
+            get { return (int)GetValue(DeltaProperty); }
+            set { SetValue(DeltaProperty, value); }
+        }
+
 
         public static readonly DependencyProperty CameraProperty =
             DependencyProperty.Register("Camera", typeof(Camera), typeof(ViewPort),
@@ -419,13 +425,6 @@ namespace AnnotationTool.View
         public static readonly DependencyProperty SelectedLineProperty =
             DependencyProperty.Register("SelectedLine", typeof(Geometry3D.Line), typeof(ViewPort),
                 new FrameworkPropertyMetadata(new Geometry3D.Line(), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
-
-
-        public int Delta
-        {
-            get { return (int)GetValue(DeltaProperty); }
-            set { SetValue(DeltaProperty, value); }
-        }
 
         public static readonly DependencyProperty DeltaProperty =
             DependencyProperty.Register("Delta", typeof(int), typeof(ViewPort),
@@ -489,6 +488,7 @@ namespace AnnotationTool.View
             {
                 index = Math.Min(list.Count - 1, list.IndexOf(fileInfo.FullName) + viewPort.Delta);
             }
+            viewPort.SelectedPrunedImage = prunedDirectoryInfo.GetFiles("*.JPG")[index].FullName;
             viewPort.PrunedPlaneMaterial = viewPort.SetPlane(CreateImage(prunedDirectoryInfo.GetFiles("*.JPG")[index].FullName));
         }
 

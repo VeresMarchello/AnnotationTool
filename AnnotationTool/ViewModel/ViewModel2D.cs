@@ -80,7 +80,7 @@ namespace AnnotationTool.ViewModel
             }
         }
 
-        private void SetDelta() 
+        private void SetDelta()
         {
             if (Index + Delta < 0)
             {
@@ -91,7 +91,6 @@ namespace AnnotationTool.ViewModel
                 Delta = LeftPrunedDirectoryFiles.Length - Index - 1;
             }
         }
-
 
         public string SelectedLeftImage
         {
@@ -359,15 +358,15 @@ namespace AnnotationTool.ViewModel
 
             double computedPointX;
             if (vector.X >= center.X)
-                computedPointX = computedX / (center.X / vertical);
+                computedPointX = computedX / (center.X / horizontal);
             else
-                computedPointX = -computedX / (center.X / vertical);
+                computedPointX = -computedX / (center.X / horizontal);
 
             double computedPointY;
             if (vector.Y >= center.Y)
-                computedPointY = -computedY / (center.Y / horizontal);
+                computedPointY = -computedY / (center.Y / vertical);
             else
-                computedPointY = computedY / (center.Y / horizontal);
+                computedPointY = computedY / (center.Y / vertical);
 
             return new Vector3((float)computedPointX, (float)computedPointY, 0);
         }
@@ -382,13 +381,13 @@ namespace AnnotationTool.ViewModel
             Vector2 center = new Vector2(imageWidth / 2, imageHeight / 2);
             Vector3 computedPoint = new Vector3(0);
 
-            double computedX = Math.Abs(center.X / vertical * vector.X);
+            double computedX = Math.Abs(center.X / horizontal * vector.X);
             if (vector.X >= 0)
                 computedPoint.X = Convert.ToInt32(center.X + computedX);
             else
                 computedPoint.X = Convert.ToInt32(center.X - computedX);
 
-            double computedY = Math.Abs(center.Y / horizontal * vector.Y);
+            double computedY = Math.Abs(center.Y / vertical * vector.Y);
             if (vector.Y >= 0)
                 computedPoint.Y = Convert.ToInt32(center.Y - computedY);
             else

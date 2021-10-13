@@ -6,6 +6,7 @@
              xmlns:hx="http://helix-toolkit.org/wpf/SharpDX"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:ie="http://schemas.microsoft.com/expression/2010/interactions"
+             xmlns:converters="clr-namespace:AnnotationTool.Converters"
              x:Name="usercontrol"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
@@ -18,6 +19,8 @@
             <Setter Property="IsEnabled" Value="{Binding ElementName=usercontrol, Path=IsEnabled}"/>
             <Setter Property="EnableDeferredRendering" Value="False"/>
         </Style>
+
+        <converters:FilenameConverter x:Key="FilenameConverter"/>
     </UserControl.Resources>
 
 
@@ -26,9 +29,15 @@
             <ColumnDefinition/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-
-        <hx:Viewport3DX Grid.Column="0" Title="{Binding SelectedPrunedImage}" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
+        <StatusBar Grid.Column="0" Grid.Row="1">
+            <StatusBarItem Content="{Binding SelectedPrunedImage, Converter={StaticResource FilenameConverter}}"/>
+        </StatusBar>
+        <hx:Viewport3DX Grid.Column="0" Grid.Row="0" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
             <hx:Viewport3DX.Camera>
                 <hx:PerspectiveCamera Position="{Binding Camera.Position, Mode=TwoWay}" LookDirection="{Binding Camera.LookDirection, Mode=TwoWay}" UpDirection="{Binding Camera.UpDirection, Mode=TwoWay}" NearPlaneDistance="{Binding Camera.NearPlaneDistance, Mode=TwoWay}" FarPlaneDistance="{Binding Camera.FarPlaneDistance, Mode=TwoWay}"/>
             </hx:Viewport3DX.Camera>
@@ -39,7 +48,12 @@
             <hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="Transparent"/>
         </hx:Viewport3DX>
 
-        <hx:Viewport3DX x:Name="viewport" Title="{Binding SelectedUnprunedImage}" Grid.Column="1" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
+        <StatusBar Grid.Column="1" Grid.Row="1">
+            <StatusBarItem Content="{Binding SelectedUnprunedImage, Converter={StaticResource FilenameConverter}}"/>
+            <Separator/>
+            <StatusBarItem Content="{Binding MouseInfo}"/>
+        </StatusBar>
+        <hx:Viewport3DX x:Name="viewport" Grid.Column="1" Grid.Row="0" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
             <hx:Viewport3DX.Camera>
                 <hx:PerspectiveCamera Position="{Binding Camera.Position, Mode=TwoWay}" LookDirection="{Binding Camera.LookDirection, Mode=TwoWay}" UpDirection="{Binding Camera.UpDirection, Mode=TwoWay}" NearPlaneDistance="{Binding Camera.NearPlaneDistance, Mode=TwoWay}" FarPlaneDistance="{Binding Camera.FarPlaneDistance, Mode=TwoWay}"/>
             </hx:Viewport3DX.Camera>

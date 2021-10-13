@@ -42,7 +42,7 @@ namespace AnnotationTool.View
             var box = new MeshBuilder();
             box.AddBox(new Vector3(0, 0, 0), 10, 10, 0, BoxFaces.PositiveZ);
             _plane = box.ToMeshGeometry3D();
-            _unprunedPlaneMaterial = PhongMaterials.Blue;
+            _unprunedPlaneMaterial = PhongMaterials.White;
             _planeTransform = new TranslateTransform3D(0, 0, 0);
 
             EffectsManager = new DefaultEffectsManager();
@@ -135,6 +135,33 @@ namespace AnnotationTool.View
         public Vector3 FirstPoint { get; set; }
         public bool IsFirstPoint { get; set; }
 
+        public Vector2 MouseInfo { get; set; }
+        private Vector3 GetPixelFromVector(Vector3 vector)
+        {
+            var image = new BitmapImage(new Uri(SelectedUnprunedImage, UriKind.RelativeOrAbsolute));
+            int imageWidth = image.PixelWidth;
+            int imageHeight = image.PixelHeight;
+
+            double vertical = 5.0;
+            double horizontal = imageWidth / (imageHeight / vertical);
+            Vector2 center = new Vector2(imageWidth / 2, imageHeight / 2);
+            Vector3 computedPoint = new Vector3(0);
+
+            double computedX = Math.Abs(center.X / horizontal * vector.X);
+            if (vector.X >= 0)
+                computedPoint.X = Convert.ToInt32(center.X + computedX);
+            else
+                computedPoint.X = Convert.ToInt32(center.X - computedX);
+
+            double computedY = Math.Abs(center.Y / vertical * vector.Y);
+            if (vector.Y >= 0)
+                computedPoint.Y = Convert.ToInt32(center.Y - computedY);
+            else
+                computedPoint.Y = Convert.ToInt32(center.Y + computedY);
+
+            return computedPoint;
+        }
+
         public ICommand LeftClickCommand { get; set; }
         public ICommand CTRLLeftClickCommand { get; set; }
         public ICommand CTRLRigtClickCommand { get; set; }
@@ -168,7 +195,7 @@ namespace AnnotationTool.View
             var viewPort = (Viewport3DX)parameter;
             var position = Mouse.GetPosition(viewPort);
             var hits = viewPort.FindHits(position);
-
+            
             foreach (var hit in hits)
             {
                 if (hit.ModelHit is MeshGeometryModel3D)
@@ -343,17 +370,22 @@ namespace AnnotationTool.View
         }
         public void MouseMove3DHandler(object sender, MouseMove3DEventArgs e)
         {
-            if (IsFirstPoint)
-            {
-                return;
-            }
-
             var vector = GetVector(sender);
 
             if (vector == new Vector3(1000))
             {
                 return;
             }
+
+            var pixel = GetPixelFromVector(vector);
+            MouseInfo = new Vector2(pixel.X, pixel.Y);
+            NotifyPropertyChanged("MouseInfo");
+            
+            if (IsFirstPoint)
+            {
+                return;
+            }
+
             vector.Z = 0;
 
             if (IsNewLineValid(FirstPoint + (FirstPoint - vector), vector))
@@ -445,7 +477,7 @@ namespace AnnotationTool.View
             image.UriSource = new Uri(path, UriKind.RelativeOrAbsolute);
             image.CreateOptions = BitmapCreateOptions.None;
             image.CacheOption = BitmapCacheOption.Default;
-            image.DecodePixelWidth = 1000;
+            image.DecodePixelWidth = 2000;
             image.EndInit();
 
             return image;

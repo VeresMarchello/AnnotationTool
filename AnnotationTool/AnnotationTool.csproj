@@ -28,7 +28,7 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>34</ApplicationRevision>
+    <ApplicationRevision>35</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -136,6 +136,7 @@
     </ApplicationDefinition>
     <Compile Include="Commands\RelayCommand.cs" />
     <Compile Include="Converters\ButtonBackgroundConverter.cs" />
+    <Compile Include="Converters\FilenameConverter.cs" />
     <Compile Include="Converters\IntToVisibilityConverter.cs" />
     <Compile Include="Converters\MarkingTypeConverter.cs" />
     <Compile Include="Converters\MarkingTypeNameConverter.cs" />
@@ -204,46 +205,126 @@
     <Resource Include="grapler.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Content Include="Images\Left\Pruned\01.JPG" />
-    <Content Include="Images\Left\Pruned\02.JPG" />
-    <Content Include="Images\Left\Pruned\03.JPG" />
-    <Content Include="Images\Left\Pruned\04.JPG" />
-    <Content Include="Images\Left\Pruned\05.JPG" />
-    <Content Include="Images\Left\Pruned\06.JPG" />
-    <Content Include="Images\Left\Pruned\07.JPG" />
-    <Content Include="Images\Left\Pruned\08.JPG" />
-    <Content Include="Images\Left\Pruned\09.JPG" />
-    <Content Include="Images\Left\Pruned\10.JPG" />
-    <Content Include="Images\Left\Unpruned\01.JPG" />
-    <Content Include="Images\Left\Unpruned\02.JPG" />
-    <Content Include="Images\Left\Unpruned\03.JPG" />
-    <Content Include="Images\Left\Unpruned\04.JPG" />
-    <Content Include="Images\Left\Unpruned\05.JPG" />
-    <Content Include="Images\Left\Unpruned\06.JPG" />
-    <Content Include="Images\Left\Unpruned\07.JPG" />
-    <Content Include="Images\Left\Unpruned\08.JPG" />
-    <Content Include="Images\Left\Unpruned\09.JPG" />
-    <Content Include="Images\Left\Unpruned\10.JPG" />
-    <Content Include="Images\Right\Pruned\01.JPG" />
-    <Content Include="Images\Right\Pruned\02.JPG" />
-    <Content Include="Images\Right\Pruned\03.JPG" />
-    <Content Include="Images\Right\Pruned\04.JPG" />
-    <Content Include="Images\Right\Pruned\05.JPG" />
-    <Content Include="Images\Right\Pruned\06.JPG" />
-    <Content Include="Images\Right\Pruned\07.JPG" />
-    <Content Include="Images\Right\Pruned\08.JPG" />
-    <Content Include="Images\Right\Pruned\09.JPG" />
-    <Content Include="Images\Right\Pruned\10.JPG" />
-    <Content Include="Images\Right\Unpruned\01.JPG" />
-    <Content Include="Images\Right\Unpruned\02.JPG" />
-    <Content Include="Images\Right\Unpruned\03.JPG" />
-    <Content Include="Images\Right\Unpruned\04.JPG" />
-    <Content Include="Images\Right\Unpruned\05.JPG" />
-    <Content Include="Images\Right\Unpruned\06.JPG" />
-    <Content Include="Images\Right\Unpruned\07.JPG" />
-    <Content Include="Images\Right\Unpruned\08.JPG" />
-    <Content Include="Images\Right\Unpruned\09.JPG" />
-    <Content Include="Images\Right\Unpruned\10.JPG" />
+    <Content Include="Images\Left\Pruned\01.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Pruned\02.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Pruned\03.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Pruned\04.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Pruned\05.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Pruned\06.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Pruned\07.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Pruned\08.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Pruned\09.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Pruned\10.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Unpruned\01.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Unpruned\02.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Unpruned\03.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Unpruned\04.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Unpruned\05.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Unpruned\06.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Unpruned\07.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Unpruned\08.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Unpruned\09.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Left\Unpruned\10.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Pruned\01.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Pruned\02.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Pruned\03.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Pruned\04.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Pruned\05.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Pruned\06.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Pruned\07.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Pruned\08.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Pruned\09.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Pruned\10.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Unpruned\01.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Unpruned\02.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Unpruned\03.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Unpruned\04.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Unpruned\05.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Unpruned\06.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Unpruned\07.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Unpruned\08.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Unpruned\09.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\Right\Unpruned\10.JPG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

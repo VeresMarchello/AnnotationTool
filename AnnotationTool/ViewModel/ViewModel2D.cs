@@ -12,6 +12,7 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace AnnotationTool.ViewModel
 {
@@ -36,6 +37,33 @@ namespace AnnotationTool.ViewModel
         private static string[] LeftDirectoryFiles = Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}Images\Left\Unpruned", "*.JPG");
         private static string[] RightDirectoryFiles = Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}Images\Right\Unpruned", "*.JPG");
         private static string[] LeftPrunedDirectoryFiles = Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}Images\Left\Pruned", "*.JPG");
+
+        private void CheckFiles() 
+        {
+            var config = System.Configuration.ConfigurationManager.OpenExeConfiguration(Application.ExecutablePath);
+            var path = config.AppSettings.Settings["ImagesPath"];
+
+            if (path == null)
+            {
+                using (var fbd = new FolderBrowserDialog())
+                {
+                    fbd.ShowNewFolderButton = false;
+                    fbd.Description = "Válassza ki a képeket tartalmazó mappát!";
+                    fbd.SelectedPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Images\Left\Unpruned";
+                    DialogResult result = fbd.ShowDialog();
+                    if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                    {
+                        config.AppSettings.Settings.Add("ImagesPath", fbd.SelectedPath);
+                        config.Save(System.Configuration.ConfigurationSaveMode.Modified);
+                    }
+                    else
+                    {
+                        ErrorMessages.Add("Fájlok nem találhatók. Újraindítás szükséges");
+                        return;
+                    }
+                }
+            }
+        }
 
         public ViewModel2D()
         {
@@ -327,7 +355,9 @@ namespace AnnotationTool.ViewModel
         {
             try
             {
-                return LeftDirectoryFiles;
+                var config = System.Configuration.ConfigurationManager.OpenExeConfiguration(Application.ExecutablePath);
+                var path = config.AppSettings.Settings["ImagesPath"].Value;
+                return Directory.GetFiles(path);
             }
             catch
             {

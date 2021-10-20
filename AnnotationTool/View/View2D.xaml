@@ -20,6 +20,7 @@
         <converters:MarkingTypeConverter x:Key="MarkingTypeConverter"/>
         <converters:MarkingTypeNameConverter x:Key="MarkingTypeNameConverter"/>
         <converters:ButtonBackgroundConverter x:Key="ButtonBackgroundConverter"/>
+        <converters:FilenameConverter x:Key="FilenameConverter"/>
 
         <Style TargetType="{x:Type ListBoxItem}">
             <Setter Property="Background" Value="Transparent"/>
@@ -205,26 +206,38 @@
             </ListBox>
 
             <Grid Grid.Row="3" Margin="10, 0, 5, 10">
-                <ScrollViewer x:Name="scrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                    <ItemsControl ItemsSource="{Binding Images}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button Style="{StaticResource ButtonStyle}" Margin="0,2,2,0" Command="{Binding Path=DataContext.SelectImageCommand, ElementName=scrollViewer}" CommandParameter="{Binding}">
-                                    <Image x:Name="Image">
-                                        <Image.Source>
-                                            <BitmapImage UriSource="{Binding}" DecodePixelWidth="200"/>
-                                        </Image.Source>
-                                    </Image>
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                    </ItemsControl>
-                </ScrollViewer>
+                <ItemsControl ItemsSource="{Binding Images}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource ButtonStyle}" Margin="0,2,2,0" Command="{Binding Path=DataContext.SelectImageCommand, ElementName=view2d}" CommandParameter="{Binding}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <Label Content="{Binding Converter={StaticResource FilenameConverter}, ConverterParameter=1}"/>
+                                    <!--<Image Grid.Row="1" x:Name="Image">
+                                        --><!--<Image.Source>-->
+                                            <!--<BitmapImage UriSource="{Binding}" DecodePixelWidth="200"/>-->
+                                        <!--</Image.Source>--><!--
+                                    </Image>-->
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel Orientation="Horizontal" ScrollUnit="Pixel" IsVirtualizing="True" IsContainerVirtualizable="True" VirtualizationMode="Recycling"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.Template>
+                        <ControlTemplate TargetType="ItemsControl">
+                            <ScrollViewer CanContentScroll="True" Focusable="False" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Auto">
+                                <ItemsPresenter/>
+                            </ScrollViewer>
+                        </ControlTemplate>
+                    </ItemsControl.Template>
+                </ItemsControl>
             </Grid>
 
             <Expander Grid.Row="4" Cursor="Hand" ExpandDirection="Up" Visibility="{Binding ErrorMessages.Count, Converter={StaticResource IntToVisibilityConverter}}">

@@ -18,6 +18,8 @@
             <Setter Property="UseDefaultGestures" Value="False"/>
             <Setter Property="IsEnabled" Value="{Binding ElementName=usercontrol, Path=IsEnabled}"/>
             <Setter Property="EnableDeferredRendering" Value="False"/>
+            <Setter Property="ZoomDistanceLimitFar" Value="12"/>
+            <Setter Property="ZoomDistanceLimitNear" Value="1"/>
         </Style>
 
         <converters:FilenameConverter x:Key="FilenameConverter"/>
@@ -55,7 +57,7 @@
         </StatusBar>
         <hx:Viewport3DX x:Name="viewport" Grid.Column="1" Grid.Row="0" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
             <hx:Viewport3DX.Camera>
-                <hx:PerspectiveCamera Position="{Binding Camera.Position, Mode=TwoWay}" LookDirection="{Binding Camera.LookDirection, Mode=TwoWay}" UpDirection="{Binding Camera.UpDirection, Mode=TwoWay}" NearPlaneDistance="{Binding Camera.NearPlaneDistance, Mode=TwoWay}" FarPlaneDistance="{Binding Camera.FarPlaneDistance, Mode=TwoWay}"/>
+                <hx:PerspectiveCamera Position="{Binding Camera.Position, Mode=TwoWay}"  LookDirection="{Binding Camera.LookDirection, Mode=TwoWay}" UpDirection="{Binding Camera.UpDirection, Mode=TwoWay}" NearPlaneDistance="{Binding Camera.NearPlaneDistance, Mode=TwoWay}" FarPlaneDistance="{Binding Camera.FarPlaneDistance, Mode=TwoWay}"/>
             </hx:Viewport3DX.Camera>
             <hx:Viewport3DX.InputBindings>
                 <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="RightClick"/>

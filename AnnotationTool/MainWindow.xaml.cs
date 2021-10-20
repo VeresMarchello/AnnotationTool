@@ -1,5 +1,4 @@
 ﻿using System.Windows;
-using AnnotationTool.ViewModel;
 
 namespace AnnotationTool
 {

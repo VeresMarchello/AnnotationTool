@@ -52,6 +52,7 @@ namespace AnnotationTool.View
             AmbientLightColor = Colors.Black;
 
             ResetNewLine();
+            IsFirstPoint = true;
 
             LeftClickCommand = new RelayCommand<object>(AddLine);
             CTRLLeftClickCommand = new RelayCommand<object>(SelectLine);
@@ -81,6 +82,12 @@ namespace AnnotationTool.View
                 _unprunedPlaneMaterial = value;
                 NotifyPropertyChanged();
 
+                IsFirstPoint = true;
+                if (string.IsNullOrEmpty(SelectedUnprunedImage) || !File.Exists(SelectedUnprunedImage))
+                {
+                    return;
+                }
+
                 var fileInfo = new FileInfo(SelectedUnprunedImage);
                 var prunedDirectoryInfo = new FileInfo(SelectedUnprunedImage.Replace("Unpruned", "Pruned")).Directory;
                 var list = fileInfo.Directory.EnumerateFiles("*.JPG").Select(x => x.FullName).ToList();
@@ -92,7 +99,6 @@ namespace AnnotationTool.View
                 }
                 SelectedPrunedImage = prunedImages[index].FullName;
                 PrunedPlaneMaterial = SetPlane(CreateImage(prunedImages[index].FullName));
-                IsFirstPoint = true;
             }
         }
         public PhongMaterial PrunedPlaneMaterial
@@ -138,6 +144,17 @@ namespace AnnotationTool.View
         public Vector2 MouseInfo { get; set; }
         private Vector3 GetPixelFromVector(Vector3 vector)
         {
+            if (string.IsNullOrEmpty(SelectedUnprunedImage))
+            {
+                return new Vector3();
+            }
+
+            FileInfo fileInfo = new FileInfo(SelectedUnprunedImage);
+            if (!fileInfo.Exists)
+            {
+                return new Vector3();
+            }
+
             var image = new BitmapImage(new Uri(SelectedUnprunedImage, UriKind.RelativeOrAbsolute));
             int imageWidth = image.PixelWidth;
             int imageHeight = image.PixelHeight;
@@ -195,7 +212,7 @@ namespace AnnotationTool.View
             var viewPort = (Viewport3DX)parameter;
             var position = Mouse.GetPosition(viewPort);
             var hits = viewPort.FindHits(position);
-            
+
             foreach (var hit in hits)
             {
                 if (hit.ModelHit is MeshGeometryModel3D)
@@ -380,7 +397,7 @@ namespace AnnotationTool.View
             var pixel = GetPixelFromVector(vector);
             MouseInfo = new Vector2(pixel.X, pixel.Y);
             NotifyPropertyChanged("MouseInfo");
-            
+
             if (IsFirstPoint)
             {
                 return;
@@ -472,6 +489,11 @@ namespace AnnotationTool.View
 
         private static BitmapImage CreateImage(string path)
         {
+            if (string.IsNullOrEmpty(path))
+            {
+                return null;
+            }
+
             var image = new BitmapImage();
             image.BeginInit();
             image.UriSource = new Uri(path, UriKind.RelativeOrAbsolute);

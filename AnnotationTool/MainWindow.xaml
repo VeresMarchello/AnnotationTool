@@ -9,7 +9,7 @@
         WindowState="Maximized"
         Icon="grapler.ico"
         Title="Grapler Annotáló" Height="450" Width="800">
-
+    
     <Grid>
         <view:View2D/>
     </Grid>

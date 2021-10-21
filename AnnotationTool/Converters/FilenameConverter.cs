@@ -11,21 +11,17 @@ namespace AnnotationTool.Converters
         {
             string fileName = "";
 
-            try
+            string fullFileName = (string)value;
+
+            if (!string.IsNullOrEmpty(fullFileName))
             {
-                string fullFileName = (string)value;
-                if (parameter != null && int.Parse(parameter.ToString()) == 1)
+                FileInfo fileInfo = new FileInfo(fullFileName);
+
+                if (fileInfo.Exists)
                 {
-                    FileInfo fileInfo = new FileInfo(fullFileName);
                     fileName = fileInfo.Name;
                 }
-                else
-                {
-                    int index = fullFileName.IndexOf("Images");
-                    fileName = fullFileName.Substring(index);
-                }
             }
-            catch (Exception e) { Console.WriteLine(e.Message); }
 
             return fileName;
         }

@@ -6,9 +6,17 @@
              xmlns:vm="clr-namespace:AnnotationTool.ViewModel"
              xmlns:view="clr-namespace:AnnotationTool.View"
              xmlns:converters="clr-namespace:AnnotationTool.Converters"
+             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
              mc:Ignorable="d" 
              x:Name="view2d"
              d:DesignHeight="450" d:DesignWidth="800">
+
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding View2DLoaded}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+
 
     <UserControl.DataContext>
         <vm:ViewModel2D/>
@@ -138,7 +146,11 @@
                 </Style>
             </Style.Resources>
         </Style>
-
+        <Style x:Key="SettingsButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="1, 0, 1, 10"/>
+            <!--<Setter Property="Height" Value="30"/>-->
+        </Style>
     </UserControl.Resources>
 
     <UserControl.InputBindings>
@@ -148,7 +160,7 @@
         <KeyBinding Command="{Binding CTRLRCommand}" Key="R" Modifiers="Ctrl"/>
     </UserControl.InputBindings>
 
-    <Grid Background="White">
+    <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>
             <ColumnDefinition Width="1*"/>
@@ -165,12 +177,20 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Row="0" Grid.Column="0" Style="{StaticResource StackPanelStyle}">
-                <Button Content=" &lt;- " Command="{Binding DecreaseDeltaCommand}"/>
-                <Button Content=" -&gt; " Command="{Binding IncreaseDeltaCommand}"/>
+                <Button Command="{Binding DecreaseDeltaCommand}">
+                    <Path Fill="Black" Data="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </Button>
+                <Button Command="{Binding IncreaseDeltaCommand}">
+                    <Path Fill="Black" Data="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                </Button>
             </StackPanel>
             <StackPanel Grid.Row="0" Grid.Column="1" Style="{StaticResource StackPanelStyle}">
-                <Button Content=" &lt;- " Command="{Binding DecreaseIndexCommand}"/>
-                <Button Content=" -&gt; " Command="{Binding IncreaseIndexCommand}"/>
+                <Button Command="{Binding DecreaseIndexCommand}">
+                    <Path Fill="Black" Data="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </Button>
+                <Button Command="{Binding IncreaseIndexCommand}">
+                    <Path Fill="Black" Data="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                </Button>
             </StackPanel>
             <view:ViewPort Grid.Row="0" Grid.ColumnSpan="2" Delta="{Binding ElementName=view2d, Path=DataContext.Delta}" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.LeftLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedLeftImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}" IsEnabled="{Binding ElementName=view2d, Path=DataContext.IsAnnotationEnabled}"/>
             <view:ViewPort Grid.Row="1" Grid.ColumnSpan="2" Delta="{Binding ElementName=view2d, Path=DataContext.Delta}" Camera="{Binding ElementName=view2d, Path=DataContext.Camera}" MarkingType="{Binding ElementName=view2d, Path=DataContext.MarkingType}" Lines="{Binding ElementName=view2d, Path=DataContext.RightLines}" SelectedUnprunedImage="{Binding ElementName=view2d, Path=DataContext.SelectedRightImage}" SelectedLine="{Binding ElementName=view2d, Path=DataContext.SelectedLine}" IsEnabled="{Binding ElementName=view2d, Path=DataContext.IsAnnotationEnabled}"/>
@@ -186,7 +206,6 @@
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
 
-            <Button Margin="10, 0, 10, 10" Cursor="Hand" Grid.Row="1" Content="Fájlok helyének megnyitása (XML, JPG)" Command="{Binding ShowFilesCommand}"/>
 
             <TabControl SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}" Grid.Row="0" Margin="10, 0, 10, 10">
                 <TabItem Header="Bal oldal">
@@ -196,6 +215,27 @@
                     <view:DataGrid Selected2dLine="{Binding ElementName=view2d,Path=DataContext.Selected2dLine}" _2DLineList="{Binding ElementName=view2d, Path=DataContext._2DRightLineList}"/>
                 </TabItem>
             </TabControl>
+
+            <Grid Grid.Row="1" Margin="10, 0, 10, 0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+
+                <Button Grid.Column="0" Style="{StaticResource SettingsButtonStyle}" Command="{Binding ShowFilesCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path VerticalAlignment="Center" Fill="Black" Data="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v.64c.57.265.94.876.856 1.546l-.64 5.124A2.5 2.5 0 0 1 12.733 15H3.266a2.5 2.5 0 0 1-2.481-2.19l-.64-5.124A1.5 1.5 0 0 1 1 6.14V3.5zM2 6h12v-.5a.5.5 0 0 0-.5-.5H9c-.964 0-1.71-.629-2.174-1.154C6.374 3.334 5.82 3 5.264 3H2.5a.5.5 0 0 0-.5.5V6zm-.367 1a.5.5 0 0 0-.496.562l.64 5.124A1.5 1.5 0 0 0 3.266 14h9.468a1.5 1.5 0 0 0 1.489-1.314l.64-5.124A.5.5 0 0 0 14.367 7H1.633z"/>
+                        <Label Content="Fájlok helyének megnyitása"/>
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="1" Style="{StaticResource SettingsButtonStyle}" Command="{Binding View2DLoaded}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path VerticalAlignment="Center" Fill="Black" Data="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
+                        <Label Content="Képek helyének megváltoztatása"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
 
             <ListBox Grid.Row="2" Margin="10, 0, 10, 10" BorderThickness="0" SelectedItem="{Binding MarkingType, Mode=TwoWay}" ItemsSource="{Binding MarkingTypes}">
                 <ListBox.ItemTemplate>
@@ -212,15 +252,15 @@
                             <Button Style="{StaticResource ButtonStyle}" Margin="0,2,2,0" Command="{Binding Path=DataContext.SelectImageCommand, ElementName=view2d}" CommandParameter="{Binding}">
                                 <Grid>
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition/>
+                                        <RowDefinition Height="1*"/>
+                                        <RowDefinition Height="3*"/>
                                     </Grid.RowDefinitions>
-                                    <Label Content="{Binding Converter={StaticResource FilenameConverter}, ConverterParameter=1}"/>
-                                    <!--<Image Grid.Row="1" x:Name="Image">
-                                        --><!--<Image.Source>-->
-                                            <!--<BitmapImage UriSource="{Binding}" DecodePixelWidth="200"/>-->
-                                        <!--</Image.Source>--><!--
-                                    </Image>-->
+                                    <Label Content="{Binding Converter={StaticResource FilenameConverter}}"/>
+                                    <Image Grid.Row="1" x:Name="Image">
+                                        <Image.Source>
+                                            <BitmapImage UriSource="{Binding}" DecodePixelWidth="200"/>
+                                        </Image.Source>
+                                    </Image>
                                 </Grid>
                             </Button>
                         </DataTemplate>

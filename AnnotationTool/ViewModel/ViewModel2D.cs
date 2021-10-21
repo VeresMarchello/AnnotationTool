@@ -34,39 +34,25 @@ namespace AnnotationTool.ViewModel
         private int _selectedTabIndex;
         private bool _isAnnotationEnabled;
 
-        private static string[] LeftDirectoryFiles = Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}Images\Left\Unpruned", "*.JPG");
-        private static string[] RightDirectoryFiles = Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}Images\Right\Unpruned", "*.JPG");
-        private static string[] LeftPrunedDirectoryFiles = Directory.GetFiles($@"{AppDomain.CurrentDomain.BaseDirectory}Images\Left\Pruned", "*.JPG");
+        private static string[] LeftDirectoryFiles = new string[] { };
+        private static string[] RightDirectoryFiles = new string[] { };
+        private static string[] LeftPrunedDirectoryFiles = new string[] { };
 
-        private void CheckFiles() 
-        {
-            var config = System.Configuration.ConfigurationManager.OpenExeConfiguration(Application.ExecutablePath);
-            var path = config.AppSettings.Settings["ImagesPath"];
-
-            if (path == null)
-            {
-                using (var fbd = new FolderBrowserDialog())
-                {
-                    fbd.ShowNewFolderButton = false;
-                    fbd.Description = "Válassza ki a képeket tartalmazó mappát!";
-                    fbd.SelectedPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Images\Left\Unpruned";
-                    DialogResult result = fbd.ShowDialog();
-                    if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
-                    {
-                        config.AppSettings.Settings.Add("ImagesPath", fbd.SelectedPath);
-                        config.Save(System.Configuration.ConfigurationSaveMode.Modified);
-                    }
-                    else
-                    {
-                        ErrorMessages.Add("Fájlok nem találhatók. Újraindítás szükséges");
-                        return;
-                    }
-                }
-            }
-        }
+        private static System.Configuration.Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(Application.ExecutablePath);
+        private static System.Configuration.KeyValueConfigurationElement configPath = config.AppSettings.Settings["ImagesPath"];
 
         public ViewModel2D()
         {
+            //config.AppSettings.Settings.Remove("ImagesPath");
+            //config.Save(System.Configuration.ConfigurationSaveMode.Modified);
+
+
+            if (configPath != null)
+            {
+                LeftDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Left\Unpruned", "*.jpg");
+                RightDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Right\Unpruned", "*.jpg");
+                LeftPrunedDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Left\Pruned", "*.jpg");
+            }
             _images = GetFolderFiles();
             if (_images.Count() > 0)
             {
@@ -78,15 +64,18 @@ namespace AnnotationTool.ViewModel
             _source = new CancellationTokenSource();
             _errorMessages = new ObservableCollection<string>() { };
             _isAnnotationEnabled = true;
+
             SelectImageCommand = new RelayCommand<object>(ChangeSelectedImage);
             DeleteErrorMessageCommand = new RelayCommand<object>(DeleteErrorMessage);
-            ShowFilesCommand = new RelayCommand<object>(ShowFiles);
+            ShowFilesCommand = new RelayCommand(ShowFiles);
+            View2DLoaded = new RelayCommand(SetImagesPath);
 
             IncreaseDeltaCommand = new RelayCommand(() => Delta++, (x) => Index + Delta < LeftPrunedDirectoryFiles.Length - 1);
             DecreaseDeltaCommand = new RelayCommand(() => Delta--, (x) => 0 < Index + Delta);
             IncreaseIndexCommand = new RelayCommand(() => Index++, (x) => Index < LeftDirectoryFiles.Length - 1);
             DecreaseIndexCommand = new RelayCommand(() => Index--, (x) => 0 < Index);
         }
+
 
         private int _delta;
         public int Delta
@@ -128,11 +117,12 @@ namespace AnnotationTool.ViewModel
                 _selectedLeftImage = value;
                 NotifyPropertyChanged("Index");
                 SetDelta();
+                ResetCamera();
                 NotifyPropertyChanged();
                 NotifyPropertyChanged("SelectedRightImage");
             }
         }
-        public string SelectedRightImage => RightDirectoryFiles[Index];
+        public string SelectedRightImage => Index > -1 ? RightDirectoryFiles[Index] : "";
 
         public string[] Images
         {
@@ -143,6 +133,61 @@ namespace AnnotationTool.ViewModel
                 NotifyPropertyChanged();
             }
         }
+
+
+        private void SetImagesPath()
+        {
+            using (var fbd = new FolderBrowserDialog())
+            {
+                fbd.ShowNewFolderButton = false;
+                fbd.Description = "Válassza ki a képeket tartalmazó mappát!";
+                if (configPath == null)
+                {
+                    fbd.RootFolder = Environment.SpecialFolder.UserProfile;
+                }
+                else
+                {
+                    fbd.SelectedPath = configPath.Value;
+                }
+
+                DialogResult result = DialogResult.None;
+                do
+                {
+                    result = fbd.ShowDialog();
+                }
+                while (result != DialogResult.OK || !CheckForFiles(fbd.SelectedPath));
+
+                config.AppSettings.Settings.Remove("ImagesPath");
+                config.AppSettings.Settings.Add("ImagesPath", fbd.SelectedPath);
+                config.Save(System.Configuration.ConfigurationSaveMode.Modified);
+                Images = GetFolderFiles();
+                SelectedLeftImage = Images[0];
+
+                bool CheckForFiles(string path)
+                {
+                    DirectoryInfo rootDirectoryInfo = new DirectoryInfo(path);
+                    var directionsDirectoryInfo = rootDirectoryInfo.GetDirectories();
+
+                    if (directionsDirectoryInfo.Count(x => x.Name == "Left" || x.Name == "Right") != 2)
+                    {
+                        return false;
+                    }
+
+                    bool filesExists = true;
+                    foreach (var item in directionsDirectoryInfo)
+                    {
+                        var correct = item.GetDirectories().Where(x => x.Name == "Pruned" || x.Name == "Unpruned");
+                        if (correct.Count() == 2)
+                        {
+                            filesExists &= correct.All(x => x.GetFiles("*.jpg").Any());
+                        }
+                    }
+
+                    return filesExists;
+                }
+            }
+        }
+
 
         public _2DLine Selected2dLine
         {
@@ -245,6 +290,8 @@ namespace AnnotationTool.ViewModel
         public ICommand DecreaseDeltaCommand { get; private set; }
         public ICommand IncreaseIndexCommand { get; private set; }
         public ICommand DecreaseIndexCommand { get; private set; }
+        public ICommand View2DLoaded { get; private set; }
+
 
 
         private LineGeometry3D GetLineGeometry(List<_2DLine> _2DLines)
@@ -342,30 +389,25 @@ namespace AnnotationTool.ViewModel
 
                 IsAnnotationEnabled = true;
 
-                _2DLeftLineList = results[0];
                 _2DRightLineList = results[1];
+                _2DLeftLineList = results[0];
 
                 _source.Dispose();
                 _source = null;
-
-                ResetCamera();
             }
         }
         private string[] GetFolderFiles()
         {
             try
             {
-                var config = System.Configuration.ConfigurationManager.OpenExeConfiguration(Application.ExecutablePath);
-                var path = config.AppSettings.Settings["ImagesPath"].Value;
-                return Directory.GetFiles(path);
+                return Directory.GetFiles($@"{configPath.Value}\Left\Unpruned", "*.JPG").OrderBy(x => x).ToArray();
             }
             catch
             {
-                ErrorMessages.Add("Képek betöltése sikertelen. Ellenőrizze a fájlokat. Újraindítás szükséges.");
-
                 return new string[] { };
             }
         }
+
         private void DeleteErrorMessage(object parameter)
         {
             if (parameter is string message)
@@ -376,6 +418,17 @@ namespace AnnotationTool.ViewModel
 
         private Vector3 GetVectorFromPixel(Vector3 vector)
         {
+            if (string.IsNullOrEmpty(SelectedLeftImage))
+            {
+                return new Vector3();
+            }
+
+            FileInfo fileInfo = new FileInfo(SelectedLeftImage);
+            if (!fileInfo.Exists)
+            {
+                return new Vector3();
+            }
+
             var image = new BitmapImage(new Uri(SelectedLeftImage, UriKind.RelativeOrAbsolute));
             int imageWidth = image.PixelWidth;
             int imageHeight = image.PixelHeight;
@@ -402,6 +455,17 @@ namespace AnnotationTool.ViewModel
         }
         private Vector3 GetPixelFromVector(Vector3 vector)
         {
+            if (string.IsNullOrEmpty(SelectedLeftImage))
+            {
+                return new Vector3();
+            }
+
+            FileInfo fileInfo = new FileInfo(SelectedLeftImage);
+            if (!fileInfo.Exists)
+            {
+                return new Vector3();
+            }
+
             var image = new BitmapImage(new Uri(SelectedLeftImage, UriKind.RelativeOrAbsolute));
             int imageWidth = image.PixelWidth;
             int imageHeight = image.PixelHeight;
@@ -519,7 +583,7 @@ namespace AnnotationTool.ViewModel
             }, cancellationToken);
         }
 
-        private void ShowFiles(object parameter = null)
+        private void ShowFiles()
         {
             var fileInfo = new FileInfo(SelectedLeftImage);
             if (!fileInfo.Exists || !fileInfo.Directory.Exists)

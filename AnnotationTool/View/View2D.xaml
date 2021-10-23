@@ -177,6 +177,7 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Row="0" Grid.Column="0" Style="{StaticResource StackPanelStyle}">
+                <Label FontSize="20" Foreground="Yellow" VerticalAlignment="Center" Content="{Binding Delta}"/>
                 <Button Command="{Binding DecreaseDeltaCommand}">
                     <Path Fill="Black" Data="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
                 </Button>
@@ -185,6 +186,7 @@
                 </Button>
             </StackPanel>
             <StackPanel Grid.Row="0" Grid.Column="1" Style="{StaticResource StackPanelStyle}">
+                <Label FontSize="20" Foreground="Yellow" VerticalAlignment="Center" Content="{Binding Index}"/>
                 <Button Command="{Binding DecreaseIndexCommand}">
                     <Path Fill="Black" Data="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
                 </Button>
@@ -202,7 +204,8 @@
                 <RowDefinition Height="3.2*"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
-                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1.1*"/>
+                <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
 
@@ -246,17 +249,17 @@
             </ListBox>
 
             <Grid Grid.Row="3" Margin="10, 0, 5, 10">
-                <ItemsControl ItemsSource="{Binding Images}">
+                <ItemsControl ItemsSource="{Binding ImageGroup}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Button Style="{StaticResource ButtonStyle}" Margin="0,2,2,0" Command="{Binding Path=DataContext.SelectImageCommand, ElementName=view2d}" CommandParameter="{Binding}">
+                            <Button VerticalContentAlignment="Stretch" Style="{StaticResource ButtonStyle}" Margin="0,2,2,0" Command="{Binding Path=DataContext.SelectImageCommand, ElementName=view2d}" CommandParameter="{Binding}">
                                 <Grid>
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="1*"/>
                                         <RowDefinition Height="3*"/>
+                                        <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <Label Content="{Binding Converter={StaticResource FilenameConverter}}"/>
-                                    <Image Grid.Row="1" x:Name="Image">
+                                    <Label Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Content="{Binding Converter={StaticResource FilenameConverter}}"/>
+                                    <Image Grid.Row="0" x:Name="Image">
                                         <Image.Source>
                                             <BitmapImage UriSource="{Binding}" DecodePixelWidth="200"/>
                                         </Image.Source>
@@ -267,7 +270,8 @@
                     </ItemsControl.ItemTemplate>
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <VirtualizingStackPanel Orientation="Horizontal" ScrollUnit="Pixel" IsVirtualizing="True" IsContainerVirtualizable="True" VirtualizationMode="Recycling"/>
+                            <StackPanel Orientation="Horizontal"/>
+                            <!--<VirtualizingStackPanel Orientation="Horizontal" IsVirtualizing="True" IsContainerVirtualizable="True" VirtualizationMode="Recycling"/>-->
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.Template>
@@ -280,7 +284,27 @@
                 </ItemsControl>
             </Grid>
 
-            <Expander Grid.Row="4" Cursor="Hand" ExpandDirection="Up" Visibility="{Binding ErrorMessages.Count, Converter={StaticResource IntToVisibilityConverter}}">
+            <Grid Grid.Row="4" Margin="10, 0, 10, 0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <Button Style="{StaticResource SettingsButtonStyle}" Grid.Column="0" Command="{Binding PreviousImageGroupCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Előző "/>
+                        <TextBlock Text="{Binding ImageGroupSize}"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource SettingsButtonStyle}" Grid.Column="1" Command="{Binding NextImageGroupCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Következő "/>
+                        <TextBlock Text="{Binding ImageGroupSize}"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <Expander Grid.Row="5" Cursor="Hand" ExpandDirection="Up" Visibility="{Binding ErrorMessages.Count, Converter={StaticResource IntToVisibilityConverter}}">
                 <Expander.Header>
                     <TextBlock Text="{Binding ErrorMessages.Count, StringFormat='Hibaüzenetek: ({0})'}"/>
                 </Expander.Header>

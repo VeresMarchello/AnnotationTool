@@ -45,7 +45,9 @@ namespace AnnotationTool.ViewModel
         {
             //config.AppSettings.Settings.Remove("ImagesPath");
             //config.Save(System.Configuration.ConfigurationSaveMode.Modified);
-
+            //configPath = config.AppSettings.Settings["ImagesPath"];
+            ImageGroupSize = 22;
+            ImageGroupStartingIndex = 0;
 
             if (configPath != null)
             {
@@ -53,8 +55,8 @@ namespace AnnotationTool.ViewModel
                 RightDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Right\Unpruned", "*.jpg");
                 LeftPrunedDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Left\Pruned", "*.jpg");
             }
-            _images = GetFolderFiles();
-            if (_images.Count() > 0)
+            Images = GetFolderFiles();
+            if (Images.Count() > 0)
             {
                 ChangeSelectedImage(_images[0]);
             }
@@ -70,12 +72,24 @@ namespace AnnotationTool.ViewModel
             ShowFilesCommand = new RelayCommand(ShowFiles);
             View2DLoaded = new RelayCommand(SetImagesPath);
 
+            NextImageGroupCommand = new RelayCommand(() => ChangeImageGroup(true), (x) => ImageGroupStartingIndex + ImageGroupSize < Images.Length - 1);
+            PreviousImageGroupCommand = new RelayCommand(() => ChangeImageGroup(false), (x) => 0 <= ImageGroupStartingIndex - ImageGroupSize);
+
             IncreaseDeltaCommand = new RelayCommand(() => Delta++, (x) => Index + Delta < LeftPrunedDirectoryFiles.Length - 1);
             DecreaseDeltaCommand = new RelayCommand(() => Delta--, (x) => 0 < Index + Delta);
-            IncreaseIndexCommand = new RelayCommand(() => Index++, (x) => Index < LeftDirectoryFiles.Length - 1);
-            DecreaseIndexCommand = new RelayCommand(() => Index--, (x) => 0 < Index);
+            //IncreaseIndexCommand = new RelayCommand(() => Index++, (x) => Index < LeftDirectoryFiles.Length - 1);
+            //DecreaseIndexCommand = new RelayCommand(() => Index--, (x) => 0 < Index);
+
+            //IncreaseDeltaCommand = new RelayCommand(() => Delta++, (x) => Index + Delta < ImageGroupStartingIndex + ImageGroupSize - 1);
+            //DecreaseDeltaCommand = new RelayCommand(() => Delta--, (x) => ImageGroupStartingIndex < Index + Delta);
+            IncreaseIndexCommand = new RelayCommand(() => Index++, (x) => Index < ImageGroupStartingIndex + ImageGroupSize - 1);
+            DecreaseIndexCommand = new RelayCommand(() => Index--, (x) => ImageGroupStartingIndex < Index);
         }
 
+
+        /// <summary>
+        /// eltérő index delta command felteleke kellenek attol fuggoen hogy a pruned vagy az unpruned a hosszabb
+        /// </summary>
 
         private int _delta;
         public int Delta
@@ -85,6 +99,8 @@ namespace AnnotationTool.ViewModel
             {
                 _delta = value;
                 NotifyPropertyChanged();
+
+                ResetCamera();
             }
         }
         public int Index
@@ -92,8 +108,7 @@ namespace AnnotationTool.ViewModel
             get { return Array.IndexOf(Images, SelectedLeftImage); }
             set
             {
-                SelectedLeftImage = LeftDirectoryFiles[value];
-                SetDelta();
+                ChangeSelectedImage(LeftDirectoryFiles[value]);
             }
         }
 
@@ -131,6 +146,11 @@ namespace AnnotationTool.ViewModel
             {
                 _images = value;
                 NotifyPropertyChanged();
+
+                if (Images != null && Images.Length > 0)
+                {
+                    ImageGroup = Images.Skip(ImageGroupStartingIndex).Take(ImageGroupSize);
+                }
             }
         }
 
@@ -143,7 +163,7 @@ namespace AnnotationTool.ViewModel
                 fbd.Description = "Válassza ki a képeket tartalmazó mappát!";
                 if (configPath == null)
                 {
-                    fbd.RootFolder = Environment.SpecialFolder.UserProfile;
+                    fbd.RootFolder = Environment.SpecialFolder.MyComputer;
                 }
                 else
                 {
@@ -157,9 +177,17 @@ namespace AnnotationTool.ViewModel
                 }
                 while (result != DialogResult.OK || !CheckForFiles(fbd.SelectedPath));
 
+                if (configPath != null && fbd.SelectedPath == configPath.Value)
+                {
+                    return;
+                }
                 config.AppSettings.Settings.Remove("ImagesPath");
                 config.AppSettings.Settings.Add("ImagesPath", fbd.SelectedPath);
                 config.Save(System.Configuration.ConfigurationSaveMode.Modified);
+                configPath = config.AppSettings.Settings["ImagesPath"];
+                LeftDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Left\Unpruned", "*.jpg");
+                RightDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Right\Unpruned", "*.jpg");
+                LeftPrunedDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Left\Pruned", "*.jpg");
                 Images = GetFolderFiles();
                 SelectedLeftImage = Images[0];
 
@@ -292,6 +320,9 @@ namespace AnnotationTool.ViewModel
         public ICommand DecreaseIndexCommand { get; private set; }
         public ICommand View2DLoaded { get; private set; }
 
+        public ICommand NextImageGroupCommand { get; private set; }
+        public ICommand PreviousImageGroupCommand { get; private set; }
+
 
 
         private LineGeometry3D GetLineGeometry(List<_2DLine> _2DLines)
@@ -383,6 +414,7 @@ namespace AnnotationTool.ViewModel
 
                 SelectedLeftImage = imagePath;
 
+
                 var results = await Task.WhenAll(
                     LoadLinesFromXML(SelectedLeftImage, _source.Token),
                     LoadLinesFromXML(SelectedRightImage, _source.Token));
@@ -405,6 +437,40 @@ namespace AnnotationTool.ViewModel
             catch
             {
                 return new string[] { };
+            }
+        }
+
+        private IEnumerable<string> _imageGroup;
+
+        public IEnumerable<string> ImageGroup
+        {
+            get { return _imageGroup; }
+            set
+            {
+                _imageGroup = value;
+                NotifyPropertyChanged();
+
+                ChangeSelectedImage(ImageGroup.First());
+            }
+        }
+
+        public int ImageGroupSize { get; set; }
+        public int ImageGroupStartingIndex { get; set; }
+        private void ChangeImageGroup(bool forward)
+        {
+            if (forward)
+            {
+                //ImageGroupStartingIndex = Math.Min(Images.Length - ImageGroupSize, ImageGroupStartingIndex + ImageGroupSize);
+                ImageGroupStartingIndex = ImageGroupStartingIndex + ImageGroupSize;
+            }
+            else
+            {
+                ImageGroupStartingIndex = Math.Max(0, ImageGroupStartingIndex - ImageGroupSize);
+            }
+
+            if (Images != null && Images.Length > 0)
+            {
+                ImageGroup = Images.Skip(ImageGroupStartingIndex).Take(Math.Min(ImageGroupSize, Images.Length - ImageGroupStartingIndex));
             }
         }
 

@@ -88,17 +88,35 @@ namespace AnnotationTool.View
                     return;
                 }
 
+                //var fileInfo = new FileInfo(viewPort.SelectedUnprunedImage);
+                //var prunedDirectoryInfo = new FileInfo(viewPort.SelectedUnprunedImage.Replace("Unpruned", "Pruned")).Directory;
+                //var list = fileInfo.Directory.EnumerateFiles("*.JPG").Select(x => x.FullName).ToList();
+                //var index = 0;
+                //if ((int)e.NewValue <= 0)
+                //{
+                //    index = Math.Max(0, list.IndexOf(fileInfo.FullName) + viewPort.Delta);
+                //}
+                //else
+                //{
+                //    index = Math.Min(prunedDirectoryInfo.GetFiles("*.JPG").Length - 1, list.IndexOf(fileInfo.FullName) + viewPort.Delta);
+                //}
+
                 var fileInfo = new FileInfo(SelectedUnprunedImage);
                 var prunedDirectoryInfo = new FileInfo(SelectedUnprunedImage.Replace("Unpruned", "Pruned")).Directory;
                 var list = fileInfo.Directory.EnumerateFiles("*.JPG").Select(x => x.FullName).ToList();
-                var index = list.IndexOf(fileInfo.FullName) + Delta;
+                var index = list.IndexOf(fileInfo.FullName);
                 var prunedImages = prunedDirectoryInfo.GetFiles("*.JPG");
-                if (index < 0 || index > prunedImages.Length - 1)
+                if (index + Delta < 0)
                 {
-                    index = list.IndexOf(fileInfo.FullName);
+                    Delta = -index;
                 }
-                SelectedPrunedImage = prunedImages[index].FullName;
-                PrunedPlaneMaterial = SetPlane(CreateImage(prunedImages[index].FullName));
+                else if (index + Delta > prunedImages.Length - 1)
+                {
+                    Delta = prunedImages.Length - index - 1;
+                }
+                
+                SelectedPrunedImage = prunedImages[index + Delta].FullName;
+                PrunedPlaneMaterial = SetPlane(CreateImage(SelectedPrunedImage));
             }
         }
         public PhongMaterial PrunedPlaneMaterial
@@ -530,6 +548,10 @@ namespace AnnotationTool.View
         private static void DeltaPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
             var viewPort = (ViewPort)obj;
+            if (string.IsNullOrEmpty(viewPort.SelectedUnprunedImage))
+            {
+                return;
+            }
             var fileInfo = new FileInfo(viewPort.SelectedUnprunedImage);
             var prunedDirectoryInfo = new FileInfo(viewPort.SelectedUnprunedImage.Replace("Unpruned", "Pruned")).Directory;
             var list = fileInfo.Directory.EnumerateFiles("*.JPG").Select(x => x.FullName).ToList();
@@ -540,10 +562,11 @@ namespace AnnotationTool.View
             }
             else
             {
-                index = Math.Min(list.Count - 1, list.IndexOf(fileInfo.FullName) + viewPort.Delta);
+                index = Math.Min(prunedDirectoryInfo.GetFiles("*.JPG").Length - 1, list.IndexOf(fileInfo.FullName) + viewPort.Delta);
             }
+
             viewPort.SelectedPrunedImage = prunedDirectoryInfo.GetFiles("*.JPG")[index].FullName;
-            viewPort.PrunedPlaneMaterial = viewPort.SetPlane(CreateImage(prunedDirectoryInfo.GetFiles("*.JPG")[index].FullName));
+            viewPort.PrunedPlaneMaterial = viewPort.SetPlane(CreateImage(viewPort.SelectedPrunedImage));
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

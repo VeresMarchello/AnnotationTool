@@ -58,7 +58,6 @@ namespace AnnotationTool.View
             AmbientLightColor = Colors.Black;
 
             ResetNewLine();
-            IsFirstPoint = true;
 
             LeftClickCommand = new RelayCommand<object>(AddLine);
             CTRLLeftClickCommand = new RelayCommand<object>(SelectLine);
@@ -345,13 +344,13 @@ namespace AnnotationTool.View
             {
                 return;
             }
+            ResetNewLine();
             SelectedLine = GetNearestLine(vector);
         }
         private void CancelLine(object parameter)
         {
             if (!IsFirstPoint)
             {
-                IsFirstPoint = true;
                 ResetNewLine();
             }
         }
@@ -382,6 +381,8 @@ namespace AnnotationTool.View
                     Indices = remainingIndices,
                     Colors = remainingColors
                 };
+
+                ResetNewLine();
             }
         }
         private void ResetNewLine()
@@ -392,6 +393,8 @@ namespace AnnotationTool.View
                 Indices = new IntCollection(),
                 Colors = new Color4Collection()
             };
+
+            IsFirstPoint = true;
         }
         public async void MouseMove3DHandler(object sender, MouseMove3DEventArgs e)
         {
@@ -501,6 +504,7 @@ namespace AnnotationTool.View
             if (e.NewValue != null)
             {
                 var viewPort = (ViewPort)obj;
+                viewPort.ResetNewLine();
                 viewPort.UnprunedPlaneMaterial = viewPort.SetPlane(CreateImage(e.NewValue.ToString()));
             }
         }

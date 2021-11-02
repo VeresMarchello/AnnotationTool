@@ -10,6 +10,8 @@ using System;
 using AnnotationTool.Commands;
 using System.Linq;
 using System.Collections.Generic;
+using System.Windows.Threading;
+using System.Threading;
 
 namespace AnnotationTool.ViewModel
 {
@@ -17,6 +19,7 @@ namespace AnnotationTool.ViewModel
     {
         private Camera _camera;
         private MarkingType _markingType;
+        private readonly SynchronizationContext _synchronizationContext;
 
         private static readonly Dictionary<Color4, MarkingType> colorMarkingTypePairs =
             new Dictionary<Color4, MarkingType> {
@@ -32,6 +35,8 @@ namespace AnnotationTool.ViewModel
 
             _markingType = MarkingType.GeneralPruning;
             MarkingTypes = Enum.GetValues(typeof(MarkingType)).Cast<MarkingType>().Where(x => x != MarkingType.None);
+
+            _synchronizationContext = SynchronizationContext.Current;
 
             SelectTypeCommand = new RelayCommand<object>(SetMarkingType);
             KeyCommand = new RelayCommand<object>(SetMarkingType);
@@ -74,9 +79,11 @@ namespace AnnotationTool.ViewModel
         }
         protected void SetCameraTarget(Vector3 target)
         {
-            Camera.Position = new Media3D.Point3D(target.X, target.Y, Camera.Position.Z);
-            Camera.LookDirection = new Media3D.Vector3D(0, 0, -Camera.Position.Z);
-
+            _synchronizationContext.Post(o =>
+            {
+                Camera.Position = new Media3D.Point3D(target.X, target.Y, Camera.Position.Z);
+                Camera.LookDirection = new Media3D.Vector3D(0, 0, -Camera.Position.Z);
+            }, null);
             NotifyPropertyChanged("Camera");
         }
         protected void ResetCamera(object parameter = null)

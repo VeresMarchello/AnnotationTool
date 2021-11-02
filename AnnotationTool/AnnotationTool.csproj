@@ -28,7 +28,7 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>36</ApplicationRevision>
+    <ApplicationRevision>37</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -137,6 +137,7 @@
     <Compile Include="Commands\RelayCommand.cs" />
     <Compile Include="Converters\ButtonBackgroundConverter.cs" />
     <Compile Include="Converters\FilenameConverter.cs" />
+    <Compile Include="Converters\ImageWidthConverter.cs" />
     <Compile Include="Converters\IntToVisibilityConverter.cs" />
     <Compile Include="Converters\MarkingTypeConverter.cs" />
     <Compile Include="Converters\MarkingTypeNameConverter.cs" />
@@ -144,6 +145,7 @@
     <Compile Include="Model\2DLine.cs" />
     <Compile Include="Model\2DLineXML.cs" />
     <Compile Include="Model\MarkingType.cs" />
+    <Compile Include="Utils\VectorPixelConverter.cs" />
     <Compile Include="ViewModel\ViewModel2D.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />
     <Compile Include="View\DataGrid.xaml.cs">

@@ -13,12 +13,14 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using System.Threading;
 using System.Windows.Forms;
+using AnnotationTool.Utils;
+using System.Windows.Threading;
 
 namespace AnnotationTool.ViewModel
 {
     public class ViewModel2D : ViewModelBase, IDisposable
     {
-        private string _selectedLeftImage;
+        private string _selectedLeftImage = null;
         private string[] _images;
 
         private _2DLine _selected2dLine;
@@ -46,20 +48,11 @@ namespace AnnotationTool.ViewModel
             //config.AppSettings.Settings.Remove("ImagesPath");
             //config.Save(System.Configuration.ConfigurationSaveMode.Modified);
             //configPath = config.AppSettings.Settings["ImagesPath"];
-            ImageGroupSize = 22;
+            ImageGroupSize = 30;
             ImageGroupStartingIndex = 0;
 
-            if (configPath != null)
-            {
-                LeftDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Left\Unpruned", "*.jpg");
-                RightDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Right\Unpruned", "*.jpg");
-                LeftPrunedDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Left\Pruned", "*.jpg");
-            }
-            Images = GetFolderFiles();
-            if (Images.Count() > 0)
-            {
-                ChangeSelectedImage(_images[0]);
-            }
+            _images = new string[] { };
+
             _2dLeftLineList = new List<_2DLine>();
             _2dRightLineList = new List<_2DLine>();
             _selected2dLine = new _2DLine(new Vector3(0), new Vector3(0), MarkingType.GeneralPruning);
@@ -82,7 +75,7 @@ namespace AnnotationTool.ViewModel
 
             //IncreaseDeltaCommand = new RelayCommand(() => Delta++, (x) => Index + Delta < ImageGroupStartingIndex + ImageGroupSize - 1);
             //DecreaseDeltaCommand = new RelayCommand(() => Delta--, (x) => ImageGroupStartingIndex < Index + Delta);
-            IncreaseIndexCommand = new RelayCommand(() => Index++, (x) => Index < ImageGroupStartingIndex + ImageGroupSize - 1);
+            IncreaseIndexCommand = new RelayCommand(() => Index++, (x) => Index < ImageGroupStartingIndex + ImageGroupSize - 1 && Index < LeftDirectoryFiles.Length - 1);
             DecreaseIndexCommand = new RelayCommand(() => Index--, (x) => ImageGroupStartingIndex < Index);
         }
 
@@ -147,20 +140,24 @@ namespace AnnotationTool.ViewModel
                 _images = value;
                 NotifyPropertyChanged();
 
+                ImageGroupStartingIndex = 0;
+                Delta = 0;
                 if (Images != null && Images.Length > 0)
                 {
                     ImageGroup = Images.Skip(ImageGroupStartingIndex).Take(ImageGroupSize);
+                    ChangeSelectedImage(ImageGroup.First());
                 }
             }
         }
 
 
-        private void SetImagesPath()
+        private async void SetImagesPath()
         {
             using (var fbd = new FolderBrowserDialog())
             {
+                int count = 0;
+                int maxCount = 3;
                 fbd.ShowNewFolderButton = false;
-                fbd.Description = "Válassza ki a képeket tartalmazó mappát!";
                 if (configPath == null)
                 {
                     fbd.RootFolder = Environment.SpecialFolder.MyComputer;
@@ -173,23 +170,36 @@ namespace AnnotationTool.ViewModel
                 DialogResult result = DialogResult.None;
                 do
                 {
+                    fbd.Description = $"Válassza ki a képeket tartalmazó mappát!\nA mappának tartalmaznia kell a Left, Right, azokon belül is az Unpruned, Pruned mappákat!\nPróbákozások száma {maxCount - count}";
                     result = fbd.ShowDialog();
+                    count++;
                 }
-                while (result != DialogResult.OK || !CheckForFiles(fbd.SelectedPath));
+                while ((result != DialogResult.OK || !CheckForFiles(fbd.SelectedPath)) && count < maxCount);
 
-                if (configPath != null && fbd.SelectedPath == configPath.Value)
+                if (result != DialogResult.OK || !CheckForFiles(fbd.SelectedPath))
                 {
-                    return;
+                    if (Images.Length > 0)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        System.Windows.Application.Current.Shutdown();
+                    }
                 }
+
                 config.AppSettings.Settings.Remove("ImagesPath");
                 config.AppSettings.Settings.Add("ImagesPath", fbd.SelectedPath);
                 config.Save(System.Configuration.ConfigurationSaveMode.Modified);
                 configPath = config.AppSettings.Settings["ImagesPath"];
-                LeftDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Left\Unpruned", "*.jpg");
-                RightDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Right\Unpruned", "*.jpg");
-                LeftPrunedDirectoryFiles = Directory.GetFiles($@"{configPath.Value}\Left\Pruned", "*.jpg");
-                Images = GetFolderFiles();
-                SelectedLeftImage = Images[0];
+
+                await SetDirectories();
+                Images = await GetFolderFiles();
+
+                if (Images.Length > 0)
+                {
+                    SelectedLeftImage = Images[0];
+                }
 
                 bool CheckForFiles(string path)
                 {
@@ -216,6 +226,18 @@ namespace AnnotationTool.ViewModel
             }
         }
 
+        private async Task SetDirectories()
+        {
+            List<Task<string[]>> tasks = new List<Task<string[]>>();
+            tasks.Add(Task.Run(() => Directory.GetFiles($@"{configPath.Value}\Left\Unpruned", "*.jpg")));
+            tasks.Add(Task.Run(() => Directory.GetFiles($@"{configPath.Value}\Right\Unpruned", "*.jpg")));
+            tasks.Add(Task.Run(() => Directory.GetFiles($@"{configPath.Value}\Left\Pruned", "*.jpg")));
+            var result = await Task.WhenAll(tasks);
+
+            LeftDirectoryFiles = result[0];
+            RightDirectoryFiles = result[1];
+            LeftPrunedDirectoryFiles = result[2];
+        }
 
         public _2DLine Selected2dLine
         {
@@ -228,7 +250,8 @@ namespace AnnotationTool.ViewModel
 
                 if (value != null)
                 {
-                    var target = GetVectorFromPixel(value.CenterPoint);
+                    var target = VectorPixelConverter.GetVectorFromPixel(value.CenterPoint, SelectedLeftImage);
+
                     SetCameraTarget(target);
                 }
             }
@@ -324,15 +347,14 @@ namespace AnnotationTool.ViewModel
         public ICommand PreviousImageGroupCommand { get; private set; }
 
 
-
         private LineGeometry3D GetLineGeometry(List<_2DLine> _2DLines)
         {
             var lineBuilder = new LineBuilder();
 
             foreach (var line in _2DLines)
             {
-                var v1 = GetVectorFromPixel(line.FirstPoint);
-                var v2 = GetVectorFromPixel(line.MirroredPoint);
+                var v1 = VectorPixelConverter.GetVectorFromPixel(line.FirstPoint, SelectedLeftImage);
+                var v2 = VectorPixelConverter.GetVectorFromPixel(line.MirroredPoint, SelectedLeftImage);
 
                 lineBuilder.AddLine(v1, v2);
             }
@@ -355,7 +377,10 @@ namespace AnnotationTool.ViewModel
             for (int i = 0; i < count; i += 2)
             {
                 var center = (lineGeometry.Positions[i] + lineGeometry.Positions[i + 1]) / 2;
-                var newLine = new _2DLine(GetPixelFromVector(center), GetPixelFromVector(lineGeometry.Positions[i]), GetMarkingType(lineGeometry.Colors[i]));
+                var pixelCenter = VectorPixelConverter.GetPixelFromVector(center, SelectedLeftImage);
+                var pixelFiirst = VectorPixelConverter.GetPixelFromVector(lineGeometry.Positions[i], SelectedLeftImage);
+                var type = GetMarkingType(lineGeometry.Colors[i]);
+                var newLine = new _2DLine(pixelCenter, pixelFiirst, type);
                 lineList.Add(newLine);
             }
 
@@ -372,20 +397,22 @@ namespace AnnotationTool.ViewModel
 
             return new Geometry3D.Line()
             {
-                P0 = GetVectorFromPixel(line.FirstPoint),
-                P1 = GetVectorFromPixel(line.MirroredPoint),
+                P0 = VectorPixelConverter.GetVectorFromPixel(line.FirstPoint, SelectedLeftImage),
+                P1 = VectorPixelConverter.GetVectorFromPixel(line.MirroredPoint, SelectedLeftImage),
             };
         }
         private _2DLine Get_2DLine(Geometry3D.Line line)
         {
-            var index = _2DLeftLineList.IndexOf(_2DLeftLineList.Where(x => ((x.MirroredPoint == GetPixelFromVector(line.P0)) && (x.FirstPoint == GetPixelFromVector(line.P1))) || ((x.FirstPoint == GetPixelFromVector(line.P0)) && (x.MirroredPoint == GetPixelFromVector(line.P1)))).FirstOrDefault());
+            var p0 = VectorPixelConverter.GetPixelFromVector(line.P0, SelectedLeftImage);
+            var p1 = VectorPixelConverter.GetPixelFromVector(line.P1, SelectedLeftImage);
+            var index = _2DLeftLineList.IndexOf(_2DLeftLineList.Where(x => ((x.MirroredPoint == p0) && (x.FirstPoint == p1)) || ((x.FirstPoint == p0) && (x.MirroredPoint == p1))).FirstOrDefault());
             if (index < 0)
             {
-                index = _2DRightLineList.IndexOf(_2dRightLineList.Where(x => ((x.MirroredPoint == GetPixelFromVector(line.P0)) && (x.FirstPoint == GetPixelFromVector(line.P1))) || ((x.FirstPoint == GetPixelFromVector(line.P0)) && (x.MirroredPoint == GetPixelFromVector(line.P1)))).FirstOrDefault());
+                index = _2DRightLineList.IndexOf(_2dRightLineList.Where(x => ((x.MirroredPoint == p0) && (x.FirstPoint == p1)) || ((x.FirstPoint == p0) && (x.MirroredPoint == p1))).FirstOrDefault());
 
                 if (index < 0)
                 {
-                    var vector = GetPixelFromVector(new Vector3(0));
+                    var vector = VectorPixelConverter.GetPixelFromVector(new Vector3(0), SelectedLeftImage);
                     return new _2DLine(vector, vector, MarkingType.GeneralPruning);
                 }
 
@@ -414,7 +441,6 @@ namespace AnnotationTool.ViewModel
 
                 SelectedLeftImage = imagePath;
 
-
                 var results = await Task.WhenAll(
                     LoadLinesFromXML(SelectedLeftImage, _source.Token),
                     LoadLinesFromXML(SelectedRightImage, _source.Token));
@@ -428,16 +454,19 @@ namespace AnnotationTool.ViewModel
                 _source = null;
             }
         }
-        private string[] GetFolderFiles()
+        private async Task<string[]> GetFolderFiles()
         {
-            try
+            return await Task.Run(() =>
             {
-                return Directory.GetFiles($@"{configPath.Value}\Left\Unpruned", "*.JPG").OrderBy(x => x).ToArray();
-            }
-            catch
-            {
-                return new string[] { };
-            }
+                try
+                {
+                    return Directory.GetFiles($@"{configPath.Value}\Left\Unpruned", "*.JPG").OrderBy(x => x).ToArray();
+                }
+                catch
+                {
+                    return new string[] { };
+                }
+            });
         }
 
         private IEnumerable<string> _imageGroup;
@@ -449,8 +478,6 @@ namespace AnnotationTool.ViewModel
             {
                 _imageGroup = value;
                 NotifyPropertyChanged();
-
-                ChangeSelectedImage(ImageGroup.First());
             }
         }
 
@@ -471,6 +498,15 @@ namespace AnnotationTool.ViewModel
             if (Images != null && Images.Length > 0)
             {
                 ImageGroup = Images.Skip(ImageGroupStartingIndex).Take(Math.Min(ImageGroupSize, Images.Length - ImageGroupStartingIndex));
+
+                if (forward)
+                {
+                    ChangeSelectedImage(ImageGroup.First());
+                }
+                else
+                {
+                    ChangeSelectedImage(ImageGroup.Last());
+                }
             }
         }
 
@@ -482,82 +518,10 @@ namespace AnnotationTool.ViewModel
             }
         }
 
-        private Vector3 GetVectorFromPixel(Vector3 vector)
+
+        private Task SaveLineToXML(List<_2DLine> newLines, string fullFileName)
         {
-            if (string.IsNullOrEmpty(SelectedLeftImage))
-            {
-                return new Vector3();
-            }
-
-            FileInfo fileInfo = new FileInfo(SelectedLeftImage);
-            if (!fileInfo.Exists)
-            {
-                return new Vector3();
-            }
-
-            var image = new BitmapImage(new Uri(SelectedLeftImage, UriKind.RelativeOrAbsolute));
-            int imageWidth = image.PixelWidth;
-            int imageHeight = image.PixelHeight;
-
-            double vertical = 5.0;
-            double horizontal = imageWidth / (imageHeight / vertical);
-            Vector2 center = new Vector2(imageWidth / 2, imageHeight / 2);
-            double computedX = Math.Abs(vector.X - center.X);
-            double computedY = Math.Abs(vector.Y - center.Y);
-
-            double computedPointX;
-            if (vector.X >= center.X)
-                computedPointX = computedX / (center.X / horizontal);
-            else
-                computedPointX = -computedX / (center.X / horizontal);
-
-            double computedPointY;
-            if (vector.Y >= center.Y)
-                computedPointY = -computedY / (center.Y / vertical);
-            else
-                computedPointY = computedY / (center.Y / vertical);
-
-            return new Vector3((float)computedPointX, (float)computedPointY, 0);
-        }
-        private Vector3 GetPixelFromVector(Vector3 vector)
-        {
-            if (string.IsNullOrEmpty(SelectedLeftImage))
-            {
-                return new Vector3();
-            }
-
-            FileInfo fileInfo = new FileInfo(SelectedLeftImage);
-            if (!fileInfo.Exists)
-            {
-                return new Vector3();
-            }
-
-            var image = new BitmapImage(new Uri(SelectedLeftImage, UriKind.RelativeOrAbsolute));
-            int imageWidth = image.PixelWidth;
-            int imageHeight = image.PixelHeight;
-
-            double vertical = 5.0;
-            double horizontal = imageWidth / (imageHeight / vertical);
-            Vector2 center = new Vector2(imageWidth / 2, imageHeight / 2);
-            Vector3 computedPoint = new Vector3(0);
-
-            double computedX = Math.Abs(center.X / horizontal * vector.X);
-            if (vector.X >= 0)
-                computedPoint.X = Convert.ToInt32(center.X + computedX);
-            else
-                computedPoint.X = Convert.ToInt32(center.X - computedX);
-
-            double computedY = Math.Abs(center.Y / vertical * vector.Y);
-            if (vector.Y >= 0)
-                computedPoint.Y = Convert.ToInt32(center.Y - computedY);
-            else
-                computedPoint.Y = Convert.ToInt32(center.Y + computedY);
-
-            return computedPoint;
-        }
-        private void SaveLineToXML(List<_2DLine> newLines, string fullFileName)
-        {
-            _ = Task.Run(() =>
+            return Task.Run(() =>
               {
                   fullFileName = fullFileName.Replace("JPG", "XML");
 
@@ -651,8 +615,8 @@ namespace AnnotationTool.ViewModel
 
         private void ShowFiles()
         {
-            var fileInfo = new FileInfo(SelectedLeftImage);
-            if (!fileInfo.Exists || !fileInfo.Directory.Exists)
+            var directoryInfo = new DirectoryInfo(configPath.Value);
+            if (!directoryInfo.Exists || !directoryInfo.Exists)
             {
                 ErrorMessages.Add("Fájlok nem találhatók. Újraindítás szükséges");
                 return;
@@ -663,7 +627,7 @@ namespace AnnotationTool.ViewModel
                 var startInfo = new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = "explorer.exe",
-                    Arguments = fileInfo.Directory.FullName
+                    Arguments = directoryInfo.FullName
                 };
                 process.StartInfo = startInfo;
                 process.Start();

@@ -44,7 +44,7 @@
 
     </UserControl.Resources>
 
-    <DataGrid Grid.Row="0" SelectedItem="{Binding Selected2dLine, Mode=TwoWay}" ItemsSource="{Binding _2DLineList}">
+    <DataGrid Grid.Row="0" SelectedItem="{Binding Selected2dLine, Mode=TwoWay}" ItemsSource="{Binding _2DLineList, IsAsync=False}">
         <DataGrid.Columns>
             <DataGridTextColumn Header="Típus" Binding="{Binding Converter={StaticResource _2DLineConverter}, ConverterParameter={StaticResource Zero}}" Width="1*"/>
             <DataGridTextColumn Header="Első pont" Binding="{Binding Converter={StaticResource _2DLineConverter}, ConverterParameter={StaticResource One}}" Width="1*"/>

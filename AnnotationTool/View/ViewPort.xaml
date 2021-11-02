@@ -16,7 +16,7 @@
             <Setter Property="ShowViewCube" Value="False"/>
             <Setter Property="IsRotationEnabled" Value="False"/>
             <Setter Property="UseDefaultGestures" Value="False"/>
-            <Setter Property="IsEnabled" Value="{Binding ElementName=usercontrol, Path=IsEnabled}"/>
+            <Setter Property="IsEnabled" Value="{Binding ElementName=usercontrol, Path=IsEnabled, IsAsync=False}"/>
             <Setter Property="EnableDeferredRendering" Value="False"/>
             <Setter Property="ZoomDistanceLimitFar" Value="12"/>
             <Setter Property="ZoomDistanceLimitNear" Value="1"/>
@@ -37,24 +37,42 @@
         </Grid.RowDefinitions>
 
         <StatusBar Grid.Column="0" Grid.Row="1">
-            <StatusBarItem Content="{Binding SelectedPrunedImage, Converter={StaticResource FilenameConverter}}"/>
+            <StatusBarItem Content="{Binding SelectedPrunedImage, Converter={StaticResource FilenameConverter}, FallbackValue=betöltés..., IsAsync=False}"/>
         </StatusBar>
+        <!--<InkCanvas Grid.Column="0" Grid.Row="0">
+            <InkCanvas.Background>
+                <ImageBrush ImageSource="{Binding SelectedPrunedImage, IsAsync=True}"/>
+            </InkCanvas.Background>
+        </InkCanvas>-->
         <hx:Viewport3DX Grid.Column="0" Grid.Row="0" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
             <hx:Viewport3DX.Camera>
                 <hx:PerspectiveCamera Position="{Binding Camera.Position, Mode=TwoWay}" LookDirection="{Binding Camera.LookDirection, Mode=TwoWay}" UpDirection="{Binding Camera.UpDirection, Mode=TwoWay}" NearPlaneDistance="{Binding Camera.NearPlaneDistance, Mode=TwoWay}" FarPlaneDistance="{Binding Camera.FarPlaneDistance, Mode=TwoWay}"/>
             </hx:Viewport3DX.Camera>
             <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
             <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />
-            <hx:MeshGeometryModel3D Geometry="{Binding Plane}" Material="{Binding PrunedPlaneMaterial}" Transform="{Binding PlaneTransform}" />
-            <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="Transparent"/>
-            <hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="Transparent"/>
+            <hx:MeshGeometryModel3D Geometry="{Binding Plane, IsAsync=False}" Material="{Binding PrunedPlaneMaterial, IsAsync=False}" Transform="{Binding PlaneTransform}" />
+            <hx:LineGeometryModel3D Geometry="{Binding Lines, IsAsync=False}" Thickness="3" Color="Transparent"/>
+            
+        <hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="Transparent"/>
+        
         </hx:Viewport3DX>
 
         <StatusBar Grid.Column="1" Grid.Row="1">
-            <StatusBarItem Content="{Binding SelectedUnprunedImage, Converter={StaticResource FilenameConverter}}"/>
+            <StatusBarItem Content="{Binding SelectedUnprunedImage, Converter={StaticResource FilenameConverter}, IsAsync=False, FallbackValue=betöltés...}"/>
             <Separator/>
-            <StatusBarItem Content="{Binding MouseInfo}"/>
+            <StatusBarItem Content="{Binding MouseInfo, IsAsync=False, FallbackValue='X:1000 Y:1000'}"/>
         </StatusBar>
+        <!--<InkCanvas Grid.Column="1" Grid.Row="0" MouseWheel="Image_MouseWheel">-->
+        <!--<Grid Background="Red" Grid.Column="1" Grid.Row="0">
+        <Image x:Name="Image" RenderTransformOrigin=".5,.5" MouseWheel="Image_MouseWheel" RenderTransform="{Binding TransformGroup}"  Source="{Binding SelectedUnprunedImage, IsAsync=True}">
+        </Image>
+        </Grid>-->
+        <!--<i:Interaction.Triggers>
+                <i:EventTrigger EventName="MouseMove">
+                    <ie:CallMethodAction MethodName="MouseMove3DHandler" TargetObject="{Binding ElementName=Image}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>-->
+        <!--</InkCanvas>-->
         <hx:Viewport3DX x:Name="viewport" Grid.Column="1" Grid.Row="0" EffectsManager="{Binding EffectsManager}" Style="{StaticResource ViewPortStyle}">
             <hx:Viewport3DX.Camera>
                 <hx:PerspectiveCamera Position="{Binding Camera.Position, Mode=TwoWay}"  LookDirection="{Binding Camera.LookDirection, Mode=TwoWay}" UpDirection="{Binding Camera.UpDirection, Mode=TwoWay}" NearPlaneDistance="{Binding Camera.NearPlaneDistance, Mode=TwoWay}" FarPlaneDistance="{Binding Camera.FarPlaneDistance, Mode=TwoWay}"/>
@@ -75,7 +93,7 @@
 
             <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
             <hx:DirectionalLight3D Direction="{Binding DirectionalLightDirection}" Color="{Binding DirectionalLightColor}" />
-            <hx:MeshGeometryModel3D Geometry="{Binding Plane}" Material="{Binding UnprunedPlaneMaterial}" Transform="{Binding PlaneTransform}" />
+            <hx:MeshGeometryModel3D Geometry="{Binding Plane, IsAsync=False}" Material="{Binding UnprunedPlaneMaterial, IsAsync=False}" Transform="{Binding PlaneTransform}" />
             <hx:LineGeometryModel3D Geometry="{Binding Lines}" Thickness="3" Color="White"/>
             <hx:LineGeometryModel3D Geometry="{Binding NewLine}" Thickness="3" Color="White"/>
         </hx:Viewport3DX>

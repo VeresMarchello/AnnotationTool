@@ -19,6 +19,8 @@ using AnnotationTool.Commands;
 using AnnotationTool.ViewModel;
 using System.Linq;
 using Geometry3D = HelixToolkit.Wpf.SharpDX.Geometry3D;
+using AnnotationTool.Utils;
+using System.Threading.Tasks;
 
 namespace AnnotationTool.View
 {
@@ -32,7 +34,11 @@ namespace AnnotationTool.View
         private PhongMaterial _prunedPlaneMaterial;
         private Transform3D _planeTransform;
         private LineGeometry3D _newLine;
-        private string _selectedPrunedImage;
+        private string _selectedPrunedImage = null;
+
+        private ScaleTransform _scaleTransform;
+        private TranslateTransform _translateTransform;
+        private TransformGroup _transformGroup;
 
         public ViewPort()
         {
@@ -58,7 +64,23 @@ namespace AnnotationTool.View
             CTRLLeftClickCommand = new RelayCommand<object>(SelectLine);
             CTRLRigtClickCommand = new RelayCommand<object>(DeleteLine);
             ESCCommand = new RelayCommand<object>(CancelLine);
+
+
+            _translateTransform = new TranslateTransform();
+            _scaleTransform = new ScaleTransform();
+            _transformGroup = new TransformGroup();
+
+            _transformGroup.Children.Add(_scaleTransform);
+            _transformGroup.Children.Add(_translateTransform);
         }
+
+
+        public TransformGroup TransformGroup
+        {
+            get { return _transformGroup; }
+            set { _transformGroup = value; }
+        }
+
 
         public EffectsManager EffectsManager { get; private set; }
         public Vector3D DirectionalLightDirection { get; private set; }
@@ -114,7 +136,7 @@ namespace AnnotationTool.View
                 {
                     Delta = prunedImages.Length - index - 1;
                 }
-                
+
                 SelectedPrunedImage = prunedImages[index + Delta].FullName;
                 PrunedPlaneMaterial = SetPlane(CreateImage(SelectedPrunedImage));
             }
@@ -160,42 +182,6 @@ namespace AnnotationTool.View
         public bool IsFirstPoint { get; set; }
 
         public Vector2 MouseInfo { get; set; }
-        private Vector3 GetPixelFromVector(Vector3 vector)
-        {
-            if (string.IsNullOrEmpty(SelectedUnprunedImage))
-            {
-                return new Vector3();
-            }
-
-            FileInfo fileInfo = new FileInfo(SelectedUnprunedImage);
-            if (!fileInfo.Exists)
-            {
-                return new Vector3();
-            }
-
-            var image = new BitmapImage(new Uri(SelectedUnprunedImage, UriKind.RelativeOrAbsolute));
-            int imageWidth = image.PixelWidth;
-            int imageHeight = image.PixelHeight;
-
-            double vertical = 5.0;
-            double horizontal = imageWidth / (imageHeight / vertical);
-            Vector2 center = new Vector2(imageWidth / 2, imageHeight / 2);
-            Vector3 computedPoint = new Vector3(0);
-
-            double computedX = Math.Abs(center.X / horizontal * vector.X);
-            if (vector.X >= 0)
-                computedPoint.X = Convert.ToInt32(center.X + computedX);
-            else
-                computedPoint.X = Convert.ToInt32(center.X - computedX);
-
-            double computedY = Math.Abs(center.Y / vertical * vector.Y);
-            if (vector.Y >= 0)
-                computedPoint.Y = Convert.ToInt32(center.Y - computedY);
-            else
-                computedPoint.Y = Convert.ToInt32(center.Y + computedY);
-
-            return computedPoint;
-        }
 
         public ICommand LeftClickCommand { get; set; }
         public ICommand CTRLLeftClickCommand { get; set; }
@@ -225,21 +211,25 @@ namespace AnnotationTool.View
                 DiffuseMap = new MemoryStream(image.ToByteArray()),
             };
         }
-        public Vector3 GetVector(object parameter)
+        public async Task<Vector3> GetVector(object parameter)
         {
-            var viewPort = (Viewport3DX)parameter;
-            var position = Mouse.GetPosition(viewPort);
-            var hits = viewPort.FindHits(position);
-
-            foreach (var hit in hits)
+            return await Task.Run(() =>
             {
-                if (hit.ModelHit is MeshGeometryModel3D)
-                {
-                    return hit.PointHit;
-                }
-            }
+                var viewPort = (Viewport3DX)parameter;
+                System.Windows.Point position = new System.Windows.Point();
+                this.Dispatcher.Invoke(() => position = Mouse.GetPosition(viewPort));
+                var hits = viewPort.FindHits(position);
 
-            return new Vector3(1000);
+                foreach (var hit in hits)
+                {
+                    if (hit.ModelHit is MeshGeometryModel3D)
+                    {
+                        return hit.PointHit;
+                    }
+                }
+
+                return new Vector3(1000);
+            });
         }
         private Geometry3D.Line GetNearestLine(Vector3 vector)
         {
@@ -297,14 +287,15 @@ namespace AnnotationTool.View
                 return false;
         }
 
-        private void AddLine(object parameter)
+        private async void AddLine(object parameter)
         {
-            var vector = GetVector(parameter);
+            var vector = await GetVector(parameter);
             if (vector == new Vector3(1000))
             {
                 return;
             }
             vector.Z = 0;
+
             if (IsFirstPoint)
             {
                 FirstPoint = vector;
@@ -347,14 +338,13 @@ namespace AnnotationTool.View
 
             IsFirstPoint = !IsFirstPoint;
         }
-        private void SelectLine(object parameter)
+        private async void SelectLine(object parameter)
         {
-            var vector = GetVector(parameter);
+            var vector = await GetVector(parameter);
             if (vector == new Vector3(1000))
             {
                 return;
             }
-
             SelectedLine = GetNearestLine(vector);
         }
         private void CancelLine(object parameter)
@@ -365,9 +355,9 @@ namespace AnnotationTool.View
                 ResetNewLine();
             }
         }
-        private void DeleteLine(object parameter)
+        private async void DeleteLine(object parameter)
         {
-            var vector = GetVector(parameter);
+            var vector = await GetVector(parameter);
             if (vector == new Vector3(1000))
             {
                 return;
@@ -403,16 +393,23 @@ namespace AnnotationTool.View
                 Colors = new Color4Collection()
             };
         }
-        public void MouseMove3DHandler(object sender, MouseMove3DEventArgs e)
+        public async void MouseMove3DHandler(object sender, MouseMove3DEventArgs e)
         {
-            var vector = GetVector(sender);
+            //var image = (Image)sender;
+            //ImageSource imageSource = image.Source;
+            //BitmapSource bitmapImage = (BitmapSource)imageSource;
+            //var x = Convert.ToInt32(e.GetPosition(image).X * bitmapImage.PixelWidth / image.ActualWidth);
+            //var y = Convert.ToInt32(e.GetPosition(image).Y * bitmapImage.PixelHeight / image.ActualHeight);
+            //MouseInfo = new System.Windows.Point(x, y);
+            //NotifyPropertyChanged("MouseInfo");
+            var vector = await GetVector(sender);
 
             if (vector == new Vector3(1000))
             {
                 return;
             }
 
-            var pixel = GetPixelFromVector(vector);
+            var pixel = VectorPixelConverter.GetPixelFromVector(vector, SelectedUnprunedImage);
             MouseInfo = new Vector2(pixel.X, pixel.Y);
             NotifyPropertyChanged("MouseInfo");
 
@@ -501,8 +498,11 @@ namespace AnnotationTool.View
 
         private static void SelectedUnprunedImagePropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
-            var viewPort = (ViewPort)obj;
-            viewPort.UnprunedPlaneMaterial = viewPort.SetPlane(CreateImage(e.NewValue.ToString()));
+            if (e.NewValue != null)
+            {
+                var viewPort = (ViewPort)obj;
+                viewPort.UnprunedPlaneMaterial = viewPort.SetPlane(CreateImage(e.NewValue.ToString()));
+            }
         }
 
         private static BitmapImage CreateImage(string path)
@@ -564,9 +564,14 @@ namespace AnnotationTool.View
             {
                 index = Math.Min(prunedDirectoryInfo.GetFiles("*.JPG").Length - 1, list.IndexOf(fileInfo.FullName) + viewPort.Delta);
             }
-
-            viewPort.SelectedPrunedImage = prunedDirectoryInfo.GetFiles("*.JPG")[index].FullName;
-            viewPort.PrunedPlaneMaterial = viewPort.SetPlane(CreateImage(viewPort.SelectedPrunedImage));
+            try
+            {
+                viewPort.SelectedPrunedImage = prunedDirectoryInfo.GetFiles("*.JPG")[index].FullName;
+                viewPort.PrunedPlaneMaterial = viewPort.SetPlane(CreateImage(viewPort.SelectedPrunedImage));
+            }
+            catch
+            {
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -574,6 +579,46 @@ namespace AnnotationTool.View
         protected void NotifyPropertyChanged([CallerMemberName] string info = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(info));
+        }
+
+        private void Image_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+
+            var st = _scaleTransform;
+            double zoom = e.Delta > 0 ? .2 : -.2;
+            st.ScaleX += zoom;
+            st.ScaleY += zoom;
+            var tg = new TransformGroup();
+            tg.Children.Add(st);
+            tg.Children.Add(_translateTransform);
+
+            TransformGroup = tg;
+
+            //double zoomNow = Math.Round(TransformGroup.Value.M11, 1);
+            //double zoomScale = 0.1;
+            //double valZoom = e.Delta > 0 ? zoomScale : -zoomScale;
+            ////RenderTransformOrigin = new System.Windows.Point(mousePosition.X / MainCanvas.ActualWidth, mousePosition.Y / MainCanvas.ActualHeight);
+            //Zoom(new System.Windows.Point(mousePosition.X, mousePosition.Y), zoomNow + valZoom);
+
+            //void Zoom(System.Windows.Point point, double scale)
+            //{
+            //    double centerX = (point.X - _translateTransform.X) / _scaleTransform.ScaleX;
+            //    double centerY = (point.Y - _translateTransform.Y) / _scaleTransform.ScaleY;
+
+            //    _scaleTransform.ScaleX = scale;
+            //    _scaleTransform.ScaleY = scale;
+
+            //    _translateTransform.X = point.X - centerX * _scaleTransform.ScaleX;
+            //    _translateTransform.Y = point.Y - centerY * _scaleTransform.ScaleY;
+
+
+            //    var tg = new TransformGroup();
+            //    tg.Children.Add(_scaleTransform);
+            //    tg.Children.Add(_translateTransform);
+
+            //    TransformGroup = tg;
+            //    NotifyPropertyChanged("TransformGroup");
+            //}
         }
     }
 }

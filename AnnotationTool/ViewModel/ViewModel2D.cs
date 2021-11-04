@@ -79,7 +79,6 @@ namespace AnnotationTool.ViewModel
             DecreaseIndexCommand = new RelayCommand(() => Index--, (x) => ImageGroupStartingIndex < Index);
         }
 
-
         /// <summary>
         /// eltérő index delta command felteleke kellenek attol fuggoen hogy a pruned vagy az unpruned a hosszabb
         /// </summary>

@@ -28,7 +28,7 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>38</ApplicationRevision>
+    <ApplicationRevision>40</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -138,6 +138,7 @@
     <Compile Include="Converters\ButtonBackgroundConverter.cs" />
     <Compile Include="Converters\FilenameConverter.cs" />
     <Compile Include="Converters\ImageWidthConverter.cs" />
+    <Compile Include="Converters\IndexConverter.cs" />
     <Compile Include="Converters\IntToVisibilityConverter.cs" />
     <Compile Include="Converters\MarkingTypeConverter.cs" />
     <Compile Include="Converters\MarkingTypeNameConverter.cs" />

@@ -310,6 +310,7 @@ namespace AnnotationTool.View
                 }
 
                 NewLine = lineGeometry;
+                IsFirstPoint = false;
             }
             else
             {
@@ -334,8 +335,6 @@ namespace AnnotationTool.View
 
                 ResetNewLine();
             }
-
-            IsFirstPoint = !IsFirstPoint;
         }
         private async void SelectLine(object parameter)
         {

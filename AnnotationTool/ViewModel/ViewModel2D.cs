@@ -286,19 +286,19 @@ namespace AnnotationTool.ViewModel
 
         public LineGeometry3D LeftLines
         {
-            get { return GetLineGeometry(_2DLeftLineList); }
+            get { return GetLineGeometry(_2DLeftLineList, SelectedLeftImage); }
             set
             {
-                _2DLeftLineList = Get_2DLineList(value);
+                _2DLeftLineList = Get_2DLineList(value, SelectedLeftImage);
                 SaveLineToXML(_2DLeftLineList, SelectedLeftImage);
             }
         }
         public LineGeometry3D RightLines
         {
-            get { return GetLineGeometry(_2DRightLineList); }
+            get { return GetLineGeometry(_2DRightLineList, SelectedRightImage); }
             set
             {
-                _2DRightLineList = Get_2DLineList(value);
+                _2DRightLineList = Get_2DLineList(value, SelectedRightImage);
                 SaveLineToXML(_2DRightLineList, SelectedRightImage);
             }
         }
@@ -346,14 +346,14 @@ namespace AnnotationTool.ViewModel
         public ICommand PreviousImageGroupCommand { get; private set; }
 
 
-        private LineGeometry3D GetLineGeometry(List<_2DLine> _2DLines)
+        private LineGeometry3D GetLineGeometry(List<_2DLine> _2DLines, string imagePath)
         {
             var lineBuilder = new LineBuilder();
 
             foreach (var line in _2DLines)
             {
-                var v1 = VectorPixelConverter.GetVectorFromPixel(line.FirstPoint, SelectedLeftImage);
-                var v2 = VectorPixelConverter.GetVectorFromPixel(line.MirroredPoint, SelectedLeftImage);
+                var v1 = VectorPixelConverter.GetVectorFromPixel(line.FirstPoint, imagePath);
+                var v2 = VectorPixelConverter.GetVectorFromPixel(line.MirroredPoint, imagePath);
 
                 lineBuilder.AddLine(v1, v2);
             }
@@ -368,7 +368,7 @@ namespace AnnotationTool.ViewModel
 
             return lineGeometry;
         }
-        private List<_2DLine> Get_2DLineList(LineGeometry3D lineGeometry)
+        private List<_2DLine> Get_2DLineList(LineGeometry3D lineGeometry, string imagePath)
         {
             var lineList = new List<_2DLine>();
             var count = lineGeometry.Positions.Count;
@@ -376,10 +376,10 @@ namespace AnnotationTool.ViewModel
             for (int i = 0; i < count; i += 2)
             {
                 var center = (lineGeometry.Positions[i] + lineGeometry.Positions[i + 1]) / 2;
-                var pixelCenter = VectorPixelConverter.GetPixelFromVector(center, SelectedLeftImage);
-                var pixelFiirst = VectorPixelConverter.GetPixelFromVector(lineGeometry.Positions[i], SelectedLeftImage);
+                var pixelCenter = VectorPixelConverter.GetPixelFromVector(center, imagePath);
+                var pixelFirst = VectorPixelConverter.GetPixelFromVector(lineGeometry.Positions[i], imagePath);
                 var type = GetMarkingType(lineGeometry.Colors[i]);
-                var newLine = new _2DLine(pixelCenter, pixelFiirst, type);
+                var newLine = new _2DLine(pixelCenter, pixelFirst, type);
                 lineList.Add(newLine);
             }
 

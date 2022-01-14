@@ -480,6 +480,7 @@ namespace AnnotationTool.ViewModel
             }
         }
 
+
         public int ImageGroupSize { get; set; }
         public int ImageGroupStartingIndex { get; set; }
         private void ChangeImageGroup(bool forward)
@@ -523,6 +524,12 @@ namespace AnnotationTool.ViewModel
             return Task.Run(() =>
               {
                   fullFileName = fullFileName.Replace("JPG", "XML");
+
+                  if (newLines.Count < 1)
+                  {
+                      File.Delete(fullFileName);
+                      return;
+                  }
 
                   Lines lines = new Lines()
                   {

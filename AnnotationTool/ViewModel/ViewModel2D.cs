@@ -143,10 +143,56 @@ namespace AnnotationTool.ViewModel
                 Delta = 0;
                 if (Images != null && Images.Length > 0)
                 {
-                    ImageGroup = Images.Skip(ImageGroupStartingIndex).Take(ImageGroupSize);
-                    ChangeSelectedImage(ImageGroup.First());
+                    ImageGroupExisitsPairs = GetImageGroupExistsPairs(ImageGroupSize);
+
+                    //ImageGroup = Images.Skip(ImageGroupStartingIndex).Take(ImageGroupSize);
+                    //ChangeSelectedImage(ImageGroup.First());
+                    ChangeSelectedImage(ImageGroupExisitsPairs.First().Key);
                 }
             }
+        }
+
+        private ObservableCollection<KeyValuePair<string, bool>> GetImageGroupExistsPairs(int take)
+        {
+            var collection = new ObservableCollection<KeyValuePair<string, bool>>();
+            //Parallel.ForEach(Images.Skip(ImageGroupStartingIndex).Take(take), image =>
+            //{
+            //    collection.Add(new KeyValuePair<string, bool>(image, IsExists(image)));
+            //});
+
+            foreach (var image in Images.Skip(ImageGroupStartingIndex).Take(take))
+            {
+                collection.Add(new KeyValuePair<string, bool>(image, IsExists(image)));
+            }
+
+            return collection;
+        }
+
+        private void RefreshImageGroupExistsPairs()
+        {
+            var keyValuePair = ImageGroupExisitsPairs.Where(x => x.Key == SelectedLeftImage).First();
+            int index = ImageGroupExisitsPairs.IndexOf(ImageGroupExisitsPairs.Where(x => x.Key == SelectedLeftImage).First());
+            ImageGroupExisitsPairs[index] = new KeyValuePair<string, bool>(SelectedLeftImage, IsExists(SelectedLeftImage));
+        }
+
+        private bool IsExists(string path)
+        {
+            bool exisist;
+
+            var fileInfo = new FileInfo(path.Replace("JPG", "XML"));
+            exisist = fileInfo.Exists;
+            if (!exisist)
+            {
+                var directoryInfo = fileInfo.Directory;
+                var list = fileInfo.Directory.EnumerateFiles("*.JPG").Select(x => x.FullName).ToList();
+                var index = list.IndexOf(path);
+
+                directoryInfo = new FileInfo(path.Replace("Left", "Right")).Directory;
+                fileInfo = new FileInfo(directoryInfo.EnumerateFiles("*.JPG").Select(x => x.FullName).ToList()[index].Replace("JPG", "XML"));
+                exisist = fileInfo.Exists;
+            }
+
+            return exisist;
         }
 
 
@@ -291,6 +337,11 @@ namespace AnnotationTool.ViewModel
             {
                 _2DLeftLineList = Get_2DLineList(value, SelectedLeftImage);
                 SaveLineToXML(_2DLeftLineList, SelectedLeftImage);
+                Dispatcher.CurrentDispatcher.InvokeAsync(async () =>
+                {
+                    await Task.Delay(100);
+                    RefreshImageGroupExistsPairs();
+                });
             }
         }
         public LineGeometry3D RightLines
@@ -300,6 +351,11 @@ namespace AnnotationTool.ViewModel
             {
                 _2DRightLineList = Get_2DLineList(value, SelectedRightImage);
                 SaveLineToXML(_2DRightLineList, SelectedRightImage);
+                Dispatcher.CurrentDispatcher.InvokeAsync(async () =>
+                {
+                    await Task.Delay(100);
+                    RefreshImageGroupExistsPairs();
+                });
             }
         }
 
@@ -468,14 +524,27 @@ namespace AnnotationTool.ViewModel
             });
         }
 
-        private IEnumerable<string> _imageGroup;
+        //private IEnumerable<string> _imageGroup;
 
-        public IEnumerable<string> ImageGroup
+        //public IEnumerable<string> ImageGroup
+        //{
+        //    get { return _imageGroup; }
+        //    set
+        //    {
+        //        _imageGroup = value;
+        //        NotifyPropertyChanged();
+        //    }
+        //}
+
+
+        private ObservableCollection<KeyValuePair<string, bool>> _imageGroupExisitsPairs;
+
+        public ObservableCollection<KeyValuePair<string, bool>> ImageGroupExisitsPairs
         {
-            get { return _imageGroup; }
+            get { return _imageGroupExisitsPairs; }
             set
             {
-                _imageGroup = value;
+                _imageGroupExisitsPairs = value;
                 NotifyPropertyChanged();
             }
         }
@@ -497,15 +566,18 @@ namespace AnnotationTool.ViewModel
 
             if (Images != null && Images.Length > 0)
             {
-                ImageGroup = Images.Skip(ImageGroupStartingIndex).Take(Math.Min(ImageGroupSize, Images.Length - ImageGroupStartingIndex));
+                ImageGroupExisitsPairs = GetImageGroupExistsPairs(Math.Min(ImageGroupSize, Images.Length - ImageGroupStartingIndex));
+                //ImageGroup = Images.Skip(ImageGroupStartingIndex).Take(Math.Min(ImageGroupSize, Images.Length - ImageGroupStartingIndex));
 
                 if (forward)
                 {
-                    ChangeSelectedImage(ImageGroup.First());
+                    //ChangeSelectedImage(ImageGroup.First());
+                    ChangeSelectedImage(ImageGroupExisitsPairs.First().Key);
                 }
                 else
                 {
-                    ChangeSelectedImage(ImageGroup.Last());
+                    //ChangeSelectedImage(ImageGroup.Last());
+                    ChangeSelectedImage(ImageGroupExisitsPairs.Last().Key);
                 }
             }
         }

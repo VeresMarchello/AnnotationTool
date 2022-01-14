@@ -28,7 +28,7 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>42</ApplicationRevision>
+    <ApplicationRevision>43</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -236,5 +236,17 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\AssimpNet.5.0.0-beta1\build\AssimpNet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\AssimpNet.5.0.0-beta1\build\AssimpNet.targets'))" />
+  </Target>
+   <!-- This section is used for code-signing the application. This should not be confused with manifest signing or with strong-name assembly signing, which can both be done from the Visual Studio interface. -->
+   <Target Name="SignOutput" AfterTargets="CoreCompile">
+    <PropertyGroup>
+      <TimestampServerUrl>http://timestamp.verisign.com/scripts/timstamp.dll</TimestampServerUrl>
+      <ApplicationDescription>A.Franklin's Awesome App</ApplicationDescription>
+      <SigningCertificateCriteria>/sha1 0c0ff5e29404b7d78q2517f487da0b1a0912c4da</SigningCertificateCriteria>
+    </PropertyGroup>
+    <ItemGroup>
+      <SignableFiles Include="$(ProjectDir)obj\$(ConfigurationName)\$(TargetName)$(TargetExt)" />
+    </ItemGroup>
+    <Exec Command="&quot;$(ProjectDir)..\Bin\SignTool&quot; sign $(SigningCertificateCriteria) /d &quot;$(ApplicationDescription)&quot; /t &quot;$(TimestampServerUrl)&quot; &quot;%(SignableFiles.Identity)&quot;" />
   </Target>
 </Project>
